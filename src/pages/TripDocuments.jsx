@@ -8,7 +8,6 @@ import UploadButton from "../components/ui/Button/UploadButton";
 import DocumentViewer from "../components/business/DocumentViewer";
 import { useParams, useNavigate } from "react-router-dom";
 
-
 export default function TripDocuments() {
     const { tripId } = useParams();
     const navigate = useNavigate();
@@ -38,15 +37,13 @@ export default function TripDocuments() {
     const [comment, setComment] = useState("");
     const [file, setFile] = useState(null);
     const [previewIndex, setPreviewIndex] = useState(null);
-
+    const [documents, setDocuments] = useState(trip?.documents || []);
 
     if (!trip) {
         return <h2 style={{ color: "white" }}>Рейс не знайдено</h2>;
     }
 
-    const documents = trip.documents || [];
-    const isCompleted =
-        trip.status === "completed";
+    const isCompleted = trip.status === "completed";
 
     const previewDoc =
         previewIndex !== null
@@ -59,6 +56,11 @@ export default function TripDocuments() {
             return;
         }
 
+        if (file.size > 2 * 1024 * 1024) {
+            alert("Файл занадто великий (макс. ~2 МБ).\nЗроби фото меншої якості.");
+            return;
+        }
+
         const reader = new FileReader();
 
         reader.onload = () => {
@@ -67,31 +69,35 @@ export default function TripDocuments() {
                 type: documentType,
                 comment,
                 fileName: file.name,
-                fileData: reader.result, // Base64
+                fileData: reader.result,
                 createdAt: new Date().toLocaleString("uk-UA"),
             };
 
-            const updatedTrips = trips.map((t) =>
-                t.id === trip.id
-                    ? {
-                        ...t,
-                        documents: [
-                            ...(t.documents || []),
-                            newDocument,
-                        ],
-                    }
-                    : t
-            );
+            const updatedDocuments = [...documents, newDocument];
 
-            localStorage.setItem(
-                "cabina_trips_v4",
-                JSON.stringify(updatedTrips)
-            );
+            try {
+                const updatedTrips = trips.map((t) =>
+                    t.id === trip.id
+                        ? { ...t, documents: updatedDocuments }
+                        : t
+                );
 
-            setComment("");
-            setFile(null);
+                localStorage.setItem(
+                    "cabina_trips_v4",
+                    JSON.stringify(updatedTrips)
+                );
 
-            window.location.reload();
+                setDocuments(updatedDocuments);
+                setComment("");
+                setFile(null);
+            } catch (err) {
+                console.error(err);
+                alert("Не вистачає місця в пам'яті.\nВидали старі документи або додай менший файл.");
+            }
+        };
+
+        reader.onerror = () => {
+            alert("Помилка читання файлу");
         };
 
         reader.readAsDataURL(file);
@@ -100,23 +106,22 @@ export default function TripDocuments() {
     const deleteDocument = (docId) => {
         if (!window.confirm("Видалити цей документ?")) return;
 
-        const updatedTrips = trips.map((t) => {
-            if (t.id !== trip.id) return t;
+        const updatedDocuments = documents.filter(
+            (doc) => doc.id !== docId
+        );
 
-            return {
-                ...t,
-                documents: (t.documents || []).filter(
-                    (doc) => doc.id !== docId
-                ),
-            };
-        });
+        const updatedTrips = trips.map((t) =>
+            t.id === trip.id
+                ? { ...t, documents: updatedDocuments }
+                : t
+        );
 
         localStorage.setItem(
             "cabina_trips_v4",
             JSON.stringify(updatedTrips)
         );
 
-        window.location.reload();
+        setDocuments(updatedDocuments);
     };
 
     return (
@@ -139,6 +144,7 @@ export default function TripDocuments() {
                 >
                     ← До рейсу
                 </button>
+
                 <h1>📄 Документи</h1>
 
                 <Card
@@ -172,9 +178,7 @@ export default function TripDocuments() {
                     <UploadButton
                         file={file}
                         disabled={isCompleted}
-                        onChange={(e) =>
-                            setFile(e.target.files[0])
-                        }
+                        onChange={(e) => setFile(e.target.files[0])}
                     />
 
                     <PrimaryButton
@@ -206,8 +210,8 @@ export default function TripDocuments() {
                         ))
                     )}
                 </Card>
-
             </div>
+
             <DocumentViewer
                 previewDoc={previewDoc}
                 documents={documents}
