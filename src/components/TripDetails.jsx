@@ -148,32 +148,11 @@ export default function TripDetails({
 
                     <button
                         className="trip-action-btn"
-                        onClick={async () => {
-                            try {
-                                const result = await generateTripPdf(trip, { download: false });
-
-                                if (!result || !result.blob) {
-                                    generateTripPdf(trip);
-                                    return;
-                                }
-
-                                const file = new File([result.blob], result.fileName, {
-                                    type: "application/pdf",
-                                });
-
-                                if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
-                                    await navigator.share({
-                                        title: `Рейс №${trip.tripNumber}`,
-                                        text: `${trip.fromCity} → ${trip.toCity}`,
-                                        files: [file],
-                                    });
-                                } else {
-                                    generateTripPdf(trip);
-                                }
-                            } catch (err) {
-                                console.error("Share error:", err);
-                                generateTripPdf(trip);
-                            }
+                        onClick={() => {
+                            generateTripPdf(trip);
+                            setTimeout(() => {
+                                alert("PDF збережено.\nВідкрий «Файли» / «Завантаження» і натисни Поділитися.");
+                            }, 500);
                         }}
                     >
                         📤 Поділитися
