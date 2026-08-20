@@ -11,14 +11,14 @@ export default function SchengenDashboard({
         (f) => f.remaining > result.remaining
     );
 
-    const statusText =
-        result.status === "safe"
-            ? "Безпечно"
-            : result.status === "warning"
-            ? "Увага"
-            : result.status === "danger"
-            ? "Майже ліміт"
-            : "Порушення";
+  const statusText =
+    result.status === "ok" || result.status === "safe"
+        ? "Безпечно"
+        : result.status === "warning"
+        ? "Увага"
+        : result.status === "danger"
+        ? "Майже ліміт"
+        : "Порушення";
 
     return (
 
