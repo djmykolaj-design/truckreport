@@ -1,0 +1,247 @@
+.reef-card{
+
+    background:#232B38;
+
+    border:1px solid #30363D;
+
+    border-radius:16px;
+
+    padding:18px;
+
+    margin-bottom:18px;
+
+    transition:.25s;
+
+}
+
+.reef-card:hover{
+
+    border-color:#32C24D;
+
+    transform:translateY(-2px);
+
+    box-shadow:0 14px 32px rgba(0,0,0,.30);
+
+}
+
+.reef-header{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:flex-start;
+
+    margin-bottom:18px;
+
+}
+
+.reef-header h3{
+
+    margin:0;
+
+    color:white;
+
+    font-size:20px;
+
+    font-weight:700;
+
+}
+
+.reef-type{
+
+    margin-top:8px;
+
+    display:inline-flex;
+
+    padding:5px 12px;
+
+    border-radius:999px;
+
+    background:#1B2430;
+
+    border:1px solid #30363D;
+
+    color:#CBD5E1;
+
+    font-size:12px;
+
+    font-weight:700;
+
+}
+
+.reef-info{
+
+    display:grid;
+
+    gap:8px;
+
+    margin-bottom:20px;
+
+    color:#E2E8F0;
+
+}
+
+.reef-info div{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:8px;
+
+}
+
+.reef-refuel-form{
+
+    display:grid;
+
+    grid-template-columns:repeat(4,1fr);
+
+    gap:10px;
+
+    margin-bottom:18px;
+
+}
+
+.reef-refuel-form input,
+
+.reef-refuel-form select{
+
+    width:100%;
+
+    padding:12px;
+
+    border-radius:10px;
+
+    border:1px solid #374151;
+
+    background:#1B2430;
+
+    color:white;
+
+    box-sizing:border-box;
+
+}
+
+.reef-refuel-form button{
+
+    border:none;
+
+    border-radius:10px;
+
+    background:#32C24D;
+
+    color:white;
+
+    font-weight:700;
+
+    cursor:pointer;
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    gap:8px;
+
+    transition:.2s;
+
+}
+
+.reef-refuel-form button:hover{
+
+    background:#28A745;
+
+}
+
+.reef-history{
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:12px;
+
+}
+
+.reef-refuel-item{
+
+    background:#1B2430;
+
+    border:1px solid #30363D;
+
+    border-radius:12px;
+
+    padding:14px;
+
+    display:grid;
+
+    grid-template-columns:1fr 1fr auto auto;
+
+    gap:12px;
+
+    align-items:center;
+
+}
+
+.reef-refuel-item small{
+
+    color:#94A3B8;
+
+}
+
+.reef-delete,
+
+.reef-refuel-item button{
+
+    width:38px;
+
+    height:38px;
+
+    border:none;
+
+    border-radius:10px;
+
+    background:#2D3748;
+
+    color:#EF4444;
+
+    cursor:pointer;
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    transition:.2s;
+
+}
+
+.reef-delete:hover,
+
+.reef-refuel-item button:hover{
+
+    background:#EF4444;
+
+    color:white;
+
+}
+
+@media(max-width:900px){
+
+    .reef-refuel-form{
+
+        grid-template-columns:1fr;
+
+    }
+
+    .reef-refuel-item{
+
+        grid-template-columns:1fr;
+
+    }
+
+}

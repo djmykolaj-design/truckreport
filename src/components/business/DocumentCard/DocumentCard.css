@@ -1,0 +1,227 @@
+.document-card {
+    width: 100%;
+    box-sizing: border-box;
+
+    padding: 16px 18px;
+    margin-bottom: 12px;
+
+    background: #232b38;
+
+    border: 1px solid #30363d;
+    border-radius: 16px;
+
+    transition:
+        transform 0.2s ease,
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.document-card:hover {
+    transform: translateY(-2px);
+
+    border-color: #32c24d;
+
+    box-shadow:
+        0 12px 30px rgba(0, 0, 0, 0.25);
+}
+
+/* =========================
+   Header
+========================= */
+
+.document-card__header {
+    display: flex;
+
+    justify-content: space-between;
+    align-items: flex-start;
+
+    gap: 20px;
+}
+
+.document-card__info {
+    min-width: 0;
+}
+
+.document-card__type {
+    color: #ffffff;
+
+    font-size: 15px;
+    font-weight: 700;
+}
+
+.document-card__name {
+    margin-top: 5px;
+
+    color: #94a3b8;
+
+    font-size: 13px;
+
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.document-card__date {
+    flex-shrink: 0;
+
+    color: #94a3b8;
+
+    font-size: 12px;
+}
+
+/* =========================
+   Comment
+========================= */
+
+.document-card__comment {
+    margin-top: 10px;
+
+    padding: 8px 12px;
+
+    background: #1b2430;
+
+    border: 1px solid rgba(255, 255, 255, 0.05);
+
+    border-radius: 10px;
+
+    color: #cbd5e1;
+
+    font-size: 13px;
+    line-height: 1.4;
+}
+
+/* =========================
+   Actions
+========================= */
+
+.document-card__actions {
+    display: flex;
+
+    gap: 8px;
+
+    margin-top: 14px;
+}
+
+.document-btn {
+    display: inline-flex;
+
+    align-items: center;
+    justify-content: center;
+
+    min-height: 34px;
+
+    padding: 7px 12px;
+
+    border-radius: 9px;
+
+    border: 1px solid transparent;
+
+    font-size: 13px;
+    font-weight: 600;
+
+    text-decoration: none;
+
+    cursor: pointer;
+
+    transition: .2s;
+}
+
+/* Переглянути */
+
+.document-btn--blue {
+    background: #1e3a5f;
+
+    border-color: #2563eb;
+
+    color: #bfdbfe;
+}
+
+.document-btn--blue:hover {
+    background: #2563eb;
+
+    color: white;
+}
+
+/* Завантажити */
+
+.document-btn--green {
+    background: #12351f;
+
+    border-color: #238b3b;
+
+    color: #86efac;
+}
+
+.document-btn--green:hover {
+    background: #238b3b;
+
+    color: white;
+}
+
+/* Видалити */
+
+.document-btn--red {
+    background: #3a1919;
+
+    border-color: #7f1d1d;
+
+    color: #fca5a5;
+}
+
+.document-btn--red:hover {
+    background: #dc2626;
+
+    border-color: #dc2626;
+
+    color: white;
+}
+
+.document-btn--red:disabled {
+    opacity: .4;
+
+    cursor: not-allowed;
+}
+
+/* =========================
+   Mobile
+========================= */
+@media (max-width: 768px) {
+
+  .document-card {
+    padding: 12px !important;
+    border-radius: 12px !important;
+    margin-bottom: 10px !important;
+  }
+
+  .document-card__header {
+    flex-direction: column;
+    gap: 4px !important;
+  }
+
+  .document-card__type {
+    font-size: 14px !important;
+  }
+
+  .document-card__name {
+    font-size: 12px !important;
+  }
+
+  .document-card__date {
+    font-size: 11px !important;
+  }
+
+  .document-card__actions {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr 1fr !important;
+    gap: 6px !important;
+    margin-top: 10px !important;
+  }
+
+  .document-btn {
+    width: 100% !important;
+    min-height: 36px !important;
+    font-size: 11px !important;
+    padding: 6px 4px !important;
+    border-radius: 8px !important;
+  }
+}

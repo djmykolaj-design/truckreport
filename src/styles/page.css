@@ -1,0 +1,12 @@
+.page {
+    width: 100%;
+    max-width: 1500px;
+    margin: 0;
+    color: var(--text);
+}
+
+.page-narrow {
+    width: 100%;
+    max-width: 1100px;
+    margin: 0;
+}

@@ -1,0 +1,130 @@
+.fuel-dashboard{
+    background:#1f2937;
+    border:1px solid #374151;
+    border-radius:18px;
+    padding:28px;
+    margin-bottom:24px;
+}
+
+.fuel-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-end;
+    margin-bottom:28px;
+}
+
+.fuel-title{
+    font-size:18px;
+    font-weight:700;
+    color:#e5e7eb;
+}
+
+.fuel-total{
+    margin-top:10px;
+    font-size:54px;
+    font-weight:800;
+    color:#22c55e;
+    line-height:1;
+}
+
+.fuel-subtitle{
+    margin-top:10px;
+    color:#9ca3af;
+    font-size:14px;
+}
+
+.fuel-grid{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:18px;
+}
+
+.fuel-item{
+    background:#111827;
+    border:1px solid #374151;
+    border-radius:16px;
+    padding:22px;
+    transition:.2s;
+}
+
+.fuel-item:hover{
+    transform:translateY(-2px);
+    border-color:#4b5563;
+}
+
+.fuel-icon{
+    font-size:26px;
+    margin-bottom:16px;
+}
+
+.fuel-value{
+    font-size:34px;
+    font-weight:800;
+    color:#22c55e;
+    line-height:1;
+}
+
+.fuel-label{
+    margin-top:10px;
+    color:#9ca3af;
+    font-size:14px;
+}
+
+@media(max-width:900px){
+
+    .fuel-grid{
+        grid-template-columns:repeat(2,1fr);
+    }
+
+}
+
+@media(max-width:600px){
+
+    .fuel-grid{
+        grid-template-columns:1fr;
+    }
+
+}
+
+@media (max-width: 768px) {
+
+  .fuel-dashboard {
+    padding: 14px !important;
+  }
+
+  .fuel-title {
+    font-size: 14px !important;
+  }
+
+  .fuel-total {
+    font-size: 28px !important;   /* було дуже велике */
+    font-weight: 700;
+    margin: 4px 0 !important;
+  }
+
+  .fuel-subtitle {
+    font-size: 12px !important;
+  }
+
+  .fuel-grid {
+    gap: 10px !important;
+    margin-top: 14px !important;
+  }
+
+  .fuel-item {
+    padding: 12px 10px !important;
+  }
+
+  .fuel-value {
+    font-size: 18px !important;
+  }
+
+  .fuel-label {
+    font-size: 11px !important;
+  }
+
+  .fuel-icon {
+    font-size: 16px !important;
+    margin-bottom: 6px !important;
+  }
+}

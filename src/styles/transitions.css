@@ -1,0 +1,37 @@
+.fade {
+
+    animation: fade .25s ease;
+
+}
+
+@keyframes fade {
+
+    from {
+
+        opacity: 0;
+
+        transform: translateY(8px);
+
+    }
+
+    to {
+
+        opacity: 1;
+
+        transform: translateY(0);
+
+    }
+
+}
+
+.hover-lift {
+
+    transition: .2s ease;
+
+}
+
+.hover-lift:hover {
+
+    transform: translateY(-2px);
+
+}

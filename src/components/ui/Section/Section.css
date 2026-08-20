@@ -1,0 +1,79 @@
+.tr-section{
+
+    margin-bottom:28px;
+
+}
+
+.tr-section-header{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    margin-bottom:18px;
+
+}
+
+.tr-section-title{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:12px;
+
+}
+
+.tr-section-icon{
+
+    color:var(--primary);
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    font-size:22px;
+
+}
+
+.tr-section-title h2{
+
+    margin:0;
+
+    color:var(--text);
+
+    font-size:22px;
+
+    font-weight:700;
+
+}
+
+.tr-section-title p{
+
+    margin-top:4px;
+
+    color:var(--text-secondary);
+
+    font-size:14px;
+
+}
+
+.tr-section-actions{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:10px;
+
+}
+
+.tr-section-body{
+
+    width:100%;
+
+}

@@ -1,0 +1,125 @@
+.tr-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+
+    border: none;
+    border-radius: 12px;
+
+    cursor: pointer;
+
+    font-family: inherit;
+    font-weight: 600;
+
+    transition: var(--transition);
+
+    background: var(--primary);
+    color: white;
+
+    box-shadow: var(--shadow);
+}
+
+.tr-btn:hover {
+    transform: translateY(-2px);
+}
+
+.tr-btn:active {
+    transform: scale(.98);
+}
+
+.tr-btn:disabled {
+    opacity: .55;
+    cursor: not-allowed;
+}
+
+/* ---------- Variants ---------- */
+
+.tr-btn-primary {
+    background: var(--primary);
+    color: white;
+}
+
+.tr-btn-primary:hover {
+    background: var(--primary-hover);
+}
+
+.tr-btn-danger {
+    background: #ef4444;
+    color: white;
+}
+
+.tr-btn-danger:hover {
+    background: #dc2626;
+}
+
+.tr-btn-secondary {
+    background: var(--surface);
+    color: var(--text);
+    border: 1px solid var(--border);
+}
+
+.tr-btn-secondary:hover {
+    border-color: var(--primary);
+}
+
+.tr-btn-ghost {
+    background: transparent;
+    color: var(--text);
+}
+
+.tr-btn-ghost:hover {
+    background: rgba(255,255,255,.05);
+}
+
+/* ---------- Sizes ---------- */
+
+.tr-btn-sm {
+    height: 38px;
+    padding: 0 16px;
+    font-size: 14px;
+}
+
+.tr-btn-md {
+    height: 46px;
+    padding: 0 22px;
+    font-size: 15px;
+}
+
+.tr-btn-lg {
+    height: 56px;
+    padding: 0 30px;
+    font-size: 16px;
+}
+
+.tr-btn-full {
+    width: 100%;
+}
+
+.tr-btn-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.tr-loader {
+    width: 18px;
+    height: 18px;
+
+    border: 2px solid rgba(255,255,255,.35);
+    border-top: 2px solid white;
+
+    border-radius: 50%;
+
+    animation: tr-spin .7s linear infinite;
+}
+
+@keyframes tr-spin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}

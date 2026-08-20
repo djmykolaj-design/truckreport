@@ -1,0 +1,298 @@
+.schengen-page {
+    width: 100%;
+    max-width: 1000px;
+    margin: 0;
+    padding: 0;
+    color: var(--tr-text);
+}
+
+/* ================= HEADER ================= */
+
+.schengen-header {
+    margin-bottom: 28px;
+}
+
+.schengen-header h1 {
+    margin: 0;
+    font-size: 34px;
+    font-weight: 700;
+    color: var(--tr-text);
+}
+
+.schengen-header p {
+    margin-top: 8px;
+    color: var(--tr-text-secondary);
+    font-size: 15px;
+}
+
+/* ================= CARD ================= */
+
+.schengen-card {
+    background: var(--tr-surface);
+    border: 1px solid var(--tr-border);
+    border-radius: 18px;
+    padding: 24px;
+    margin-bottom: 24px;
+}
+
+.schengen-card h2 {
+    margin: 0 0 20px;
+    font-size: 22px;
+    font-weight: 700;
+}
+
+/* ================= DASHBOARD ================= */
+
+.schengen-main {
+    display: flex;
+    flex-direction: column;
+}
+
+.schengen-main-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.schengen-number {
+    font-size: 56px;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.schengen-number span {
+    color: var(--tr-text-secondary);
+    font-size: 34px;
+}
+
+.schengen-caption {
+    margin-top: 8px;
+    color: var(--tr-text-secondary);
+}
+
+.schengen-progress {
+    height: 14px;
+    background: #1f2937;
+    border-radius: 999px;
+    overflow: hidden;
+    margin: 26px 0;
+}
+
+.schengen-progress-fill {
+    height: 100%;
+    border-radius: 999px;
+    transition: 0.3s;
+}
+
+/* ================= SUMMARY ================= */
+
+.schengen-summary {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 18px;
+}
+
+.summary-item {
+    background: var(--tr-surface-light);
+    border: 1px solid var(--tr-border);
+    border-radius: 14px;
+    padding: 20px;
+    text-align: center;
+}
+
+.summary-label {
+    color: var(--tr-text-secondary);
+    font-size: 13px;
+    margin-bottom: 10px;
+}
+
+.summary-value {
+    font-size: 28px;
+    font-weight: 700;
+}
+
+.summary-sub {
+    margin-top: 6px;
+    color: var(--tr-text-secondary);
+    font-size: 13px;
+}
+
+/* ================= FORM ================= */
+
+.schengen-form {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+.schengen-form input {
+    width: 100%;
+    padding: 14px;
+    border-radius: 12px;
+    border: 1px solid var(--tr-border);
+    background: var(--tr-surface-light);
+    color: white;
+    font-size: 15px;
+    box-sizing: border-box;
+}
+
+.schengen-form button {
+    grid-column: 1 / -1;
+    padding: 14px;
+    border: none;
+    border-radius: 12px;
+    background: var(--tr-primary);
+    color: white;
+    font-weight: 700;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.schengen-form button:hover {
+    filter: brightness(1.08);
+}
+
+/* ================= STAYS ================= */
+
+.stay-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 18px;
+    margin-bottom: 10px;
+    background: var(--tr-surface-light);
+    border: 1px solid var(--tr-border);
+    border-radius: 14px;
+}
+
+.stay-info {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.stay-date {
+    font-weight: 600;
+}
+
+.stay-arrow {
+    color: var(--tr-text-secondary);
+}
+
+.stay-right {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+}
+
+.stay-days {
+    color: var(--tr-primary);
+    font-weight: 700;
+}
+
+.delete-btn {
+    background: transparent;
+    border: none;
+    color: #ef4444;
+    cursor: pointer;
+    font-size: 18px;
+}
+
+/* ================= FUTURE ================= */
+
+.future-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.future-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 18px;
+    border-radius: 14px;
+    background: var(--tr-surface-light);
+    border: 1px solid var(--tr-border);
+}
+
+.future-date {
+    font-weight: 600;
+}
+
+.future-after {
+    color: var(--tr-text-secondary);
+    font-size: 13px;
+    margin-top: 4px;
+}
+
+.future-gain {
+    color: var(--tr-primary);
+    font-weight: 700;
+    font-size: 18px;
+}
+
+/* ================= EMPTY ================= */
+
+.empty {
+    text-align: center;
+    padding: 40px;
+    color: var(--tr-text-secondary);
+}
+
+/* ================= MOBILE ================= */
+
+@media (max-width: 768px) {
+
+  /* 85/90 — робимо помітно більшим */
+  .schengen-number {
+    font-size: 62px !important;
+    font-weight: 800;
+    letter-spacing: -1.5px;
+    line-height: 1;
+  }
+
+  .schengen-number span {
+    font-size: 34px !important;
+  }
+
+  .schengen-caption {
+    font-size: 13px !important;
+    margin-top: 4px !important;
+  }
+
+  /* Нижні блоки — значно компактніші */
+  .schengen-summary {
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+  }
+
+  .summary-item {
+    padding: 10px 12px !important;
+    border-radius: 10px !important;
+  }
+
+  .summary-label {
+    font-size: 11px !important;
+    margin-bottom: 2px !important;
+  }
+
+  .summary-value {
+    font-size: 17px !important;
+  }
+
+  .summary-sub {
+    font-size: 11px !important;
+    margin-top: 2px !important;
+  }
+
+  .schengen-card {
+    padding: 14px !important;
+    margin-bottom: 12px !important;
+  }
+
+  .schengen-progress {
+    height: 9px !important;
+    margin: 14px 0 !important;
+  }
+}

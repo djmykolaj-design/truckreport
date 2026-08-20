@@ -1,0 +1,236 @@
+.viewer-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.94);
+    display: flex;
+    flex-direction: column;
+    z-index: 9999;
+}
+
+.viewer-toolbar {
+    height: 72px;
+    background: #111827;
+    border-bottom: 1px solid #374151;
+
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    padding: 0 24px;
+    flex-shrink: 0;
+}
+
+.viewer-left,
+.viewer-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.viewer-title {
+    color: white;
+    font-size: 16px;
+    font-weight: 700;
+
+    max-width: 500px;
+
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.viewer-zoom {
+    width: 72px;
+    height: 42px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: #1F2937;
+    border: 1px solid #374151;
+    border-radius: 10px;
+
+    color: white;
+    font-weight: 700;
+}
+
+.viewer-close {
+    width: 42px;
+    height: 42px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: #DC2626;
+    color: white;
+
+    border: none;
+    border-radius: 10px;
+
+    cursor: pointer;
+
+    font-size: 18px;
+    font-weight: bold;
+
+    transition: .2s;
+}
+
+.viewer-close:hover {
+    background: #EF4444;
+}
+
+.viewer-content {
+    flex: 1;
+
+    overflow: hidden;
+
+    background: #000;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    user-select: none;
+}
+
+.viewer-center {
+    width: 100%;
+    height: 100%;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    overflow: hidden;
+}
+
+.viewer-image {
+    display: block;
+
+    max-width: none;
+    max-height: none;
+
+    border-radius: 12px;
+
+    box-shadow: 0 10px 35px rgba(0,0,0,.55);
+
+    pointer-events: none;
+}
+
+.viewer-pdf {
+    width: 900px;
+    height: 1200px;
+
+    border: none;
+    border-radius: 12px;
+
+    background: white;
+
+    box-shadow: 0 10px 35px rgba(0,0,0,.55);
+}
+
+.viewer-error {
+    color: white;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.viewer-btn {
+    width: 42px;
+    height: 42px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: #1F2937;
+    border: 1px solid #374151;
+    border-radius: 10px;
+
+    color: white;
+
+    cursor: pointer;
+
+    font-size: 18px;
+    font-weight: 700;
+
+    transition: .2s;
+}
+
+.viewer-btn:hover {
+    background: #2563EB;
+    border-color: #3B82F6;
+}
+
+.viewer-download {
+    width: 42px;
+    height: 42px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: #16A34A;
+    border: 1px solid #15803D;
+    border-radius: 10px;
+
+    color: white;
+    text-decoration: none;
+
+    font-size: 18px;
+    font-weight: 700;
+
+    transition: .2s;
+}
+
+.viewer-download:hover {
+    background: #22C55E;
+}
+
+@media (max-width: 768px) {
+
+  .viewer-toolbar {
+    height: 52px !important;
+    padding: 0 8px !important;
+    gap: 4px;
+  }
+
+  .viewer-left,
+  .viewer-right {
+    gap: 4px !important;
+  }
+
+  .viewer-title {
+    display: none !important; /* на телефоні ховаємо назву файлу, щоб кнопки влазили */
+  }
+
+  .viewer-btn,
+  .viewer-close,
+  .viewer-download {
+    width: 34px !important;
+    height: 34px !important;
+    font-size: 14px !important;
+    border-radius: 8px !important;
+  }
+
+  .viewer-zoom {
+    width: 48px !important;
+    height: 34px !important;
+    font-size: 12px !important;
+  }
+
+  .viewer-content,
+  .viewer-center {
+    overflow: hidden !important;
+  }
+
+  .viewer-image {
+    max-width: 100% !important;
+    max-height: 100% !important;
+    width: auto !important;
+    height: auto !important;
+    object-fit: contain !important;
+  }
+}

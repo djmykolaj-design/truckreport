@@ -1,0 +1,60 @@
+.tr-badge{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+
+    border-radius:999px;
+
+    font-weight:600;
+    letter-spacing:.3px;
+
+    white-space:nowrap;
+}
+
+.tr-badge-sm{
+    height:24px;
+    padding:0 10px;
+    font-size:12px;
+}
+
+.tr-badge-md{
+    height:30px;
+    padding:0 14px;
+    font-size:13px;
+}
+
+.tr-badge-lg{
+    height:36px;
+    padding:0 18px;
+    font-size:14px;
+}
+
+.tr-badge-green{
+    background:rgba(50,194,77,.18);
+    color:#32C24D;
+    border:1px solid rgba(50,194,77,.35);
+}
+
+.tr-badge-orange{
+    background:rgba(255,170,0,.15);
+    color:#FFB020;
+    border:1px solid rgba(255,170,0,.35);
+}
+
+.tr-badge-red{
+    background:rgba(255,82,82,.15);
+    color:#FF5252;
+    border:1px solid rgba(255,82,82,.35);
+}
+
+.tr-badge-blue{
+    background:rgba(59,130,246,.15);
+    color:#60A5FA;
+    border:1px solid rgba(59,130,246,.35);
+}
+
+.tr-badge-gray{
+    background:#2B3139;
+    color:#B8C1CC;
+    border:1px solid #39424D;
+}

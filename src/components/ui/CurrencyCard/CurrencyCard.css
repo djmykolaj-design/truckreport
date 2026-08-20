@@ -1,0 +1,205 @@
+.tr-currency-card{
+
+    background:#232B38;
+
+    border:1px solid #30363D;
+
+    border-radius:16px;
+
+    padding:16px;
+
+    min-height:220px;
+
+    display:flex;
+
+    flex-direction:column;
+
+    transition:.25s;
+
+}
+
+.tr-currency-card:hover{
+
+    transform:translateY(-3px);
+
+    border-color:#32C24D;
+
+    box-shadow:0 14px 32px rgba(0,0,0,.35);
+
+}
+
+.tr-currency-top{
+
+    display:flex;
+
+    flex-direction:column;
+
+    align-items:flex-start;
+
+    gap:8px;
+
+    margin-bottom:18px;
+
+}
+
+.tr-currency-title{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:10px;
+
+    color:white;
+
+    font-size:20px;
+
+    font-weight:700;
+
+    letter-spacing:.3px;
+
+}
+
+.tr-currency-icon{
+
+    font-size:24px;
+
+}
+
+.tr-currency-balance{
+
+    font-size:44px;
+
+    font-weight:800;
+
+    line-height:1;
+
+    letter-spacing:-1px;
+
+    transition:.25s;
+
+}
+
+.tr-currency-balance.positive{
+
+    color:#32C24D;
+
+}
+
+.tr-currency-balance.zero{
+
+    color:#F59E0B;
+
+}
+
+.tr-currency-balance.negative{
+
+    color:#EF4444;
+
+}
+
+.tr-currency-label{
+
+    font-size:12px;
+
+    color:#94A3B8;
+
+    margin-top:4px;
+
+    text-transform:uppercase;
+
+    letter-spacing:.8px;
+
+}
+
+.tr-currency-divider{
+
+    height:1px;
+
+    background:#30363D;
+
+    margin:18px 0;
+
+}
+
+.tr-currency-row{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    padding:10px 0;
+
+    color:#94A3B8;
+
+    border-bottom:1px solid rgba(255,255,255,.05);
+
+}
+
+.tr-currency-row:last-child{
+
+    border-bottom:none;
+
+}
+
+.tr-currency-row strong{
+
+    color:white;
+
+    font-weight:700;
+
+}
+
+.tr-currency-row.plus strong{
+
+    color:#32C24D;
+
+}
+
+.tr-currency-row.minus strong{
+
+    color:#EF4444;
+
+}
+
+.tr-currency-row.spent strong{
+
+    color:#F59E0B;
+
+}
+
+@media (max-width: 768px) {
+
+  .tr-currency-card {
+    padding: 12px !important;
+    min-height: auto !important;
+    border-radius: 12px !important;
+  }
+
+  .tr-currency-title {
+    font-size: 15px !important;
+  }
+
+  .tr-currency-icon {
+    font-size: 18px !important;
+  }
+
+  .tr-currency-balance {
+    font-size: 26px !important;   /* було 44px */
+  }
+
+  .tr-currency-label {
+    font-size: 11px !important;
+  }
+
+  .tr-currency-divider {
+    margin: 10px 0 !important;
+  }
+
+  .tr-currency-row {
+    padding: 6px 0 !important;
+    font-size: 13px !important;
+  }
+}

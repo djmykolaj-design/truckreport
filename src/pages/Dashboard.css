@@ -1,0 +1,329 @@
+/* =========================================================
+   DASHBOARD
+========================================================= */
+
+.dashboard {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0;
+
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+
+    color: var(--text);
+}
+
+
+/* =========================================================
+   DASHBOARD HEADER
+========================================================= */
+
+.dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    width: 100%;
+
+    background: var(--surface);
+
+    border: 1px solid var(--border);
+    border-radius: 20px;
+
+    padding: 28px 32px;
+
+    box-sizing: border-box;
+}
+
+.dashboard-header h1 {
+    margin: 0;
+
+    font-size: 36px;
+    font-weight: 700;
+
+    color: var(--text);
+}
+
+.dashboard-header p {
+    margin: 8px 0 0;
+
+    color: var(--text-secondary);
+
+    font-size: 16px;
+}
+
+
+/* =========================================================
+   STATS GRID
+========================================================= */
+
+.stats-grid {
+    width: 100%;
+
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+
+    gap: 20px;
+}
+
+.stats-grid .tr-card {
+    transition:
+        transform 0.25s ease,
+        border-color 0.25s ease,
+        box-shadow 0.25s ease;
+}
+
+.stats-grid .tr-card:hover {
+    transform: translateY(-4px);
+
+    border-color: var(--primary);
+
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.18);
+}
+
+.stats-grid h2 {
+    margin: 8px 0 4px;
+
+    font-size: 34px;
+    font-weight: 700;
+
+    color: var(--text);
+}
+
+.stats-grid p {
+    margin: 0;
+
+    color: var(--text-secondary);
+
+    font-size: 14px;
+}
+
+
+/* =========================================================
+   TRIP STATUS
+========================================================= */
+
+.trip-status {
+    display: inline-flex;
+    align-items: center;
+
+    padding: 8px 14px;
+    margin: 18px 0;
+
+    border-radius: 999px;
+
+    background: rgba(34, 197, 94, 0.12);
+
+    color: #34D399;
+
+    font-weight: 600;
+}
+
+
+/* =========================================================
+   STANDARD PROGRESS
+========================================================= */
+
+progress {
+    width: 100%;
+    height: 12px;
+
+    border: none;
+    border-radius: 999px;
+
+    overflow: hidden;
+
+    appearance: none;
+}
+
+progress::-webkit-progress-bar {
+    background: var(--surface-light);
+}
+
+progress::-webkit-progress-value {
+    background: linear-gradient(
+        90deg,
+        #22C55E,
+        #34D399
+    );
+}
+
+progress::-moz-progress-bar {
+    background: #22C55E;
+}
+
+
+/* =========================================================
+   SCHENGEN PROGRESS
+========================================================= */
+
+.schengen-progress {
+    width: 100%;
+    height: 14px;
+
+    margin-top: 18px;
+
+    background: var(--surface-light);
+
+    border-radius: 999px;
+
+    overflow: hidden;
+}
+
+.schengen-progress-fill {
+    height: 100%;
+
+    border-radius: 999px;
+
+    background: linear-gradient(
+        90deg,
+        #22C55E,
+        #34D399
+    );
+
+    transition: width 0.4s ease;
+}
+
+.schengen-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    margin-top: 12px;
+
+    color: var(--text-secondary);
+
+    font-size: 14px;
+}
+
+
+/* =========================================================
+   RESPONSIVE — TABLET
+========================================================= */
+
+@media (max-width: 1100px) {
+
+    .dashboard {
+        max-width: 100%;
+    }
+
+    .stats-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+
+/* =========================================================
+   RESPONSIVE — MOBILE
+========================================================= */
+
+@media (max-width: 768px) {
+
+  .dashboard {
+    gap: 12px;
+    padding: 0;
+  }
+
+  /* Шапка */
+  .dashboard-header {
+    padding: 16px !important;
+    border-radius: 14px !important;
+  }
+
+  .dashboard-header h1 {
+    font-size: 22px !important;
+  }
+
+  .dashboard-header p {
+    font-size: 13px !important;
+    margin-top: 4px !important;
+  }
+
+  /* Активний рейс — компактні цифри */
+  .active-trip-stats {
+    gap: 8px !important;
+    margin-bottom: 14px !important;
+  }
+
+  .stat-item {
+    padding: 10px 6px !important;
+    border-radius: 10px !important;
+  }
+
+  .stat-value {
+    font-size: 16px !important;
+  }
+
+  .stat-label {
+    font-size: 11px !important;
+  }
+
+  /* KPI сітка */
+  .stats-grid {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 10px !important;
+  }
+
+  .stats-grid h2 {
+    font-size: 22px !important;
+  }
+
+  .stats-grid p {
+    font-size: 12px !important;
+  }
+
+  /* Шенген блок на головній */
+  .schengen-progress {
+    height: 10px !important;
+    margin-top: 12px !important;
+  }
+
+  .schengen-info {
+    font-size: 12px !important;
+    margin-top: 8px !important;
+  }
+}
+
+/* ===== Активний рейс ===== */
+.trip-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: #94a3b8;
+  margin: 8px 0 16px;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  background: #22c55e;
+  border-radius: 50%;
+}
+
+.active-trip-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.stat-item {
+  background: rgba(15, 23, 42, 0.6);
+  border-radius: 12px;
+  padding: 12px 8px;
+  text-align: center;
+}
+
+.stat-value {
+  font-size: 17px;
+  font-weight: 700;
+  color: #f8fafc;
+  margin-bottom: 2px;
+}
+
+.stat-label {
+  font-size: 12px;
+  color: #94a3b8;
+}

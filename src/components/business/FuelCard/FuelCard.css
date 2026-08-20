@@ -1,0 +1,167 @@
+.fuel-card{
+
+    background:#232B38;
+
+    border:1px solid #30363D;
+
+    border-radius:16px;
+
+    padding:16px;
+
+    margin-bottom:14px;
+
+    transition:.25s;
+
+}
+
+.fuel-card:hover{
+
+    border-color:#32C24D;
+
+    transform:translateY(-2px);
+
+    box-shadow:0 14px 30px rgba(0,0,0,.30);
+
+}
+
+.fuel-card-header{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    margin-bottom:10px;
+
+}
+
+.fuel-card-station{
+
+    font-size:14px;
+
+    font-weight:700;
+
+    color:white;
+
+}
+
+.fuel-card-liters{
+
+    font-size:34px;
+
+    font-weight:800;
+
+    color:#32C24D;
+
+    line-height:1;
+
+    margin-bottom:10px;
+
+}
+
+.fuel-card-price{
+
+    color:#F59E0B;
+
+    font-size:16px;
+
+    font-weight:700;
+
+    margin-bottom:10px;
+
+}
+
+.fuel-card-comment{
+
+    padding:10px;
+
+    border-radius:10px;
+
+    background:#1B2430;
+
+    color:#CBD5E1;
+
+    margin-bottom:10px;
+
+}
+
+.fuel-card-date{
+
+    color:#94A3B8;
+
+    font-size:13px;
+
+}
+
+.fuel-delete-btn{
+
+    width:34px;
+
+    height:34px;
+
+    border:none;
+
+    border-radius:8px;
+
+    background:#2D3748;
+
+    color:#EF4444;
+
+    cursor:pointer;
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    transition:.2s;
+
+}
+
+.fuel-delete-btn:hover{
+
+    background:#EF4444;
+
+    color:white;
+
+}
+
+@media (max-width: 768px) {
+
+  .fuel-card {
+    padding: 12px !important;
+    border-radius: 12px !important;
+    margin-bottom: 10px !important;
+  }
+
+  .fuel-card-station {
+    font-size: 13px !important;
+  }
+
+  .fuel-card-liters {
+    font-size: 22px !important;   /* було 34px */
+    margin-bottom: 6px !important;
+  }
+
+  .fuel-card-price {
+    font-size: 14px !important;
+    margin-bottom: 6px !important;
+  }
+
+  .fuel-card-comment {
+    padding: 8px !important;
+    font-size: 13px !important;
+    margin-bottom: 6px !important;
+  }
+
+  .fuel-card-date {
+    font-size: 12px !important;
+  }
+
+  .fuel-delete-btn {
+    width: 30px !important;
+    height: 30px !important;
+  }
+}

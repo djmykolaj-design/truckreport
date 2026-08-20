@@ -1,0 +1,39 @@
+.exchange-card {
+    background: #1f2937;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 12px;
+
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.exchange-card strong {
+    color: white;
+    font-size: 18px;
+}
+
+.exchange-card small {
+    color: #9ca3af;
+}
+
+.exchange-delete {
+    width: fit-content;
+
+    padding: 8px 14px;
+
+    border: none;
+    border-radius: 8px;
+
+    background: #ef4444;
+    color: white;
+
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.exchange-delete:disabled {
+    opacity: .5;
+    cursor: not-allowed;
+}

@@ -1,0 +1,39 @@
+.table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.table th {
+    text-align: left;
+    padding: 14px 16px;
+
+    background: var(--surface);
+
+    color: var(--text-secondary);
+
+    font-size: 14px;
+
+    border-bottom: 1px solid var(--border);
+}
+
+.table td {
+
+    padding: 14px 16px;
+
+    border-bottom: 1px solid var(--border);
+
+    color: var(--text);
+
+}
+
+.table tr:last-child td {
+
+    border-bottom: none;
+
+}
+
+.table tr:hover {
+
+    background: rgba(255,255,255,.02);
+
+}

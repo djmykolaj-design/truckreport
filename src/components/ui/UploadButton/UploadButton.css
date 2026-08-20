@@ -1,0 +1,41 @@
+.upload-button {
+    display: block;
+    width: 100%;
+    cursor: pointer;
+}
+
+.upload-content {
+    border: 2px dashed #374151;
+    border-radius: 14px;
+    padding: 28px;
+    text-align: center;
+    background: #111827;
+    transition: .25s;
+}
+
+.upload-content:hover {
+    border-color: #22c55e;
+    background: #162031;
+}
+
+.upload-icon {
+    font-size: 34px;
+    margin-bottom: 12px;
+}
+
+.upload-title {
+    color: white;
+    font-weight: 600;
+}
+
+.upload-subtitle {
+    color: #9ca3af;
+    margin-top: 6px;
+    font-size: 14px;
+}
+
+.upload-file {
+    margin-top: 14px;
+    color: #22c55e;
+    font-weight: bold;
+}

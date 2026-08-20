@@ -1,0 +1,241 @@
+.trip-details {
+    width: 100%;
+    color: var(--text);
+}
+
+/* =========================
+   Trip Header
+========================= */
+
+.trip-header {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 28px;
+    margin-bottom: 24px;
+}
+
+.trip-header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 24px;
+}
+
+.trip-title {
+    margin: 0;
+    color: var(--text);
+    font-size: 34px;
+    font-weight: 700;
+}
+
+.trip-route {
+    margin-top: 10px;
+    color: var(--text);
+    font-size: 18px;
+}
+
+.trip-date {
+    margin-top: 8px;
+    color: var(--text-secondary);
+}
+
+.trip-driver {
+    margin-top: 12px;
+    color: var(--text-secondary);
+}
+
+.trip-vehicle {
+    margin-top: 6px;
+    color: var(--text-secondary);
+}
+
+/* =========================
+   Trip Status
+========================= */
+
+.trip-status {
+    padding: 10px 22px;
+    border-radius: 999px;
+    color: white;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.trip-status.active {
+    background: var(--success);
+}
+
+.trip-status.completed {
+    background: #4b5563;
+}
+
+/* =========================
+   Trip Stats
+========================= */
+
+.trip-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 18px;
+    margin-top: 28px;
+}
+
+/* =========================
+   Action Buttons
+========================= */
+
+.trip-action-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-top: 20px;
+}
+
+.trip-action-btn {
+    width: 100%;
+    min-height: 48px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: var(--surface-light);
+    border: 1px solid var(--border);
+    color: var(--text);
+
+    border-radius: 12px;
+    padding: 14px 18px;
+
+    font-weight: 700;
+    font-size: 14px;
+
+    transition: var(--transition);
+    cursor: pointer;
+}
+
+.trip-action-btn:hover {
+    border-color: var(--primary);
+    background: var(--primary);
+    color: white;
+}
+
+/* =========================
+   Responsive
+========================= */
+
+@media (max-width: 1000px) {
+
+    .trip-stats {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+}
+
+@media (max-width: 700px) {
+
+    .trip-header {
+        padding: 20px;
+    }
+
+    .trip-header-top {
+        flex-direction: column;
+    }
+
+    .trip-title {
+        font-size: 28px;
+    }
+
+    .trip-route {
+        font-size: 16px;
+    }
+
+    .trip-stats {
+        grid-template-columns: 1fr;
+    }
+
+    .trip-action-grid {
+        grid-template-columns: 1fr;
+    }
+
+}
+
+@media (max-width: 500px) {
+
+    .trip-header {
+        padding: 16px;
+        border-radius: 16px;
+    }
+
+    .trip-title {
+        font-size: 24px;
+    }
+
+    .trip-status {
+        padding: 8px 16px;
+    }
+
+    .trip-action-btn {
+        min-height: 46px;
+    }
+
+}
+
+/* ===== Компактний вигляд для телефону ===== */
+@media (max-width: 768px) {
+
+  .trip-header {
+    padding: 16px !important;
+    margin-bottom: 16px !important;
+    border-radius: 14px !important;
+  }
+
+  .trip-title {
+    font-size: 20px !important;
+    line-height: 1.25 !important;
+  }
+
+  .trip-route {
+    font-size: 14px !important;
+    margin-top: 6px !important;
+  }
+
+  .trip-date,
+  .trip-driver,
+  .trip-vehicle {
+    font-size: 13px !important;
+    margin-top: 4px !important;
+  }
+
+  .trip-status {
+    padding: 6px 12px !important;
+    font-size: 12px !important;
+    margin-top: 10px;
+  }
+
+  .trip-stats {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 10px !important;
+    margin-top: 16px !important;
+  }
+
+  /* Зменшуємо StatCard всередині */
+  .trip-stats .stat-card,
+  .trip-stats [class*="StatCard"],
+  .trip-stats > * {
+    padding: 12px 10px !important;
+  }
+
+  .trip-stats h3,
+  .trip-stats .stat-value,
+  .trip-stats [class*="value"] {
+    font-size: 18px !important;
+  }
+
+  .trip-stats p,
+  .trip-stats .stat-label,
+  .trip-stats [class*="title"],
+  .trip-stats [class*="label"] {
+    font-size: 12px !important;
+  }
+}

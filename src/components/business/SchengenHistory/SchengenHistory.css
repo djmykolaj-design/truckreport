@@ -1,0 +1,109 @@
+.history-card{
+
+    background:var(--tr-surface);
+
+    border:1px solid var(--tr-border);
+
+    border-radius:18px;
+
+    padding:24px;
+
+    margin-bottom:24px;
+
+}
+
+.history-header{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    margin-bottom:20px;
+
+}
+
+.history-header span{
+
+    color:var(--tr-text-secondary);
+
+}
+
+.history-row{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    padding:18px 0;
+
+    border-top:1px solid var(--tr-border);
+
+}
+
+.history-row:first-of-type{
+
+    border-top:none;
+
+}
+
+.history-dates{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:12px;
+
+}
+
+.history-dates span{
+
+    color:var(--tr-text-secondary);
+
+}
+
+.history-right{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:18px;
+
+}
+
+.history-days{
+
+    color:var(--tr-primary);
+
+    font-weight:700;
+
+}
+
+.history-right button{
+
+    background:none;
+
+    border:none;
+
+    color:#ef4444;
+
+    cursor:pointer;
+
+    font-size:18px;
+
+}
+
+.history-empty{
+
+    text-align:center;
+
+    color:var(--tr-text-secondary);
+
+    padding:40px;
+
+}

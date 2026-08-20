@@ -1,0 +1,39 @@
+.layout {
+    display: flex;
+
+    min-height: 100vh;
+
+    background: var(--background);
+
+    color: var(--text);
+
+    gap: 8px;
+}
+
+.layout-content {
+    flex: 1;
+    padding: 20px 24px;
+    overflow: auto;
+}
+/* ===== Мобільна / Десктопна версія ===== */
+.desktop-only {
+  display: block;
+}
+
+.mobile-only {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .desktop-only {
+    display: none;
+  }
+
+  .mobile-only {
+    display: block;
+  }
+
+  .layout-content {
+  padding-bottom: 100px !important; /* місце під нижню навігацію */
+  }
+}

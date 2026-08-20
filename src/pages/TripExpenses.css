@@ -1,0 +1,256 @@
+.trip-expenses {
+    color: white;
+    width: 100%;
+    max-width: 1200px;
+    margin: 0;
+    margin-right: auto;
+}
+
+/* ===========================
+   Заголовок
+=========================== */
+
+.trip-expenses h1 {
+    margin-bottom: 24px;
+}
+
+/* ===========================
+   Валюти
+=========================== */
+
+.currency-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 18px;
+    margin-top: 20px;
+    width: 100%;
+}
+
+/* ===========================
+   Category totals
+=========================== */
+
+.category-total {
+    margin-bottom: 18px;
+}
+
+.category-total strong {
+    display: block;
+    margin-bottom: 8px;
+    color: white;
+    font-size: 16px;
+}
+
+.category-currency {
+    margin-left: 18px;
+    color: #CBD5E1;
+    padding: 2px 0;
+}
+
+/* ===========================
+   Expense Cards
+=========================== */
+
+.tr-expense-card {
+    position: relative;
+    width: 100%;
+    box-sizing: border-box;
+
+    padding: 18px 20px;
+    margin-bottom: 12px;
+
+    border-radius: 16px;
+
+    background: #232B38;
+    border: 1px solid #30363D;
+
+    transition: .25s;
+    cursor: pointer;
+}
+
+.tr-expense-card:hover {
+    transform: translateY(-4px);
+
+    border-color: #32C24D;
+
+    box-shadow: 0 18px 40px rgba(0, 0, 0, .35);
+}
+
+/* ===========================
+   Expense Header
+=========================== */
+
+.tr-expense-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    margin-bottom: 10px;
+}
+
+/* ===========================
+   Amount
+=========================== */
+
+.tr-expense-amount {
+    font-size: 34px;
+    font-weight: 800;
+
+    color: #32C24D;
+
+    line-height: 1;
+    letter-spacing: -1px;
+
+    text-align: right;
+}
+
+/* ===========================
+   Comment
+=========================== */
+
+.tr-expense-comment {
+    margin-top: 8px;
+    padding: 8px 12px;
+
+    background: #1B2430;
+
+    border: 1px solid rgba(255, 255, 255, .05);
+
+    border-radius: 10px;
+
+    color: #CBD5E1;
+
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+/* ===========================
+   Footer
+=========================== */
+
+.tr-expense-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    margin-top: 10px;
+
+    color: #94A3B8;
+    font-size: 13px;
+}
+
+.tr-expense-date {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* ===========================
+   Delete
+=========================== */
+
+.tr-delete-btn {
+    opacity: 0;
+    transition: .2s;
+}
+
+.tr-expense-card:hover .tr-delete-btn {
+    opacity: 1;
+}
+
+/* ===========================
+   Responsive
+=========================== */
+
+@media (max-width: 1200px) {
+
+    .trip-expenses {
+        max-width: 100%;
+    }
+
+    .currency-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 700px) {
+
+    .currency-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .tr-expense-card {
+        padding: 16px;
+    }
+
+    .tr-expense-amount {
+        font-size: 30px;
+    }
+}
+
+/* ===========================
+   Category expenses
+=========================== */
+
+.category-expenses-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+}
+
+.category-expense-item {
+    padding: 14px 16px;
+
+    background: #232B38;
+
+    border: 1px solid #30363D;
+    border-radius: 12px;
+
+    transition: .2s;
+}
+
+.category-expense-item:hover {
+    border-color: #32C24D;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 24px rgba(0, 0, 0, .25);
+}
+
+.category-expense-name {
+    color: white;
+
+    font-size: 14px;
+    font-weight: 700;
+
+    margin-bottom: 8px;
+}
+
+.category-expense-values {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.category-expense-value {
+    color: #CBD5E1;
+    font-size: 13px;
+}
+
+/* ===========================
+   Responsive
+=========================== */
+
+@media (max-width: 900px) {
+
+    .category-expenses-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+}
+
+@media (max-width: 600px) {
+
+    .category-expenses-grid {
+        grid-template-columns: 1fr;
+    }
+
+}
