@@ -1,14 +1,17 @@
 .tr-expense-card {
     width: 100%;
+    max-width: 100%;
     box-sizing: border-box;
 
-    padding: 16px 18px;
-    margin-bottom: 12px;
+    padding: 14px 16px;
+    margin-bottom: 10px;
 
     border-radius: 14px;
 
     background: #232b38;
     border: 1px solid #303b4a;
+
+    overflow: hidden;
 
     transition:
         transform 0.2s ease,
@@ -16,124 +19,89 @@
         box-shadow 0.2s ease;
 }
 
-/* Наведення */
 .tr-expense-card:hover {
     transform: translateY(-2px);
-
     border-color: #32c24d;
-
-    box-shadow:
-        0 8px 24px rgba(0, 0, 0, 0.25);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
 }
 
-/* Верхній рядок */
 .tr-expense-header {
     display: flex;
-
-    align-items: center;
+    align-items: flex-start;
     justify-content: space-between;
-
-    gap: 16px;
+    gap: 12px;
+    min-width: 0;
 }
 
-/* Категорія */
 .tr-expense-category {
     color: #f1f5f9;
-
     font-size: 14px;
     font-weight: 600;
-
     line-height: 1.3;
+    min-width: 0;
+    overflow-wrap: anywhere;
+    word-break: break-word;
 }
 
-/* Права частина */
 .tr-expense-actions {
     display: flex;
-
     align-items: center;
-
-    gap: 12px;
-
+    gap: 8px;
     flex-shrink: 0;
+    max-width: 55%;
 }
 
-/* Сума */
 .tr-expense-amount {
     color: #32c24d;
-
-    font-size: 25px;
+    font-size: 18px;
     font-weight: 800;
-
-    line-height: 1;
-
-    white-space: nowrap;
+    line-height: 1.2;
+    text-align: right;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    white-space: normal;
 }
 
-/* Коментар */
 .tr-expense-comment {
     margin-top: 10px;
-
     padding: 7px 10px;
-
     background: #1b2430;
-
     border: 1px solid rgba(255, 255, 255, 0.05);
-
     border-radius: 8px;
-
     color: #cbd5e1;
-
     font-size: 13px;
-
     line-height: 1.4;
+    overflow-wrap: anywhere;
 }
 
-/* Нижній рядок */
 .tr-expense-footer {
     display: flex;
-
     align-items: center;
-
     margin-top: 10px;
 }
 
-/* Дата */
 .tr-expense-date {
     display: flex;
-
     align-items: center;
-
     gap: 5px;
-
     color: #94a3b8;
-
     font-size: 12px;
 }
 
-/* Кнопка видалення */
 .tr-delete-btn {
     display: flex;
-
     align-items: center;
     justify-content: center;
-
     width: 32px;
     height: 32px;
-
     padding: 0;
-
     border: 1px solid #303b4a;
-
     border-radius: 8px;
-
     background: #1b2430;
-
     color: #94a3b8;
-
     cursor: pointer;
-
+    flex-shrink: 0;
     opacity: 0;
-
     transition:
         opacity 0.2s ease,
         color 0.2s ease,
@@ -141,37 +109,35 @@
         border-color 0.2s ease;
 }
 
-/* Показуємо кнопку при наведенні */
 .tr-expense-card:hover .tr-delete-btn {
     opacity: 1;
 }
 
-/* Hover кнопки */
 .tr-delete-btn:hover {
     color: #ffffff;
-
     background: #b91c1c;
-
     border-color: #ef4444;
 }
 
-/* На маленьких екранах кнопку видно */
 @media (max-width: 700px) {
-
     .tr-delete-btn {
         opacity: 1;
     }
 
     .tr-expense-header {
-        align-items: flex-start;
-    }
-
-    .tr-expense-actions {
+        flex-direction: column;
+        align-items: stretch;
         gap: 8px;
     }
 
-    .tr-expense-amount {
-        font-size: 21px;
+    .tr-expense-actions {
+        max-width: 100%;
+        width: 100%;
+        justify-content: space-between;
     }
 
+    .tr-expense-amount {
+        font-size: 16px;
+        text-align: left;
+    }
 }
