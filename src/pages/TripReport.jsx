@@ -144,7 +144,7 @@ export default function TripReport() {
                     </div>
 
                     <div className="report-stat-value">
-                        {fuel.distance || 0} км
+                        {fuel.mileage || 0} км
                     </div>
 
                     <div className="report-stat-label">

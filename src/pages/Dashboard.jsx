@@ -74,12 +74,25 @@ export default function Dashboard() {
               </div>
 
               <div className="stat-item">
-                <div className="stat-value">
-                  {activeTripStats.expensesEUR > 0
-                    ? `${Math.round(activeTripStats.expensesEUR)} €`
-                    : activeTripStats.expensesUAH > 0
-                      ? `${Math.round(activeTripStats.expensesUAH)} ₴`
-                      : "0"}
+                <div className="stat-value" style={{ fontSize: "15px", lineHeight: 1.3 }}>
+                  {activeTripStats.mainExpense ? (
+                    <>
+                      {activeTripStats.expenses.EUR > 0 && (
+                        <div>{Math.round(activeTripStats.expenses.EUR)} €</div>
+                      )}
+                      {activeTripStats.expenses.UAH > 0 && (
+                        <div>{Math.round(activeTripStats.expenses.UAH)} ₴</div>
+                      )}
+                      {activeTripStats.expenses.PLN > 0 && (
+                        <div>{Math.round(activeTripStats.expenses.PLN)} zł</div>
+                      )}
+                      {activeTripStats.expenses.USD > 0 && (
+                        <div>{Math.round(activeTripStats.expenses.USD)} $</div>
+                      )}
+                    </>
+                  ) : (
+                    "0"
+                  )}
                 </div>
                 <div className="stat-label">Витрати</div>
               </div>
@@ -112,22 +125,47 @@ export default function Dashboard() {
         <StatCard
           icon={<Fuel size={22} />}
           title="Пальне"
-          value={`${totalFuel.toFixed(0)} л`}
-          subtitle="Заправлено"
+          value={`${Math.round(
+            activeTrip ? activeTripStats.fuelAdded : totalFuel
+          )} л`}
+          subtitle={activeTrip ? "За цей рейс" : "Заправлено"}
         />
 
         <StatCard
           icon={<Wallet size={22} />}
           title="Витрати"
-          value={`${expenses.EUR.toFixed(0)} €`}
-          subtitle="EUR"
+          value={
+            activeTrip && activeTripStats.mainExpense ? (
+              <span style={{ fontSize: "18px", lineHeight: 1.25 }}>
+                {activeTripStats.expenses.EUR > 0 && (
+                  <div>{Math.round(activeTripStats.expenses.EUR)} €</div>
+                )}
+                {activeTripStats.expenses.UAH > 0 && (
+                  <div>{Math.round(activeTripStats.expenses.UAH)} ₴</div>
+                )}
+                {activeTripStats.expenses.PLN > 0 && (
+                  <div>{Math.round(activeTripStats.expenses.PLN)} zł</div>
+                )}
+                {activeTripStats.expenses.USD > 0 && (
+                  <div>{Math.round(activeTripStats.expenses.USD)} $</div>
+                )}
+              </span>
+            ) : (
+              `${expenses.EUR.toFixed(0)} €`
+            )
+          }
+          subtitle={activeTrip ? "За цей рейс" : "EUR"}
         />
 
         <StatCard
           icon={<FileText size={22} />}
           title="Документи"
-          value={documentsCount}
-          subtitle="Файлів"
+          value={
+            activeTrip
+              ? activeTripStats.documentsCount
+              : documentsCount
+          }
+          subtitle={activeTrip ? "За цей рейс" : "Файлів"}
         />
       </div>
 

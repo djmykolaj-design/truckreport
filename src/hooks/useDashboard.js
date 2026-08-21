@@ -49,34 +49,52 @@ export default function useDashboard() {
     }, 0);
 
      // ===== Дані для активного рейсу =====
-        const activeTrip = activeTrips[0] || null;
+const activeTrip = activeTrips[0] || null;
 
-    let activeTripStats = {
-      startMileage: 0,
-      fuelAdded: 0,
-      expensesEUR: 0,
-      expensesUAH: 0,
-    };
+let activeTripStats = {
+  startMileage: 0,
+  fuelAdded: 0,
+  expenses: {},      // усі валюти
+  mainExpense: null,  // головна для відображення
+  documentsCount: 0,
+};
 
-    if (activeTrip) {
-      const fuelData = calculateFuel(activeTrip);
+if (activeTrip) {
+  const fuelData = calculateFuel(activeTrip);
 
-      let eur = 0;
-      let uah = 0;
+  const exp = {
+    EUR: 0,
+    USD: 0,
+    PLN: 0,
+    UAH: 0,
+  };
 
-      (activeTrip.expenses || []).forEach((e) => {
-        const amount = Number(e.amount) || 0;
-        if (e.currency === "EUR") eur += amount;
-        if (e.currency === "UAH") uah += amount;
-      });
-
-      activeTripStats = {
-        startMileage: Number(activeTrip.startMileage) || 0,
-        fuelAdded: fuelData.totalFuel || 0, // скільки заправлено за рейс
-        expensesEUR: eur,
-        expensesUAH: uah,
-      };
+  (activeTrip.expenses || []).forEach((e) => {
+    const amount = Number(e.amount) || 0;
+    if (exp[e.currency] !== undefined) {
+      exp[e.currency] += amount;
     }
+  });
+
+  // Вибираємо валюту з найбільшою сумою
+  let mainExpense = null;
+  let maxAmount = 0;
+
+  Object.entries(exp).forEach(([currency, amount]) => {
+    if (amount > maxAmount) {
+      maxAmount = amount;
+      mainExpense = { currency, amount };
+    }
+  });
+
+  activeTripStats = {
+    startMileage: Number(activeTrip.startMileage) || 0,
+    fuelAdded: fuelData.totalFuel || 0,
+    expenses: exp,
+    mainExpense,
+    documentsCount: activeTrip.documents?.length || 0,
+  };
+}
 
     return {
       trips,
