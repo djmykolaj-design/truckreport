@@ -9,6 +9,55 @@ import DocumentViewer from "../components/business/DocumentViewer";
 import { useParams, useNavigate } from "react-router-dom";
 import { saveTripToCloud } from "../services/cloudTrips";
 
+function compressImage(file, maxWidth = 1600, quality = 0.7) {
+  return new Promise((resolve, reject) => {
+    if (!file.type.startsWith("image/")) {
+      resolve(file);
+      return;
+    }
+
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+
+    img.onload = () => {
+      const scale = Math.min(1, maxWidth / img.width);
+      const width = Math.round(img.width * scale);
+      const height = Math.round(img.height * scale);
+
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(img, 0, 0, width, height);
+
+      canvas.toBlob(
+        (blob) => {
+          URL.revokeObjectURL(url);
+          if (!blob) {
+            reject(new Error("compress failed"));
+            return;
+          }
+          resolve(
+            new File([blob], file.name.replace(/\.\w+$/, ".jpg"), {
+              type: "image/jpeg",
+            })
+          );
+        },
+        "image/jpeg",
+        quality
+      );
+    };
+
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error("image load failed"));
+    };
+
+    img.src = url;
+  });
+}
+
 export default function TripDocuments() {
   const { tripId } = useParams();
   const navigate = useNavigate();
@@ -37,6 +86,7 @@ export default function TripDocuments() {
   const [file, setFile] = useState(null);
   const [previewIndex, setPreviewIndex] = useState(null);
   const [documents, setDocuments] = useState(trip?.documents || []);
+  const [saving, setSaving] = useState(false);
 
   if (!trip) {
     return <h2 style={{ color: "white" }}>Рейс не знайдено</h2>;
@@ -69,51 +119,63 @@ export default function TripDocuments() {
     saveTripToCloud(updatedTrip);
   };
 
-  const addDocument = () => {
+  const addDocument = async () => {
     if (!file) {
       alert("Оберіть файл");
       return;
     }
 
-    if (file.size > 2 * 1024 * 1024) {
-      alert(
-        "Файл занадто великий (макс. ~2 МБ).\nЗроби фото меншої якості."
-      );
-      return;
-    }
+    setSaving(true);
 
-    const reader = new FileReader();
+    try {
+      const readyFile = await compressImage(file);
 
-    reader.onload = () => {
-      const newDocument = {
-        id: Date.now(),
-        type: documentType,
-        comment,
-        fileName: file.name,
-        fileData: reader.result,
-        createdAt: new Date().toLocaleString("uk-UA"),
+      if (readyFile.size > 2.5 * 1024 * 1024) {
+        alert("Файл все ще завеликий. Спробуй інше фото.");
+        setSaving(false);
+        return;
+      }
+
+      const reader = new FileReader();
+
+      reader.onload = () => {
+        const newDocument = {
+          id: Date.now(),
+          type: documentType,
+          comment,
+          fileName: readyFile.name,
+          fileData: reader.result,
+          createdAt: new Date().toLocaleString("uk-UA"),
+        };
+
+        const updatedDocuments = [...documents, newDocument];
+
+        try {
+          persist(updatedDocuments);
+          setDocuments(updatedDocuments);
+          setComment("");
+          setFile(null);
+        } catch (err) {
+          console.error(err);
+          alert(
+            "Не вистачає місця в пам'яті.\nВидали старі документи або додай менший файл."
+          );
+        } finally {
+          setSaving(false);
+        }
       };
 
-      const updatedDocuments = [...documents, newDocument];
+      reader.onerror = () => {
+        alert("Помилка читання файлу");
+        setSaving(false);
+      };
 
-      try {
-        persist(updatedDocuments);
-        setDocuments(updatedDocuments);
-        setComment("");
-        setFile(null);
-      } catch (err) {
-        console.error(err);
-        alert(
-          "Не вистачає місця в пам'яті.\nВидали старі документи або додай менший файл."
-        );
-      }
-    };
-
-    reader.onerror = () => {
-      alert("Помилка читання файлу");
-    };
-
-    reader.readAsDataURL(file);
+      reader.readAsDataURL(readyFile);
+    } catch (e) {
+      console.error(e);
+      alert("Не вдалося обробити фото");
+      setSaving(false);
+    }
   };
 
   const deleteDocument = (docId) => {
@@ -159,7 +221,7 @@ export default function TripDocuments() {
 
         <Card
           title="Додати документ"
-          subtitle="Завантажте документ до рейсу"
+          subtitle="Фото з камери стискається автоматично"
         >
           <Select
             value={documentType}
@@ -180,12 +242,15 @@ export default function TripDocuments() {
 
           <UploadButton
             file={file}
-            disabled={isCompleted}
+            disabled={isCompleted || saving}
             onChange={(e) => setFile(e.target.files[0])}
           />
 
-          <PrimaryButton onClick={addDocument} disabled={isCompleted}>
-            💾 Додати документ
+          <PrimaryButton
+            onClick={addDocument}
+            disabled={isCompleted || saving}
+          >
+            {saving ? "Обробка..." : "💾 Додати документ"}
           </PrimaryButton>
         </Card>
 
