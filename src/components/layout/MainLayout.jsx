@@ -2,11 +2,19 @@ import "./MainLayout.css";
 import Sidebar from "./Sidebar";
 import BottomNav from "./BottomNav";
 import "../../styles/page.css";
+import { useLocation } from "react-router-dom";
 
 export default function MainLayout({ children }) {
+  const location = useLocation();
+  const isLogin = location.pathname === "/login";
+
+  // На сторінці логіну — без меню
+  if (isLogin) {
+    return <>{children}</>;
+  }
+
   return (
     <div className="layout">
-      {/* Сайдбар тільки для десктопу */}
       <div className="desktop-only">
         <Sidebar />
       </div>
@@ -15,7 +23,6 @@ export default function MainLayout({ children }) {
         {children}
       </main>
 
-      {/* Нижня навігація тільки для мобільних */}
       <div className="mobile-only">
         <BottomNav />
       </div>

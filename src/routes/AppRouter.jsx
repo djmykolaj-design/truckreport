@@ -12,20 +12,96 @@ import TripFinish from "../pages/TripFinish";
 import TripDocuments from "../pages/TripDocuments";
 import TripReport from "../pages/TripReport";
 
+import AuthGuard from "../components/AuthGuard";
+import Login from "../pages/Login";
+
 export default function AppRouter() {
     return (
         <BrowserRouter>
             <MainLayout>
                 <Routes>
-                    <Route path="/" element={<Dashboard />} />
-                    <Route path="/trips" element={<TripsV4 />} />
-                    <Route path="/schengen" element={<Schengen />} />
-                    <Route path="/trip-fuel/:tripId" element={<TripFuel />} />
-                    <Route path="/trip-expenses/:tripId" element={<TripExpenses />} />
-                    <Route path="/trip/:tripId/finish" element={<TripFinish />} />
-                    <Route path="/trip/:tripId/report" element={<TripReport />} />
-                    <Route path="/trip-exchange/:tripId" element={<TripExchange />} />
-                    <Route path="/trip-documents/:tripId" element={<TripDocuments />} />
+                  <Route path="/login" element={<Login />} />
+
+<Route
+  path="/"
+  element={
+    <AuthGuard>
+      <Dashboard />
+    </AuthGuard>
+  }
+/>
+
+<Route
+  path="/trips"
+  element={
+    <AuthGuard>
+      <TripsV4 />
+    </AuthGuard>
+  }
+/>
+
+<Route
+  path="/schengen"
+  element={
+    <AuthGuard>
+      <Schengen />
+    </AuthGuard>
+  }
+/>
+
+<Route
+  path="/trip-fuel/:tripId"
+  element={
+    <AuthGuard>
+      <TripFuel />
+    </AuthGuard>
+  }
+/>
+
+<Route
+  path="/trip-expenses/:tripId"
+  element={
+    <AuthGuard>
+      <TripExpenses />
+    </AuthGuard>
+  }
+/>
+
+<Route
+  path="/trip-exchange/:tripId"
+  element={
+    <AuthGuard>
+      <TripExchange />
+    </AuthGuard>
+  }
+/>
+
+<Route
+  path="/trip-documents/:tripId"
+  element={
+    <AuthGuard>
+      <TripDocuments />
+    </AuthGuard>
+  }
+/>
+
+<Route
+  path="/trip/:tripId/finish"
+  element={
+    <AuthGuard>
+      <TripFinish />
+    </AuthGuard>
+  }
+/>
+
+<Route
+  path="/trip/:tripId/report"
+  element={
+    <AuthGuard>
+      <TripReport />
+    </AuthGuard>
+  }
+/>
                 </Routes>
             </MainLayout>
         </BrowserRouter>

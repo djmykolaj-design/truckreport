@@ -4,12 +4,16 @@ import TripList from "../components/TripList";
 import TripForm from "../components/TripForm";
 import TripDetails from "../components/TripDetails";
 import useTripForm from "../hooks/useTripForm";
+import {
+  loadTripsFromCloud,
+  saveAllTripsToCloud,
+  deleteTripFromCloud,
+} from "../services/cloudTrips";
 
 export default function TripsV4() {
   const [showForm, setShowForm] = useState(false);
-  const [trips, setTrips] = useState(() => {
-    return JSON.parse(localStorage.getItem("cabina_trips_v4") || "[]");
-  });
+  const [trips, setTrips] = useState([]);
+  const [loadingTrips, setLoadingTrips] = useState(true);
   const [selectedTrip, setSelectedTrip] = useState(null);
 
   const navigate = useNavigate();
@@ -33,20 +37,41 @@ export default function TripsV4() {
     startUah, setStartUah,
   } = form;
 
-  // Зберігаємо в localStorage
+  // Завантаження: local → cloud
   useEffect(() => {
-    localStorage.setItem("cabina_trips_v4", JSON.stringify(trips));
-  }, [trips]);
+    async function init() {
+      const local = JSON.parse(
+        localStorage.getItem("cabina_trips_v4") || "[]"
+      );
+      if (local.length) setTrips(local);
 
-  // Відкриваємо рейс з URL (?trip=...)
+      const cloud = await loadTripsFromCloud();
+      if (cloud.length) {
+        setTrips(cloud);
+        localStorage.setItem("cabina_trips_v4", JSON.stringify(cloud));
+      }
+
+      setLoadingTrips(false);
+    }
+
+    init();
+  }, []);
+
+  // Автозбереження: local + cloud
+  useEffect(() => {
+    if (loadingTrips) return;
+
+    localStorage.setItem("cabina_trips_v4", JSON.stringify(trips));
+    saveAllTripsToCloud(trips);
+  }, [trips, loadingTrips]);
+
+  // Відкрити рейс з URL (?trip=...)
   useEffect(() => {
     const tripId = searchParams.get("trip");
     if (!tripId) return;
 
     const trip = trips.find((t) => t.id === Number(tripId));
-    if (trip) {
-      setSelectedTrip(trip);
-    }
+    if (trip) setSelectedTrip(trip);
   }, [trips, searchParams]);
 
   const saveTrip = () => {
@@ -82,11 +107,9 @@ export default function TripsV4() {
       documents: [],
     };
 
-    const updatedTrips = [newTrip, ...trips];
-    setTrips(updatedTrips);
+    setTrips([newTrip, ...trips]);
     setSelectedTrip(newTrip);
 
-    // Очищаємо форму
     setTripNumber("");
     setDriver("");
     setCodriver("");
@@ -101,15 +124,14 @@ export default function TripsV4() {
     setStartUsd("");
     setStartPln("");
     setStartUah("");
-
     setShowForm(false);
   };
 
   const deleteTrip = (id) => {
     if (!window.confirm("Видалити рейс?")) return;
 
-    const updatedTrips = trips.filter((trip) => trip.id !== id);
-    setTrips(updatedTrips);
+    setTrips((prev) => prev.filter((trip) => trip.id !== id));
+    deleteTripFromCloud(id);
 
     if (selectedTrip?.id === id) {
       setSelectedTrip(null);
@@ -118,16 +140,20 @@ export default function TripsV4() {
 
   const isMobile = window.innerWidth <= 768;
 
+  if (loadingTrips) {
+    return (
+      <div style={{ color: "white", padding: 20 }}>
+        Завантаження рейсів...
+      </div>
+    );
+  }
+
   // ===== МОБІЛЬНА ВЕРСІЯ =====
   if (isMobile) {
-    // Якщо відкрита форма створення
     if (showForm) {
       return (
         <div style={{ padding: "12px", paddingBottom: "90px" }}>
-          <button
-            onClick={() => setShowForm(false)}
-            style={backButton}
-          >
+          <button onClick={() => setShowForm(false)} style={backButton}>
             ← Назад
           </button>
 
@@ -155,7 +181,6 @@ export default function TripsV4() {
       );
     }
 
-    // Якщо вибраний рейс — показуємо тільки деталі
     if (selectedTrip) {
       return (
         <div style={{ padding: "12px", paddingBottom: "90px" }}>
@@ -181,7 +206,6 @@ export default function TripsV4() {
       );
     }
 
-    // Інакше — показуємо тільки список
     return (
       <div style={{ padding: "12px", paddingBottom: "90px" }}>
         <div style={cardStyle}>
@@ -202,7 +226,7 @@ export default function TripsV4() {
     );
   }
 
-  // ===== ДЕСКТОПНА ВЕРСІЯ (як було) =====
+  // ===== ДЕСКТОП =====
   return (
     <div
       style={{
@@ -213,7 +237,6 @@ export default function TripsV4() {
         color: "white",
       }}
     >
-      {/* ЛІВА КОЛОНКА */}
       <div style={{ width: "360px" }}>
         <div style={cardStyle}>
           <h2>🚛 РЕЙСИ</h2>
@@ -229,7 +252,6 @@ export default function TripsV4() {
         />
       </div>
 
-      {/* ПРАВА КОЛОНКА */}
       <div style={{ width: "100%", maxWidth: "1200px" }}>
         {showForm && (
           <TripForm
@@ -269,7 +291,6 @@ export default function TripsV4() {
   );
 }
 
-// ===== Стилі =====
 const cardStyle = {
   background: "#111827",
   padding: "20px",
