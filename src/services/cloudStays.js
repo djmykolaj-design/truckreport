@@ -18,11 +18,17 @@ export async function loadStaysFromCloud() {
     return [];
   }
 
-  return (data || []).map((row) => ({
-    id: row.id,
-    start: row.start_date,
-    end: row.end_date,
-  }));
+  const map = new Map();
+  (data || []).forEach((row) => {
+    const key = `${row.start_date}_${row.end_date}`;
+    map.set(key, {
+      id: row.id,
+      start: row.start_date,
+      end: row.end_date,
+    });
+  });
+
+  return Array.from(map.values());
 }
 
 export async function saveStaysToCloud(stays) {
@@ -32,20 +38,35 @@ export async function saveStaysToCloud(stays) {
 
   if (!user) return;
 
-  // Простий варіант: видалити всі свої і записати заново
-  await supabase.from("stays").delete().eq("user_id", user.id);
+  const { error: delError } = await supabase
+    .from("stays")
+    .delete()
+    .eq("user_id", user.id);
 
-  if (!stays.length) return;
+  if (delError) {
+    console.error("delete stays:", delError);
+    return;
+  }
 
-  const rows = stays.map((s) => ({
-    user_id: user.id,
-    start_date: s.start,
-    end_date: s.end,
-  }));
+  if (!stays?.length) return;
+
+  const seen = new Set();
+  const rows = [];
+
+  stays.forEach((s) => {
+    if (!s?.start || !s?.end) return;
+    const key = `${s.start}_${s.end}`;
+    if (seen.has(key)) return;
+    seen.add(key);
+    rows.push({
+      user_id: user.id,
+      start_date: s.start,
+      end_date: s.end,
+    });
+  });
+
+  if (!rows.length) return;
 
   const { error } = await supabase.from("stays").insert(rows);
-
-  if (error) {
-    console.error("saveStaysToCloud:", error);
-  }
+  if (error) console.error("saveStaysToCloud:", error);
 }

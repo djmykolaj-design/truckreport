@@ -1,298 +1,199 @@
 .schengen-page {
-    width: 100%;
-    max-width: 1000px;
-    margin: 0;
-    padding: 0;
-    color: var(--tr-text);
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 0 0 24px;
+  color: #f8fafc;
 }
 
 /* ================= HEADER ================= */
 
 .schengen-header {
-    margin-bottom: 28px;
+  margin-bottom: 14px;
 }
 
 .schengen-header h1 {
-    margin: 0;
-    font-size: 34px;
-    font-weight: 700;
-    color: var(--tr-text);
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
+  color: #f8fafc;
 }
 
 .schengen-header p {
-    margin-top: 8px;
-    color: var(--tr-text-secondary);
-    font-size: 15px;
+  margin: 4px 0 0;
+  color: #94a3b8;
+  font-size: 13px;
 }
 
 /* ================= CARD ================= */
 
 .schengen-card {
-    background: var(--tr-surface);
-    border: 1px solid var(--tr-border);
-    border-radius: 18px;
-    padding: 24px;
-    margin-bottom: 24px;
+  background: #111827;
+  border: 1px solid #1f2937;
+  border-radius: 18px;
+  padding: 16px;
+  margin-bottom: 12px;
 }
 
 .schengen-card h2 {
-    margin: 0 0 20px;
-    font-size: 22px;
-    font-weight: 700;
-}
-
-/* ================= DASHBOARD ================= */
-
-.schengen-main {
-    display: flex;
-    flex-direction: column;
-}
-
-.schengen-main-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-}
-
-.schengen-number {
-    font-size: 56px;
-    font-weight: 700;
-    line-height: 1;
-}
-
-.schengen-number span {
-    color: var(--tr-text-secondary);
-    font-size: 34px;
-}
-
-.schengen-caption {
-    margin-top: 8px;
-    color: var(--tr-text-secondary);
-}
-
-.schengen-progress {
-    height: 14px;
-    background: #1f2937;
-    border-radius: 999px;
-    overflow: hidden;
-    margin: 26px 0;
-}
-
-.schengen-progress-fill {
-    height: 100%;
-    border-radius: 999px;
-    transition: 0.3s;
-}
-
-/* ================= SUMMARY ================= */
-
-.schengen-summary {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 18px;
-}
-
-.summary-item {
-    background: var(--tr-surface-light);
-    border: 1px solid var(--tr-border);
-    border-radius: 14px;
-    padding: 20px;
-    text-align: center;
-}
-
-.summary-label {
-    color: var(--tr-text-secondary);
-    font-size: 13px;
-    margin-bottom: 10px;
-}
-
-.summary-value {
-    font-size: 28px;
-    font-weight: 700;
-}
-
-.summary-sub {
-    margin-top: 6px;
-    color: var(--tr-text-secondary);
-    font-size: 13px;
+  margin: 0 0 14px;
+  font-size: 16px;
+  font-weight: 700;
 }
 
 /* ================= FORM ================= */
 
 .schengen-form {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 16px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
 }
 
 .schengen-form input {
-    width: 100%;
-    padding: 14px;
-    border-radius: 12px;
-    border: 1px solid var(--tr-border);
-    background: var(--tr-surface-light);
-    color: white;
-    font-size: 15px;
-    box-sizing: border-box;
+  width: 100%;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid #334155;
+  background: #0f172a;
+  color: white;
+  font-size: 14px;
+  box-sizing: border-box;
 }
 
 .schengen-form button {
-    grid-column: 1 / -1;
-    padding: 14px;
-    border: none;
-    border-radius: 12px;
-    background: var(--tr-primary);
-    color: white;
-    font-weight: 700;
-    cursor: pointer;
-    transition: 0.2s;
+  grid-column: 1 / -1;
+  padding: 13px;
+  border: none;
+  border-radius: 12px;
+  background: #22c55e;
+  color: white;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
 }
 
-.schengen-form button:hover {
-    filter: brightness(1.08);
+.schengen-form button:active {
+  opacity: 0.9;
 }
 
 /* ================= STAYS ================= */
 
 .stay-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 18px;
-    margin-bottom: 10px;
-    background: var(--tr-surface-light);
-    border: 1px solid var(--tr-border);
-    border-radius: 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 14px;
+  margin-bottom: 8px;
+  background: #0f172a;
+  border: 1px solid #1f2937;
+  border-radius: 12px;
+  gap: 10px;
 }
 
 .stay-info {
-    display: flex;
-    align-items: center;
-    gap: 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  flex-wrap: wrap;
 }
 
 .stay-date {
-    font-weight: 600;
+  font-weight: 600;
+  font-size: 14px;
 }
 
 .stay-arrow {
-    color: var(--tr-text-secondary);
+  color: #64748b;
 }
 
 .stay-right {
-    display: flex;
-    align-items: center;
-    gap: 18px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
 }
 
 .stay-days {
-    color: var(--tr-primary);
-    font-weight: 700;
+  color: #22c55e;
+  font-weight: 700;
+  font-size: 14px;
 }
 
 .delete-btn {
-    background: transparent;
-    border: none;
-    color: #ef4444;
-    cursor: pointer;
-    font-size: 18px;
+  background: transparent;
+  border: none;
+  color: #ef4444;
+  cursor: pointer;
+  font-size: 16px;
+  padding: 4px;
 }
 
 /* ================= FUTURE ================= */
 
 .future-list {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .future-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 18px;
-    border-radius: 14px;
-    background: var(--tr-surface-light);
-    border: 1px solid var(--tr-border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: #0f172a;
+  border: 1px solid #1f2937;
+  gap: 10px;
 }
 
 .future-date {
-    font-weight: 600;
+  font-weight: 600;
+  font-size: 14px;
 }
 
 .future-after {
-    color: var(--tr-text-secondary);
-    font-size: 13px;
-    margin-top: 4px;
+  color: #64748b;
+  font-size: 12px;
+  margin-top: 2px;
 }
 
 .future-gain {
-    color: var(--tr-primary);
-    font-weight: 700;
-    font-size: 18px;
+  color: #22c55e;
+  font-weight: 700;
+  font-size: 15px;
+  flex-shrink: 0;
 }
 
 /* ================= EMPTY ================= */
 
 .empty {
-    text-align: center;
-    padding: 40px;
-    color: var(--tr-text-secondary);
+  text-align: center;
+  padding: 28px 12px;
+  color: #64748b;
+  font-size: 14px;
 }
 
 /* ================= MOBILE ================= */
 
 @media (max-width: 768px) {
-
-  /* 85/90 — робимо помітно більшим */
-  .schengen-number {
-    font-size: 62px !important;
-    font-weight: 800;
-    letter-spacing: -1.5px;
-    line-height: 1;
+  .schengen-header {
+    display: none;
   }
 
-  .schengen-number span {
-    font-size: 34px !important;
+  .schengen-form {
+    grid-template-columns: 1fr;
   }
 
-  .schengen-caption {
-    font-size: 13px !important;
-    margin-top: 4px !important;
+  .stay-row,
+  .future-row {
+    flex-direction: column;
+    align-items: flex-start;
   }
 
-  /* Нижні блоки — значно компактніші */
-  .schengen-summary {
-    grid-template-columns: 1fr !important;
-    gap: 8px !important;
-  }
-
-  .summary-item {
-    padding: 10px 12px !important;
-    border-radius: 10px !important;
-  }
-
-  .summary-label {
-    font-size: 11px !important;
-    margin-bottom: 2px !important;
-  }
-
-  .summary-value {
-    font-size: 17px !important;
-  }
-
-  .summary-sub {
-    font-size: 11px !important;
-    margin-top: 2px !important;
-  }
-
-  .schengen-card {
-    padding: 14px !important;
-    margin-bottom: 12px !important;
-  }
-
-  .schengen-progress {
-    height: 9px !important;
-    margin: 14px 0 !important;
+  .stay-right {
+    width: 100%;
+    justify-content: space-between;
   }
 }

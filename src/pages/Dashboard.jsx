@@ -1,19 +1,13 @@
 import "./Dashboard.css";
-
-import { Card } from "../components/ui/Card";
-import { PrimaryButton } from "../components/ui/Button";
-import { StatCard } from "../components/ui/StatCard";
-
 import useDashboard from "../hooks/useDashboard";
 import { useNavigate } from "react-router-dom";
-
 import {
   Truck,
   Fuel,
   Wallet,
   FileText,
-  Globe2,
   ArrowRight,
+  MapPin,
 } from "lucide-react";
 
 export default function Dashboard() {
@@ -32,179 +26,158 @@ export default function Dashboard() {
     schengenColor,
   } = useDashboard();
 
+  const formatExpense = () => {
+    if (!activeTripStats?.mainExpense) return "0";
+    const e = activeTripStats.expenses || {};
+    const parts = [];
+    if (e.EUR > 0) parts.push(`${Math.round(e.EUR)} €`);
+    if (e.UAH > 0) parts.push(`${Math.round(e.UAH)} ₴`);
+    if (e.PLN > 0) parts.push(`${Math.round(e.PLN)} zł`);
+    if (e.USD > 0) parts.push(`${Math.round(e.USD)} $`);
+    return parts.length ? parts.join(" · ") : "0";
+  };
+
   return (
     <div className="dashboard">
-      <header className="dashboard-header">
-        <div>
-          <h1>TruckReport</h1>
-          <p>Панель керування автопарком</p>
-        </div>
-      </header>
-
       {/* ===== АКТИВНИЙ РЕЙС ===== */}
-      <Card
-        title="Активний рейс"
-        subtitle={
-          activeTrip
-            ? `TR-${activeTrip.tripNumber} • ${activeTrip.fromCity} → ${activeTrip.toCity}`
-            : "Немає активного рейсу"
-        }
-        icon={<Truck size={22} />}
-      >
+      <section className="hero-card">
+        <div className="hero-top">
+          <div className="hero-title">
+            <Truck size={18} />
+            <span>Активний рейс</span>
+          </div>
+          {activeTrip && (
+            <div className="hero-badge">У дорозі</div>
+          )}
+        </div>
+
         {activeTrip ? (
           <>
-            <div className="trip-status">
-              <span className="status-dot"></span>
-              У дорозі
+            <div className="hero-route">
+              {activeTrip.fromCity || "—"}
+              <span className="hero-arrow">→</span>
+              {activeTrip.toCity || "—"}
             </div>
 
-            <div className="active-trip-stats">
-              <div className="stat-item">
-                <div className="stat-value">
-                  {Math.round(activeTripStats.startMileage)} км
-                </div>
-                <div className="stat-label">На старті</div>
-              </div>
+            <div className="hero-meta">
+              TR-{activeTrip.tripNumber}
+            </div>
 
-              <div className="stat-item">
-                <div className="stat-value">
-                  {Math.round(activeTripStats.fuelAdded)} л
+            <div className="hero-stats">
+              <div className="hero-stat">
+                <div className="hero-stat-value">
+                  {Math.round(activeTripStats.startMileage || 0)} км
                 </div>
-                <div className="stat-label">Заправлено</div>
+                <div className="hero-stat-label">На старті</div>
               </div>
-
-              <div className="stat-item">
-                <div className="stat-value" style={{ fontSize: "15px", lineHeight: 1.3 }}>
-                  {activeTripStats.mainExpense ? (
-                    <>
-                      {activeTripStats.expenses.EUR > 0 && (
-                        <div>{Math.round(activeTripStats.expenses.EUR)} €</div>
-                      )}
-                      {activeTripStats.expenses.UAH > 0 && (
-                        <div>{Math.round(activeTripStats.expenses.UAH)} ₴</div>
-                      )}
-                      {activeTripStats.expenses.PLN > 0 && (
-                        <div>{Math.round(activeTripStats.expenses.PLN)} zł</div>
-                      )}
-                      {activeTripStats.expenses.USD > 0 && (
-                        <div>{Math.round(activeTripStats.expenses.USD)} $</div>
-                      )}
-                    </>
-                  ) : (
-                    "0"
-                  )}
+              <div className="hero-stat">
+                <div className="hero-stat-value">
+                  {Math.round(activeTripStats.fuelAdded || 0)} л
                 </div>
-                <div className="stat-label">Витрати</div>
+                <div className="hero-stat-label">Пальне</div>
+              </div>
+              <div className="hero-stat">
+                <div className="hero-stat-value hero-stat-expense">
+                  {formatExpense()}
+                </div>
+                <div className="hero-stat-label">Витрати</div>
               </div>
             </div>
 
-            <PrimaryButton
-              fullWidth
+            <button
+              className="hero-btn"
               onClick={() => navigate(`/trips?trip=${activeTrip.id}`)}
             >
               Відкрити рейс
               <ArrowRight size={18} />
-            </PrimaryButton>
+            </button>
           </>
         ) : (
-          <p style={{ color: "#94a3b8", margin: "12px 0 0" }}>
-            Створіть новий рейс, щоб почати.
-          </p>
+          <>
+            <div className="hero-empty">Немає активного рейсу</div>
+            <button
+              className="hero-btn"
+              onClick={() => navigate("/trips")}
+            >
+              Створити рейс
+              <ArrowRight size={18} />
+            </button>
+          </>
         )}
-      </Card>
+      </section>
 
       {/* ===== KPI ===== */}
-      <div className="stats-grid">
-        <StatCard
-          icon={<Truck size={22} />}
-          title="Рейси"
-          value={totalTrips}
-          subtitle={`Активних ${activeTrips} • Завершених ${completedTrips}`}
-        />
+     
+      <div className="kpi-grid">
+        <div className="kpi-card">
+          <div className="kpi-icon"><Truck size={18} /></div>
+          <div className="kpi-value">{totalTrips}</div>
+          <div className="kpi-title">Рейси</div>
+          <div className="kpi-sub">
+            Активних {activeTrips} · Завершених {completedTrips}
+          </div>
+        </div>
 
-        <StatCard
-          icon={<Fuel size={22} />}
-          title="Пальне"
-          value={`${Math.round(
-            activeTrip ? activeTripStats.fuelAdded : totalFuel
-          )} л`}
-          subtitle={activeTrip ? "За цей рейс" : "Заправлено"}
-        />
+        <div className="kpi-card">
+          <div className="kpi-icon"><Fuel size={18} /></div>
+          <div className="kpi-value">
+            {Math.round(activeTrip ? activeTripStats.fuelAdded : totalFuel)} л
+          </div>
+          <div className="kpi-title">Пальне</div>
+          <div className="kpi-sub">
+            {activeTrip ? "За цей рейс" : "Всього"}
+          </div>
+        </div>
 
-        <StatCard
-          icon={<Wallet size={22} />}
-          title="Витрати"
-          value={
-            activeTrip && activeTripStats.mainExpense ? (
-              <span style={{ fontSize: "18px", lineHeight: 1.25 }}>
-                {activeTripStats.expenses.EUR > 0 && (
-                  <div>{Math.round(activeTripStats.expenses.EUR)} €</div>
-                )}
-                {activeTripStats.expenses.UAH > 0 && (
-                  <div>{Math.round(activeTripStats.expenses.UAH)} ₴</div>
-                )}
-                {activeTripStats.expenses.PLN > 0 && (
-                  <div>{Math.round(activeTripStats.expenses.PLN)} zł</div>
-                )}
-                {activeTripStats.expenses.USD > 0 && (
-                  <div>{Math.round(activeTripStats.expenses.USD)} $</div>
-                )}
-              </span>
-            ) : (
-              `${expenses.EUR.toFixed(0)} €`
-            )
-          }
-          subtitle={activeTrip ? "За цей рейс" : "EUR"}
-        />
+        <div className="kpi-card">
+          <div className="kpi-icon"><Wallet size={18} /></div>
+          <div className="kpi-value kpi-expense">
+            {activeTrip ? formatExpense() : `${Math.round(expenses.EUR || 0)} €`}
+          </div>
+          <div className="kpi-title">Витрати</div>
+          <div className="kpi-sub">
+            {activeTrip ? "За цей рейс" : "EUR"}
+          </div>
+        </div>
 
-        <StatCard
-          icon={<FileText size={22} />}
-          title="Документи"
-          value={
-            activeTrip
-              ? activeTripStats.documentsCount
-              : documentsCount
-          }
-          subtitle={activeTrip ? "За цей рейс" : "Файлів"}
-        />
+        <div className="kpi-card">
+          <div className="kpi-icon"><FileText size={18} /></div>
+          <div className="kpi-value">
+            {activeTrip ? activeTripStats.documentsCount : documentsCount}
+          </div>
+          <div className="kpi-title">Документи</div>
+          <div className="kpi-sub">
+            {activeTrip ? "За цей рейс" : "Файлів"}
+          </div>
+        </div>
       </div>
 
       {/* ===== ШЕНГЕН ===== */}
-      <Card
-        title="Шенген"
-        subtitle={`${schengen.remaining} днів залишилось`}
-        icon={<Globe2 size={22} />}
-      >
-        <h2
-          style={{
-            fontSize: "46px",
-            margin: "10px 0 0",
-            color: schengenColor,
-            fontWeight: "700",
-          }}
+      <section className="schengen-card">
+        <div className="schengen-left">
+          <div className="schengen-title">Шенгенські дні</div>
+          <div className="schengen-sub">
+            Використано {schengen.usedDays} з 90
+          </div>
+        </div>
+        <div
+          className="schengen-number"
+          style={{ color: schengenColor }}
         >
           {schengen.remaining}
-        </h2>
+          <span>/90</span>
+        </div>
 
-        <p style={{ color: "#94A3B8", marginBottom: "18px" }}>
-          днів залишилось
-        </p>
-
-        <div className="schengen-progress">
+        <div className="schengen-bar">
           <div
-            className="schengen-progress-fill"
+            className="schengen-bar-fill"
             style={{
               width: `${Math.min((schengen.usedDays / 90) * 100, 100)}%`,
               background: schengenColor,
             }}
           />
         </div>
-
-        <div className="schengen-info">
-          <span>{schengen.usedDays} / 90 використано</span>
-          <span>{schengen.remaining} залишилось</span>
-        </div>
-      </Card>
+      </section>
     </div>
   );
 }

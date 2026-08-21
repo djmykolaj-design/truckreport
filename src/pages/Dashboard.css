@@ -1,335 +1,246 @@
-/* =========================================================
-   DASHBOARD
-========================================================= */
-
 .dashboard {
-    width: 100%;
-    max-width: 1200px;
-    margin: 0;
-
-    display: flex;
-    flex-direction: column;
-    gap: 24px;
-
-    color: var(--text);
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  color: #f8fafc;
+  padding-bottom: 12px;
 }
 
-
-/* =========================================================
-   DASHBOARD HEADER
-========================================================= */
-
-.dashboard-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-
-    width: 100%;
-
-    background: var(--surface);
-
-    border: 1px solid var(--border);
-    border-radius: 20px;
-
-    padding: 28px 32px;
-
-    box-sizing: border-box;
+/* ===== HERO / АКТИВНИЙ РЕЙС ===== */
+.hero-card {
+  background: #111827;
+  border: 1px solid #1f2937;
+  border-radius: 18px;
+  padding: 18px;
 }
 
-.dashboard-header h1 {
-    margin: 0;
-
-    font-size: 36px;
-    font-weight: 700;
-
-    color: var(--text);
+.hero-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
 }
 
-.dashboard-header p {
-    margin: 8px 0 0;
-
-    color: var(--text-secondary);
-
-    font-size: 16px;
-}
-
-
-/* =========================================================
-   STATS GRID
-========================================================= */
-
-.stats-grid {
-    width: 100%;
-
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-
-    gap: 20px;
-}
-
-.stats-grid .tr-card {
-    transition:
-        transform 0.25s ease,
-        border-color 0.25s ease,
-        box-shadow 0.25s ease;
-}
-
-.stats-grid .tr-card:hover {
-    transform: translateY(-4px);
-
-    border-color: var(--primary);
-
-    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.18);
-}
-
-.stats-grid h2 {
-    margin: 8px 0 4px;
-
-    font-size: 34px;
-    font-weight: 700;
-
-    color: var(--text);
-}
-
-.stats-grid p {
-    margin: 0;
-
-    color: var(--text-secondary);
-
-    font-size: 14px;
-}
-
-
-/* =========================================================
-   TRIP STATUS
-========================================================= */
-
-.trip-status {
-    display: inline-flex;
-    align-items: center;
-
-    padding: 8px 14px;
-    margin: 18px 0;
-
-    border-radius: 999px;
-
-    background: rgba(34, 197, 94, 0.12);
-
-    color: #34D399;
-
-    font-weight: 600;
-}
-
-
-/* =========================================================
-   STANDARD PROGRESS
-========================================================= */
-
-progress {
-    width: 100%;
-    height: 12px;
-
-    border: none;
-    border-radius: 999px;
-
-    overflow: hidden;
-
-    appearance: none;
-}
-
-progress::-webkit-progress-bar {
-    background: var(--surface-light);
-}
-
-progress::-webkit-progress-value {
-    background: linear-gradient(
-        90deg,
-        #22C55E,
-        #34D399
-    );
-}
-
-progress::-moz-progress-bar {
-    background: #22C55E;
-}
-
-
-/* =========================================================
-   SCHENGEN PROGRESS
-========================================================= */
-
-.schengen-progress {
-    width: 100%;
-    height: 14px;
-
-    margin-top: 18px;
-
-    background: var(--surface-light);
-
-    border-radius: 999px;
-
-    overflow: hidden;
-}
-
-.schengen-progress-fill {
-    height: 100%;
-
-    border-radius: 999px;
-
-    background: linear-gradient(
-        90deg,
-        #22C55E,
-        #34D399
-    );
-
-    transition: width 0.4s ease;
-}
-
-.schengen-info {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-
-    margin-top: 12px;
-
-    color: var(--text-secondary);
-
-    font-size: 14px;
-}
-
-
-/* =========================================================
-   RESPONSIVE — TABLET
-========================================================= */
-
-@media (max-width: 1100px) {
-
-    .dashboard {
-        max-width: 100%;
-    }
-
-    .stats-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-}
-
-
-/* =========================================================
-   RESPONSIVE — MOBILE
-========================================================= */
-
-@media (max-width: 768px) {
-
-  .dashboard {
-    gap: 12px;
-    padding: 0;
-  }
-
-  /* Шапка */
-  .dashboard-header {
-    padding: 16px !important;
-    border-radius: 14px !important;
-  }
-
-  .dashboard-header h1 {
-    font-size: 22px !important;
-  }
-
-  .dashboard-header p {
-    font-size: 13px !important;
-    margin-top: 4px !important;
-  }
-
-  /* Активний рейс — компактні цифри */
-  .active-trip-stats {
-    gap: 8px !important;
-    margin-bottom: 14px !important;
-  }
-
-  .stat-item {
-    padding: 10px 6px !important;
-    border-radius: 10px !important;
-  }
-
-  .stat-value {
-    font-size: 16px !important;
-  }
-
-  .stat-label {
-    font-size: 11px !important;
-  }
-
-  /* KPI сітка */
-  .stats-grid {
-    grid-template-columns: 1fr 1fr !important;
-    gap: 10px !important;
-  }
-
-  .stats-grid h2 {
-    font-size: 22px !important;
-  }
-
-  .stats-grid p {
-    font-size: 12px !important;
-  }
-
-  /* Шенген блок на головній */
-  .schengen-progress {
-    height: 10px !important;
-    margin-top: 12px !important;
-  }
-
-  .schengen-info {
-    font-size: 12px !important;
-    margin-top: 8px !important;
-  }
-}
-
-/* ===== Активний рейс ===== */
-.trip-status {
+.hero-title {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 14px;
   color: #94a3b8;
-  margin: 8px 0 16px;
+  font-size: 14px;
+  font-weight: 600;
 }
 
-.status-dot {
-  width: 8px;
-  height: 8px;
-  background: #22c55e;
-  border-radius: 50%;
+.hero-badge {
+  background: rgba(34, 197, 94, 0.15);
+  color: #22c55e;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 6px 12px;
+  border-radius: 999px;
 }
 
-.active-trip-stats {
+.hero-route {
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1.25;
+  margin-bottom: 6px;
+}
+
+.hero-arrow {
+  color: #22c55e;
+  margin: 0 8px;
+}
+
+.hero-meta {
+  color: #64748b;
+  font-size: 13px;
+  margin-bottom: 16px;
+}
+
+.hero-stats {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
-  margin-bottom: 18px;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 16px;
 }
 
-.stat-item {
-  background: rgba(15, 23, 42, 0.6);
+.hero-stat {
+  background: #0f172a;
   border-radius: 12px;
   padding: 12px 8px;
   text-align: center;
 }
 
-.stat-value {
-  font-size: 17px;
+.hero-stat-value {
+  font-size: 16px;
   font-weight: 700;
   color: #f8fafc;
-  margin-bottom: 2px;
 }
 
-.stat-label {
+.hero-stat-expense {
+  font-size: 14px;
+  line-height: 1.3;
+}
+
+.hero-stat-label {
+  margin-top: 4px;
+  font-size: 11px;
+  color: #94a3b8;
+}
+
+.hero-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px;
+  border: none;
+  border-radius: 12px;
+  background: #22c55e;
+  color: white;
+  font-weight: 700;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.hero-btn:active {
+  opacity: 0.9;
+}
+
+.hero-empty {
+  color: #94a3b8;
+  margin: 8px 0 16px;
+  font-size: 15px;
+}
+
+/* ===== KPI ===== */
+.kpi-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #94a3b8;
+  margin-top: 4px;
+}
+
+.kpi-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.kpi-card {
+  background: #111827;
+  border: 1px solid #1f2937;
+  border-radius: 16px;
+  padding: 14px;
+}
+
+.kpi-icon {
+  color: #22c55e;
+  margin-bottom: 10px;
+}
+
+.kpi-value {
+  font-size: 24px;
+  font-weight: 800;
+  line-height: 1.1;
+  color: #f8fafc;
+}
+
+.kpi-expense {
+  font-size: 18px;
+}
+
+.kpi-title {
+  margin-top: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #e2e8f0;
+}
+
+.kpi-sub {
+  margin-top: 4px;
+  font-size: 11px;
+  color: #64748b;
+}
+
+/* ===== SCHENGEN ===== */
+.schengen-card {
+  background: #111827;
+  border: 1px solid #1f2937;
+  border-radius: 18px;
+  padding: 18px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-rows: auto auto;
+  gap: 8px 16px;
+  align-items: center;
+}
+
+.schengen-title {
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.schengen-sub {
   font-size: 12px;
   color: #94a3b8;
 }
 
+.schengen-number {
+  grid-row: 1 / 3;
+  grid-column: 2;
+  font-size: 42px;
+  font-weight: 800;
+  line-height: 1;
+  text-align: right;
+}
+
+.schengen-number span {
+  display: inline;
+  font-size: 18px;
+  font-weight: 600;
+  color: #64748b;
+  margin-left: 2px;
+}
+
+.schengen-bar {
+  grid-column: 1 / -1;
+  height: 8px;
+  background: #1e293b;
+  border-radius: 999px;
+  overflow: hidden;
+  margin-top: 6px;
+}
+
+.schengen-bar-fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.3s ease;
+}
+
+/* ===== MOBILE ===== */
 @media (max-width: 768px) {
-  .dashboard-header {
-    display: none;
+  .dashboard {
+    gap: 12px;
+  }
+
+  .hero-route {
+    font-size: 22px;
+  }
+
+  .hero-stat-value {
+    font-size: 15px;
+  }
+
+  .kpi-value {
+    font-size: 22px;
+  }
+
+  .schengen-number {
+    font-size: 36px;
   }
 }
