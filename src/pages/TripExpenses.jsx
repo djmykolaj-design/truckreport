@@ -12,40 +12,19 @@ import { useParams, useNavigate } from "react-router-dom";
 export default function TripExpenses() {
   const navigate = useNavigate();
   const { tripId } = useParams();
-  
 
   const trips = JSON.parse(
     localStorage.getItem("cabina_trips_v4") || "[]"
   );
 
-  const trip = trips.find(
-    (t) => t.id === Number(tripId)
-  );
+  const trip = trips.find((t) => t.id === Number(tripId));
   const exchanges = trip?.exchanges || [];
 
-  if (!trip) {
-    return <div>Рейс не знайдено</div>;
-  }
-
-  const finance = calculateFinance(trip);
-
-
-  const [category, setCategory] =
-    useState("🛣️ Дорога");
-
+  const [category, setCategory] = useState("🛣️ Дорога");
   const [amount, setAmount] = useState("");
-
-  const [currency, setCurrency] =
-    useState("EUR");
-
-  const [comment, setComment] =
-    useState("");
-
-  const [expenses, setExpenses] =
-    useState(trip?.expenses || []);
-
-  const isCompleted =
-    trip.status === "completed";
+  const [currency, setCurrency] = useState("EUR");
+  const [comment, setComment] = useState("");
+  const [expenses, setExpenses] = useState(trip?.expenses || []);
 
   if (!trip) {
     return (
@@ -55,34 +34,43 @@ export default function TripExpenses() {
     );
   }
 
-  const saveExpense = () => {
-    if (!amount) {
+  const finance = calculateFinance({
+    ...trip,
+    expenses,
+  });
+
+  const isCompleted = trip.status === "completed";
+
+  const saveExpense = async () => {
+    if (!amount || Number(amount) <= 0) {
       alert("Вкажи суму");
+      return;
+    }
+
+    if (isCompleted) {
+      alert("Рейс уже завершено");
       return;
     }
 
     const newExpense = {
       id: Date.now(),
       category,
-      amount,
+      amount: Number(amount),
       currency,
-      comment,
-      date: new Date().toLocaleString(),
+      comment: comment || "",
+      date: new Date().toLocaleString("uk-UA"),
     };
 
-    const updatedExpenses = [
-      newExpense,
-      ...expenses,
-    ];
-
+    const updatedExpenses = [newExpense, ...expenses];
     setExpenses(updatedExpenses);
 
-    const updatedTrips = trips.map((t) =>
+    const allTrips = JSON.parse(
+      localStorage.getItem("cabina_trips_v4") || "[]"
+    );
+
+    const updatedTrips = allTrips.map((t) =>
       t.id === Number(tripId)
-        ? {
-          ...t,
-          expenses: updatedExpenses,
-        }
+        ? { ...t, expenses: updatedExpenses }
         : t
     );
 
@@ -91,10 +79,52 @@ export default function TripExpenses() {
       JSON.stringify(updatedTrips)
     );
 
+    try {
+      const { saveAllTripsToCloud } = await import(
+        "../services/cloudTrips"
+      );
+      await saveAllTripsToCloud(updatedTrips);
+    } catch (e) {
+      console.error("Cloud save:", e);
+    }
+
     setAmount("");
     setComment("");
     setCategory("🛣️ Дорога");
     setCurrency("EUR");
+  };
+
+  const deleteExpense = async (id) => {
+    if (!window.confirm("Видалити витрату?")) {
+      return;
+    }
+
+    const updatedExpenses = expenses.filter((e) => e.id !== id);
+    setExpenses(updatedExpenses);
+
+    const allTrips = JSON.parse(
+      localStorage.getItem("cabina_trips_v4") || "[]"
+    );
+
+    const updatedTrips = allTrips.map((t) =>
+      t.id === Number(tripId)
+        ? { ...t, expenses: updatedExpenses }
+        : t
+    );
+
+    localStorage.setItem(
+      "cabina_trips_v4",
+      JSON.stringify(updatedTrips)
+    );
+
+    try {
+      const { saveAllTripsToCloud } = await import(
+        "../services/cloudTrips"
+      );
+      await saveAllTripsToCloud(updatedTrips);
+    } catch (e) {
+      console.error("Cloud save:", e);
+    }
   };
 
   const categories = [
@@ -110,130 +140,71 @@ export default function TripExpenses() {
     "📦 Інше",
   ];
 
-  const categoryTotals = categories.map((category) => {
-
+  const categoryTotals = categories.map((cat) => {
     const totals = {};
 
     expenses
-      .filter((e) => e.category === category)
+      .filter((e) => e.category === cat)
       .forEach((expense) => {
-
         if (!totals[expense.currency]) {
           totals[expense.currency] = 0;
         }
-
         totals[expense.currency] += Number(expense.amount);
-
       });
 
     return {
-      name: category,
+      name: cat,
       totals,
     };
-
   });
+
   const allOperations = [
     ...expenses.map((e) => ({
       ...e,
       type: "expense",
     })),
-
     ...exchanges.map((e) => ({
       ...e,
       type: "exchange",
     })),
-  ].sort(
-    (a, b) =>
-      new Date(b.date) - new Date(a.date)
-  );
-
-  const deleteExpense = (id) => {
-    if (!window.confirm("Видалити витрату?")) {
-      return;
-    }
-
-    const updatedExpenses = expenses.filter(
-      (e) => e.id !== id
-    );
-
-    setExpenses(updatedExpenses);
-
-    const updatedTrips = trips.map((t) =>
-      t.id === Number(tripId)
-        ? {
-          ...t,
-          expenses: updatedExpenses,
-        }
-        : t
-    );
-
-    localStorage.setItem(
-      "cabina_trips_v4",
-      JSON.stringify(updatedTrips)
-    );
-  };
+  ].sort((a, b) => new Date(b.date) - new Date(a.date));
 
   const currencies = [
-    {
-      icon: "💶",
-      currency: "EUR",
-      data: finance.EUR,
-    },
-    {
-      icon: "💵",
-      currency: "USD",
-      data: finance.USD,
-    },
-    {
-      icon: "🇵🇱",
-      currency: "PLN",
-      data: finance.PLN,
-    },
-    {
-      icon: "₴",
-      currency: "UAH",
-      data: finance.UAH,
-    },
+    { icon: "💶", currency: "EUR", data: finance.EUR },
+    { icon: "💵", currency: "USD", data: finance.USD },
+    { icon: "🇵🇱", currency: "PLN", data: finance.PLN },
+    { icon: "₴", currency: "UAH", data: finance.UAH },
   ];
 
   return (
     <div className="trip-expenses">
       <button
-      onClick={() => navigate(`/trips?trip=${tripId}`)}
-      style={{
-        width: "100%",
-        padding: "12px",
-        marginBottom: "16px",
-        borderRadius: "12px",
-        border: "1px solid #334155",
-        background: "#1e293b",
-        color: "#e2e8f0",
-        cursor: "pointer",
-        fontWeight: 500,
-        fontSize: "15px",
-      }}
-    >
-      ← До рейсу
-    </button>
-      <h1>
-        💰 Витрати рейсу №
-        {trip.tripNumber}
-      </h1>
-
-      <Card
-        title="Нова витрата"
-        subtitle="Додайте нову витрату до рейсу"
+        onClick={() => navigate(`/trips?trip=${tripId}`)}
+        style={{
+          width: "100%",
+          padding: "12px",
+          marginBottom: "16px",
+          borderRadius: "12px",
+          border: "1px solid #334155",
+          background: "#1e293b",
+          color: "#e2e8f0",
+          cursor: "pointer",
+          fontWeight: 500,
+          fontSize: "15px",
+        }}
       >
+        ← До рейсу
+      </button>
 
+      <h1>💰 Витрати рейсу №{trip.tripNumber}</h1>
+
+      <Card title="Нова витрата" subtitle="Додайте нову витрату до рейсу">
         <Select
           value={category}
           onChange={(e) => setCategory(e.target.value)}
         >
           {categories.map((cat) => (
-            <option
-              key={cat}
-              value={cat}
-            >
+            <option key={cat} value={cat}>
               {cat}
             </option>
           ))}
@@ -271,19 +242,11 @@ export default function TripExpenses() {
         </PrimaryButton>
       </Card>
 
-      <Card
-        title="Видані кошти"
-        subtitle="Баланс по валютах"
-      >
-        <h3>
-          💵 Видані кошти /
-          Залишок
-        </h3>
+      <Card title="Видані кошти" subtitle="Баланс по валютах">
+        <h3>💵 Видані кошти / Залишок</h3>
 
         <div className="currency-grid">
-
           {currencies.map((item) => (
-
             <CurrencyCard
               key={item.currency}
               icon={item.icon}
@@ -294,70 +257,40 @@ export default function TripExpenses() {
               exchangedOut={item.data.exchangedOut}
               spent={item.data.spent}
             />
-
           ))}
-
         </div>
       </Card>
 
-      <Card
-        title="По категоріях"
-        subtitle="Статистика витрат"
-      >
+      <Card title="По категоріях" subtitle="Статистика витрат">
         <div className="category-expenses-grid">
-
           {categoryTotals.map((cat) => {
+            const currencyList = Object.entries(cat.totals);
 
-            const currencies = Object.entries(cat.totals);
-
-            if (currencies.length === 0) {
+            if (currencyList.length === 0) {
               return null;
             }
 
             return (
-              <div
-                key={cat.name}
-                className="category-expense-item"
-              >
-                
-                <div className="category-expense-name">
-                  {cat.name}
-                </div>
+              <div key={cat.name} className="category-expense-item">
+                <div className="category-expense-name">{cat.name}</div>
 
                 <div className="category-expense-values">
-
-                  {currencies.map(
-                    ([currency, amount]) => (
-                      <div
-                        key={currency}
-                        className="category-expense-value"
-                      >
-                        {amount.toFixed(2)} {currency}
-                      </div>
-                    )
-                  )}
-
+                  {currencyList.map(([cur, sum]) => (
+                    <div key={cur} className="category-expense-value">
+                      {sum.toFixed(2)} {cur}
+                    </div>
+                  ))}
                 </div>
               </div>
             );
           })}
-
         </div>
       </Card>
 
-      <Card
-        title="Всі витрати"
-        subtitle={`${expenses.length} записів`}
-      >
+      <Card title="Всі витрати" subtitle={`${expenses.length} записів`}>
+        {expenses.length === 0 && <p>Витрат ще немає</p>}
 
-        {expenses.length ===
-          0 && (
-            <p>
-              Витрат ще немає
-            </p>
-          )}
-
-        {allOperations.map((expense) => (
+        {allOperations.map((expense) =>
           expense.type === "exchange" ? (
             <ExpenseCard
               key={expense.id}
@@ -369,7 +302,7 @@ export default function TripExpenses() {
                 date: expense.date,
               }}
               isCompleted={isCompleted}
-              onDelete={() => { }}
+              onDelete={() => {}}
             />
           ) : (
             <ExpenseCard
@@ -379,7 +312,7 @@ export default function TripExpenses() {
               onDelete={deleteExpense}
             />
           )
-        ))}
+        )}
       </Card>
     </div>
   );
