@@ -8,6 +8,7 @@ import { CurrencyCard } from "../components/ui/CurrencyCard";
 import ExpenseCard from "../components/business/ExpenseCard";
 import "./TripExpenses.css";
 import { useParams, useNavigate } from "react-router-dom";
+import { saveTripToCloud } from "../services/cloudTrips";
 
 export default function TripExpenses() {
   const navigate = useNavigate();
@@ -18,13 +19,19 @@ export default function TripExpenses() {
   );
 
   const trip = trips.find((t) => t.id === Number(tripId));
-  const exchanges = trip?.exchanges || [];
 
   const [category, setCategory] = useState("🛣️ Дорога");
   const [amount, setAmount] = useState("");
   const [currency, setCurrency] = useState("EUR");
   const [comment, setComment] = useState("");
   const [expenses, setExpenses] = useState(trip?.expenses || []);
+  const [fundsReceived, setFundsReceived] = useState(
+    trip?.fundsReceived || []
+  );
+
+  const [receiveAmount, setReceiveAmount] = useState("");
+  const [receiveCurrency, setReceiveCurrency] = useState("EUR");
+  const [receiveComment, setReceiveComment] = useState("");
 
   if (!trip) {
     return (
@@ -34,12 +41,43 @@ export default function TripExpenses() {
     );
   }
 
+  const exchanges = trip.exchanges || [];
+
   const finance = calculateFinance({
     ...trip,
     expenses,
+    fundsReceived,
   });
 
   const isCompleted = trip.status === "completed";
+
+  const persist = async (patch) => {
+    const allTrips = JSON.parse(
+      localStorage.getItem("cabina_trips_v4") || "[]"
+    );
+
+    const updatedTrip = {
+      ...trip,
+      expenses,
+      fundsReceived,
+      ...patch,
+    };
+
+    const updatedTrips = allTrips.map((t) =>
+      t.id === Number(tripId) ? updatedTrip : t
+    );
+
+    localStorage.setItem(
+      "cabina_trips_v4",
+      JSON.stringify(updatedTrips)
+    );
+
+    try {
+      await saveTripToCloud(updatedTrip);
+    } catch (e) {
+      console.error("Cloud save:", e);
+    }
+  };
 
   const saveExpense = async () => {
     if (!amount || Number(amount) <= 0) {
@@ -63,30 +101,7 @@ export default function TripExpenses() {
 
     const updatedExpenses = [newExpense, ...expenses];
     setExpenses(updatedExpenses);
-
-    const allTrips = JSON.parse(
-      localStorage.getItem("cabina_trips_v4") || "[]"
-    );
-
-    const updatedTrips = allTrips.map((t) =>
-      t.id === Number(tripId)
-        ? { ...t, expenses: updatedExpenses }
-        : t
-    );
-
-    localStorage.setItem(
-      "cabina_trips_v4",
-      JSON.stringify(updatedTrips)
-    );
-
-    try {
-      const { saveAllTripsToCloud } = await import(
-        "../services/cloudTrips"
-      );
-      await saveAllTripsToCloud(updatedTrips);
-    } catch (e) {
-      console.error("Cloud save:", e);
-    }
+    await persist({ expenses: updatedExpenses });
 
     setAmount("");
     setComment("");
@@ -95,36 +110,46 @@ export default function TripExpenses() {
   };
 
   const deleteExpense = async (id) => {
-    if (!window.confirm("Видалити витрату?")) {
-      return;
-    }
+    if (!window.confirm("Видалити витрату?")) return;
 
     const updatedExpenses = expenses.filter((e) => e.id !== id);
     setExpenses(updatedExpenses);
+    await persist({ expenses: updatedExpenses });
+  };
 
-    const allTrips = JSON.parse(
-      localStorage.getItem("cabina_trips_v4") || "[]"
-    );
-
-    const updatedTrips = allTrips.map((t) =>
-      t.id === Number(tripId)
-        ? { ...t, expenses: updatedExpenses }
-        : t
-    );
-
-    localStorage.setItem(
-      "cabina_trips_v4",
-      JSON.stringify(updatedTrips)
-    );
-
-    try {
-      const { saveAllTripsToCloud } = await import(
-        "../services/cloudTrips"
-      );
-      await saveAllTripsToCloud(updatedTrips);
-    } catch (e) {
-      console.error("Cloud save:", e);
+  const saveReceived = async () => {
+    if (!receiveAmount || Number(receiveAmount) <= 0) {
+      alert("Вкажи суму");
+      return;
     }
+
+    if (isCompleted) {
+      alert("Рейс уже завершено");
+      return;
+    }
+
+    const newItem = {
+      id: Date.now(),
+      amount: Number(receiveAmount),
+      currency: receiveCurrency,
+      comment: receiveComment || "Отримано в рейсі",
+      date: new Date().toLocaleString("uk-UA"),
+    };
+
+    const updatedFunds = [newItem, ...fundsReceived];
+    setFundsReceived(updatedFunds);
+    await persist({ fundsReceived: updatedFunds });
+
+    setReceiveAmount("");
+    setReceiveComment("");
+  };
+
+  const deleteReceived = async (id) => {
+    if (!window.confirm("Видалити отримання коштів?")) return;
+
+    const updatedFunds = fundsReceived.filter((e) => e.id !== id);
+    setFundsReceived(updatedFunds);
+    await persist({ fundsReceived: updatedFunds });
   };
 
   const categories = [
@@ -146,27 +171,17 @@ export default function TripExpenses() {
     expenses
       .filter((e) => e.category === cat)
       .forEach((expense) => {
-        if (!totals[expense.currency]) {
-          totals[expense.currency] = 0;
-        }
+        if (!totals[expense.currency]) totals[expense.currency] = 0;
         totals[expense.currency] += Number(expense.amount);
       });
 
-    return {
-      name: cat,
-      totals,
-    };
+    return { name: cat, totals };
   });
 
   const allOperations = [
-    ...expenses.map((e) => ({
-      ...e,
-      type: "expense",
-    })),
-    ...exchanges.map((e) => ({
-      ...e,
-      type: "exchange",
-    })),
+    ...expenses.map((e) => ({ ...e, type: "expense" })),
+    ...exchanges.map((e) => ({ ...e, type: "exchange" })),
+    ...fundsReceived.map((e) => ({ ...e, type: "received" })),
   ].sort((a, b) => new Date(b.date) - new Date(a.date));
 
   const currencies = [
@@ -238,13 +253,47 @@ export default function TripExpenses() {
           onClick={saveExpense}
           disabled={isCompleted}
         >
-          💾 Зберегти
+          💾 Зберегти витрату
+        </PrimaryButton>
+      </Card>
+
+      <Card
+        title="Отримати кошти"
+        subtitle="Додаткові гроші під час рейсу"
+      >
+        <Input
+          type="number"
+          placeholder="Сума"
+          value={receiveAmount}
+          onChange={(e) => setReceiveAmount(e.target.value)}
+        />
+
+        <Select
+          value={receiveCurrency}
+          onChange={(e) => setReceiveCurrency(e.target.value)}
+        >
+          <option value="EUR">EUR</option>
+          <option value="USD">USD</option>
+          <option value="PLN">PLN</option>
+          <option value="UAH">UAH</option>
+        </Select>
+
+        <Input
+          placeholder="Коментар (фірма, місце)"
+          value={receiveComment}
+          onChange={(e) => setReceiveComment(e.target.value)}
+        />
+
+        <PrimaryButton
+          fullWidth
+          onClick={saveReceived}
+          disabled={isCompleted}
+        >
+          💾 Додати кошти
         </PrimaryButton>
       </Card>
 
       <Card title="Видані кошти" subtitle="Баланс по валютах">
-        <h3>💵 Видані кошти / Залишок</h3>
-
         <div className="currency-grid">
           {currencies.map((item) => (
             <CurrencyCard
@@ -265,15 +314,11 @@ export default function TripExpenses() {
         <div className="category-expenses-grid">
           {categoryTotals.map((cat) => {
             const currencyList = Object.entries(cat.totals);
-
-            if (currencyList.length === 0) {
-              return null;
-            }
+            if (currencyList.length === 0) return null;
 
             return (
               <div key={cat.name} className="category-expense-item">
                 <div className="category-expense-name">{cat.name}</div>
-
                 <div className="category-expense-values">
                   {currencyList.map(([cur, sum]) => (
                     <div key={cur} className="category-expense-value">
@@ -287,32 +332,53 @@ export default function TripExpenses() {
         </div>
       </Card>
 
-      <Card title="Всі витрати" subtitle={`${expenses.length} записів`}>
-        {expenses.length === 0 && <p>Витрат ще немає</p>}
+      <Card title="Всі операції" subtitle={`${allOperations.length} записів`}>
+        {allOperations.length === 0 && <p>Операцій ще немає</p>}
 
-        {allOperations.map((expense) =>
-          expense.type === "exchange" ? (
+        {allOperations.map((item) => {
+          if (item.type === "exchange") {
+            return (
+              <ExpenseCard
+                key={item.id}
+                expense={{
+                  category: "💱 Обмін валют",
+                  amount: `${item.fromAmount} ${item.fromCurrency} → ${item.toAmount} ${item.toCurrency}`,
+                  currency: "",
+                  comment: "",
+                  date: item.date,
+                }}
+                isCompleted={isCompleted}
+                onDelete={() => {}}
+              />
+            );
+          }
+
+          if (item.type === "received") {
+            return (
+              <ExpenseCard
+                key={item.id}
+                expense={{
+                  category: "📥 Отримано кошти",
+                  amount: item.amount,
+                  currency: item.currency,
+                  comment: item.comment,
+                  date: item.date,
+                }}
+                isCompleted={isCompleted}
+                onDelete={() => deleteReceived(item.id)}
+              />
+            );
+          }
+
+          return (
             <ExpenseCard
-              key={expense.id}
-              expense={{
-                category: "💱 Обмін валют",
-                amount: `${expense.fromAmount} ${expense.fromCurrency} → ${expense.toAmount} ${expense.toCurrency}`,
-                currency: "",
-                comment: "",
-                date: expense.date,
-              }}
-              isCompleted={isCompleted}
-              onDelete={() => {}}
-            />
-          ) : (
-            <ExpenseCard
-              key={expense.id}
-              expense={expense}
+              key={item.id}
+              expense={item}
               isCompleted={isCompleted}
               onDelete={deleteExpense}
             />
-          )
-        )}
+          );
+        })}
       </Card>
     </div>
   );
