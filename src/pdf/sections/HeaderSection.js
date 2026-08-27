@@ -69,7 +69,7 @@ export function HeaderSection(trip) {
                     stack: [
 
                         label("Маршрут"),
-                        value(`${trip.fromCity || "-"} → ${trip.toCity || "-"}`),
+                        value(`${trip.fromCity || "-"} - ${trip.toCity || "-"}`),
 
                         label("Водії"),
                         value(`${trip.driver || "-"} | ${trip.codriver || "-"}`),

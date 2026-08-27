@@ -1,178 +1,98 @@
-function money(expense, currency) {
-    return expense.currency === currency
-        ? Number(expense.amount).toFixed(2)
-        : "";
+function cleanCategory(text = "") {
+  return String(text)
+    .replace(/[^\p{L}\p{N}\p{P}\p{Z}€₴$]/gu, "")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 export function ExpensesSection(expenses = []) {
+  const byCurrency = {
+    EUR: [],
+    USD: [],
+    PLN: [],
+    UAH: [],
+  };
 
-    const total = {
-        UAH: 0,
-        EUR: 0,
-        PLN: 0,
-        USD: 0,
-    };
+  expenses.forEach((e) => {
+    const currency = e.currency || "EUR";
+    if (!byCurrency[currency]) byCurrency[currency] = [];
+    byCurrency[currency].push(e);
+  });
 
-    expenses.forEach((e) => {
-        if (total[e.currency] !== undefined) {
-            total[e.currency] += Number(e.amount || 0);
-        }
+  const blocks = [];
+
+  blocks.push({
+    text: "ВИТРАТИ",
+    style: "sectionTitle",
+    margin: [0, 0, 0, 12],
+  });
+
+  const order = ["EUR", "UAH", "PLN", "USD"];
+
+  order.forEach((currency) => {
+    const list = byCurrency[currency] || [];
+    if (!list.length) return;
+
+    const total = list.reduce(
+      (sum, e) => sum + Number(e.amount || 0),
+      0
+    );
+
+    blocks.push({
+      text: currency,
+      bold: true,
+      fontSize: 13,
+      color: "#14532D",
+      margin: [0, 8, 0, 6],
     });
 
-    return [
-
-        {
-            text: "ВИТРАТИ",
-            style: "sectionTitle",
-            margin: [0, 0, 0, 8],
-        },
-
-        {
-
-            table: {
-
-                headerRows: 1,
-
-                widths: [18, 48, 65, "*", 38, 38, 38, 38],
-
-                body: [
-
-                    [
-                        head("№"),
-                        head("Дата"),
-                        head("Категорія"),
-                        head("Опис"),
-                        head("UAH"),
-                        head("EUR"),
-                        head("PLN"),
-                        head("USD"),
-                    ],
-
-                    ...expenses.map((expense, index) => [
-
-                        center(index + 1),
-
-                        center(
-                            (expense.date || "-").split(" ")[0]
-                        ),
-
-                        {
-                            text: expense.category || "-",
-                            fontSize: 9,
-                        },
-
-                        {
-                            text:
-                                expense.comment ||
-                                expense.description ||
-                                "-",
-                            fontSize: 9,
-                        },
-
-                        right(money(expense, "UAH")),
-
-                        right(money(expense, "EUR")),
-
-                        right(money(expense, "PLN")),
-
-                        right(money(expense, "USD")),
-
-                    ]),
-
-                    [
-
-                        {
-
-                            text: "РАЗОМ",
-
-                            bold: true,
-
-                            colSpan: 4,
-
-                            color: "#14532D",
-
-                            fillColor: "#DCFCE7",
-
-                            alignment: "left",
-
-                            margin: [6, 4, 6, 4],
-
-                        },
-
-                        {}, {}, {},
-
-                        totalCell(total.UAH),
-
-                        totalCell(total.EUR),
-
-                        totalCell(total.PLN),
-
-                        totalCell(total.USD),
-
-                    ]
-
-                ]
-
+    blocks.push({
+      table: {
+        headerRows: 1,
+        widths: [24, 90, "*", 70],
+        body: [
+          [
+            { text: "№", bold: true, fillColor: "#F3F4F6" },
+            { text: "Дата", bold: true, fillColor: "#F3F4F6" },
+            { text: "Категорія / опис", bold: true, fillColor: "#F3F4F6" },
+            { text: "Сума", bold: true, fillColor: "#F3F4F6", alignment: "right" },
+          ],
+          ...list.map((e, i) => [
+            String(i + 1),
+            String(e.date || "").split(",")[0] || "",
+            [
+              cleanCategory(e.category || ""),
+              e.comment ? ` (${e.comment})` : "",
+            ].join(""),
+            {
+              text: Number(e.amount || 0).toFixed(2),
+              alignment: "right",
             },
+          ]),
+          [
+            { text: "", fillColor: "#DCFCE7" },
+            { text: "", fillColor: "#DCFCE7" },
+            { text: "РАЗОМ", bold: true, fillColor: "#DCFCE7" },
+            {
+              text: `${total.toFixed(2)} ${currency}`,
+              bold: true,
+              alignment: "right",
+              fillColor: "#DCFCE7",
+            },
+          ],
+        ],
+      },
+      layout: "lightHorizontalLines",
+      margin: [0, 0, 0, 14],
+    });
+  });
 
-            layout: {
+  if (blocks.length === 1) {
+    blocks.push({
+      text: "Витрат немає",
+      color: "#6B7280",
+    });
+  }
 
-                fillColor: (row) =>
-
-                    row === 0
-                        ? "#E5E7EB"
-                        : row % 2 === 0
-                            ? "#F9FAFB"
-                            : null,
-
-                hLineColor: () => "#D1D5DB",
-                vLineColor: () => "#D1D5DB",
-
-                hLineWidth: () => 0.5,
-                vLineWidth: () => 0.5,
-
-            }
-
-        }
-
-    ];
-
-}
-
-function head(text) {
-    return {
-        text,
-        bold: true,
-        color: "#14532D",
-        alignment: "center",
-        fontSize: 9,
-        margin: [0, 4, 0, 4],
-    };
-}
-
-function center(text) {
-    return {
-        text,
-        alignment: "center",
-        fontSize: 9,
-    };
-}
-
-function right(text) {
-    return {
-        text,
-        alignment: "right",
-        fontSize: 9,
-    };
-}
-
-function totalCell(value) {
-    return {
-        text: Number(value).toFixed(2),
-        bold: true,
-        alignment: "right",
-        color: "#20442d",
-        fillColor: "#DCFCE7",
-        fontSize: 9,
-    };
+  return blocks;
 }

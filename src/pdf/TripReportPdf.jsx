@@ -32,6 +32,8 @@ export function generateTripPdf(trip, options = { download: true }) {
             ...HeaderSection(trip),
             ...SummarySection({
                 totalKm,
+                startMileage: Number(trip.startMileage || 0),
+                endMileage: Number(trip.endMileage || 0),
                 averageFuel,
                 fuelUsed,
                 reefFuelUsed: fuel.reefMainFuel + fuel.reefSeparateFuel,
