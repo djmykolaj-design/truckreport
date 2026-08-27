@@ -48,7 +48,7 @@ export default function DocumentCard({
 
                 <a
                     className="document-btn document-btn--green"
-                    href={document.fileData}
+                    href={document.url || document.fileData}
                     download={document.fileName}
                 >
                     ⬇ Завантажити

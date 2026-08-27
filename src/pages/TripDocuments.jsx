@@ -8,8 +8,9 @@ import UploadButton from "../components/ui/Button/UploadButton";
 import DocumentViewer from "../components/business/DocumentViewer";
 import { useParams, useNavigate } from "react-router-dom";
 import { saveTripToCloud } from "../services/cloudTrips";
+import { supabase } from "../lib/supabase";
 
-function compressImage(file, maxWidth = 1600, quality = 0.7) {
+function compressImage(file, maxWidth = 1400, quality = 0.65) {
   return new Promise((resolve, reject) => {
     if (!file.type.startsWith("image/")) {
       resolve(file);
@@ -128,60 +129,73 @@ export default function TripDocuments() {
     setSaving(true);
 
     try {
-      const readyFile = await compressImage(file);
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
 
-      if (readyFile.size > 2.5 * 1024 * 1024) {
-        alert("Файл все ще завеликий. Спробуй інше фото.");
+      if (!user) {
+        alert("Спочатку увійди в акаунт");
         setSaving(false);
         return;
       }
 
-      const reader = new FileReader();
+      const readyFile = await compressImage(file);
 
-      reader.onload = () => {
-        const newDocument = {
-          id: Date.now(),
-          type: documentType,
-          comment,
-          fileName: readyFile.name,
-          fileData: reader.result,
-          createdAt: new Date().toLocaleString("uk-UA"),
-        };
+      const ext = readyFile.type === "application/pdf" ? "pdf" : "jpg";
+      const path = `${user.id}/${tripId}/${Date.now()}.${ext}`;
 
-        const updatedDocuments = [...documents, newDocument];
+      const { error: uploadError } = await supabase.storage
+        .from("documents")
+        .upload(path, readyFile, {
+          contentType: readyFile.type,
+          upsert: false,
+        });
 
-        try {
-          persist(updatedDocuments);
-          setDocuments(updatedDocuments);
-          setComment("");
-          setFile(null);
-        } catch (err) {
-          console.error(err);
-          alert(
-            "Не вистачає місця в пам'яті.\nВидали старі документи або додай менший файл."
-          );
-        } finally {
-          setSaving(false);
-        }
-      };
-
-      reader.onerror = () => {
-        alert("Помилка читання файлу");
+      if (uploadError) {
+        console.error(uploadError);
+        alert("Не вдалося завантажити файл: " + uploadError.message);
         setSaving(false);
+        return;
+      }
+
+      const { data: publicData } = supabase.storage
+        .from("documents")
+        .getPublicUrl(path);
+
+      const newDocument = {
+        id: Date.now(),
+        type: documentType,
+        comment,
+        fileName: readyFile.name,
+        url: publicData.publicUrl,
+        storagePath: path,
+        createdAt: new Date().toLocaleString("uk-UA"),
       };
 
-      reader.readAsDataURL(readyFile);
+      const updatedDocuments = [...documents, newDocument];
+      setDocuments(updatedDocuments);
+      persist(updatedDocuments);
+
+      setComment("");
+      setFile(null);
     } catch (e) {
       console.error(e);
-      alert("Не вдалося обробити фото");
+      alert("Помилка при додаванні документа");
+    } finally {
       setSaving(false);
     }
   };
 
-  const deleteDocument = (docId) => {
+  const deleteDocument = async (docId) => {
     if (!window.confirm("Видалити цей документ?")) return;
 
-    const updatedDocuments = documents.filter((doc) => doc.id !== docId);
+    const doc = documents.find((d) => d.id === docId);
+
+    if (doc?.storagePath) {
+      await supabase.storage.from("documents").remove([doc.storagePath]);
+    }
+
+    const updatedDocuments = documents.filter((d) => d.id !== docId);
     setDocuments(updatedDocuments);
     persist(updatedDocuments);
   };
@@ -221,7 +235,7 @@ export default function TripDocuments() {
 
         <Card
           title="Додати документ"
-          subtitle="Фото з камери стискається автоматично"
+          subtitle="Фото стискається і зберігається в хмарі"
         >
           <Select
             value={documentType}
@@ -243,14 +257,14 @@ export default function TripDocuments() {
           <UploadButton
             file={file}
             disabled={isCompleted || saving}
-            onChange={(e) => setFile(e.target.files[0])}
+            onChange={(e) => setFile(e.target.files?.[0] || null)}
           />
 
           <PrimaryButton
             onClick={addDocument}
             disabled={isCompleted || saving}
           >
-            {saving ? "Обробка..." : "💾 Додати документ"}
+            {saving ? "Завантаження..." : "💾 Додати документ"}
           </PrimaryButton>
         </Card>
 

@@ -1,47 +1,50 @@
+import { saveTripToCloud } from "./cloudTrips";
+
 const STORAGE_KEY = "cabina_trips_v4";
 
 export function getTrips() {
-    return JSON.parse(
-        localStorage.getItem(STORAGE_KEY) || "[]"
-    );
+  return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
 }
 
 export function saveTrips(trips) {
-    localStorage.setItem(
-        STORAGE_KEY,
-        JSON.stringify(trips)
-    );
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(trips));
 }
 
 export function getTripById(tripId) {
-    return getTrips().find(
-        trip => trip.id === Number(tripId)
-    );
+  return getTrips().find((trip) => trip.id === Number(tripId));
 }
 
 export function updateTrip(tripId, updates) {
-    const trips = getTrips();
+  const trips = getTrips();
 
-    const updatedTrips = trips.map(trip =>
-        trip.id === Number(tripId)
-            ? {
-                  ...trip,
-                  ...updates,
-              }
-            : trip
-    );
+  const updatedTrips = trips.map((trip) =>
+    trip.id === Number(tripId)
+      ? {
+          ...trip,
+          ...updates,
+        }
+      : trip
+  );
 
-    saveTrips(updatedTrips);
+  saveTrips(updatedTrips);
 
-    return updatedTrips;
+  const updatedTrip = updatedTrips.find(
+    (trip) => trip.id === Number(tripId)
+  );
+
+  if (updatedTrip) {
+    saveTripToCloud(updatedTrip);
+  }
+
+  return updatedTrip;
 }
 
 export function deleteTrip(tripId) {
-    const trips = getTrips().filter(
-        trip => trip.id !== Number(tripId)
-    );
+  const trips = getTrips().filter(
+    (trip) => trip.id !== Number(tripId)
+  );
 
-    saveTrips(trips);
+  saveTrips(trips);
 
-    return trips;
+  return trips;
 }
