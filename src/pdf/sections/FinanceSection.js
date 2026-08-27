@@ -1,129 +1,82 @@
 export function FinanceSection(finance) {
+  const currencies = ["EUR", "USD", "PLN", "UAH"];
 
-    const currencies = ["EUR", "USD", "PLN", "UAH"];
+const header = (text) => ({
+  text,
+  bold: true,
+  fontSize: 9,
+  color: "#14532D",
+  alignment: "center",
+  fillColor: "#F3F4F6",
+});
 
-    const body = [
+  const num = (text) => ({
+    text,
+    fontSize: 9,
+    alignment: "right",
+  });
 
-        [
-            head("Валюта"),
-            head("Видано"),
-            head("+ Обмін"),
-            head("- Обмін"),
-            head("Витрати"),
-            head("Залишок"),
-        ],
+  const body = [
+    [
+      header("Валюта"),
+      header("Видано"),
+      header("+ Обмін"),
+      header("- Обмін"),
+      header("Витрати"),
+      header("Залишок"),
+    ],
+  ];
 
-    ];
+  currencies.forEach((currency) => {
+    const row = finance[currency];
+    if (!row) return;
 
-    currencies.forEach((currency) => {
+    const received = Number(row.received || 0);
+    const issued = Number(row.issued || 0);
+    const startIssued = issued - received;
 
-        const balance = Number(finance[currency].balance);
+    const issuedText =
+      received > 0
+        ? `${startIssued.toFixed(0)}+${received.toFixed(0)}`
+        : issued.toFixed(2);
 
-        body.push([
-
-            {
-                text: currency,
-                bold: true,
-                alignment: "center",
-            },
-
-            value(finance[currency].issued),
-
-            value(finance[currency].exchangedIn),
-
-            value(finance[currency].exchangedOut),
-
-            value(finance[currency].spent),
-
-            {
-                text: balance.toFixed(2),
-                bold: true,
-                color:
-                    balance > 0
-                        ? "#0f2718"
-                        : balance < 0
-                        ? "#DC2626"
-                        : "#111827",
-                alignment: "right",
-            },
-
-        ]);
-
-    });
-
-    return [
-
-        {
-            text: "ФІНАНСОВИЙ ЗВІТ",
-            style: "sectionTitle",
-            margin: [0, 0, 0, 8],
-        },
-
-        {
-
-            table: {
-
-                headerRows: 1,
-
-                widths: [55, 65, 65, 65, 65, 70],
-
-                body,
-
-            },
-
-            layout: {
-
-                fillColor: (row) =>
-                    row === 0
-                        ? "#E5E7EB"
-                        : row % 2 === 0
-                        ? "#F9FAFB"
-                        : null,
-
-                hLineColor: () => "#D1D5DB",
-                vLineColor: () => "#D1D5DB",
-
-                hLineWidth: () => 0.5,
-                vLineWidth: () => 0.5,
-
-            },
-
-        },
-
-    ];
-
-}
-
-function head(text) {
-
-    return {
-
-        text,
-
+    body.push([
+      { text: currency, fontSize: 9, bold: true },
+      num(issuedText),
+      num(Number(row.exchangedIn || 0).toFixed(2)),
+      num(Number(row.exchangedOut || 0).toFixed(2)),
+      num(Number(row.spent || 0).toFixed(2)),
+      {
+        text: Number(row.balance || 0).toFixed(2),
+        fontSize: 9,
         bold: true,
-
-        color: "#14532D",
-
-        fontSize: 10,
-
-        alignment: "center",
-
-        margin: [0, 4, 0, 4],
-
-    };
-
-}
-
-function value(number) {
-
-    return {
-
-        text: Number(number).toFixed(2),
-
         alignment: "right",
+      },
+    ]);
+  });
 
-        fontSize: 10,
-
-    };
-
+  return [
+    {
+      text: "ФІНАНСОВИЙ ЗВІТ",
+      style: "sectionTitle",
+      margin: [0, 16, 0, 8],
+    },
+    {
+      table: {
+        headerRows: 1,
+        widths: [55, 70, 70, 70, 70, 70],
+        body,
+      },
+      layout: {
+        hLineWidth: () => 0.6,
+        vLineWidth: () => 0.6,
+        hLineColor: () => "#BFBFBF",
+        vLineColor: () => "#BFBFBF",
+        paddingLeft: () => 6,
+        paddingRight: () => 6,
+        paddingTop: () => 5,
+        paddingBottom: () => 5,
+      },
+    },
+  ];
 }
