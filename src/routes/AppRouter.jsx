@@ -14,96 +14,98 @@ import TripReport from "../pages/TripReport";
 
 import AuthGuard from "../components/AuthGuard";
 import Login from "../pages/Login";
+import ResetPassword from "../pages/ResetPassword";
 
 export default function AppRouter() {
-    return (
-        <BrowserRouter>
-            <MainLayout>
-                <Routes>
-                  <Route path="/login" element={<Login />} />
+  return (
+    <BrowserRouter>
+      <MainLayout>
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
 
-<Route
-  path="/"
-  element={
-    <AuthGuard>
-      <Dashboard />
-    </AuthGuard>
-  }
-/>
+          <Route
+            path="/"
+            element={
+              <AuthGuard>
+                <Dashboard />
+              </AuthGuard>
+            }
+          />
 
-<Route
-  path="/trips"
-  element={
-    <AuthGuard>
-      <TripsV4 />
-    </AuthGuard>
-  }
-/>
+          <Route
+            path="/trips"
+            element={
+              <AuthGuard>
+                <TripsV4 />
+              </AuthGuard>
+            }
+          />
 
-<Route
-  path="/schengen"
-  element={
-    <AuthGuard>
-      <Schengen />
-    </AuthGuard>
-  }
-/>
+          <Route
+            path="/schengen"
+            element={
+              <AuthGuard>
+                <Schengen />
+              </AuthGuard>
+            }
+          />
 
-<Route
-  path="/trip-fuel/:tripId"
-  element={
-    <AuthGuard>
-      <TripFuel />
-    </AuthGuard>
-  }
-/>
+          <Route
+            path="/trip-fuel/:tripId"
+            element={
+              <AuthGuard>
+                <TripFuel />
+              </AuthGuard>
+            }
+          />
 
-<Route
-  path="/trip-expenses/:tripId"
-  element={
-    <AuthGuard>
-      <TripExpenses />
-    </AuthGuard>
-  }
-/>
+          <Route
+            path="/trip-expenses/:tripId"
+            element={
+              <AuthGuard>
+                <TripExpenses />
+              </AuthGuard>
+            }
+          />
 
-<Route
-  path="/trip-exchange/:tripId"
-  element={
-    <AuthGuard>
-      <TripExchange />
-    </AuthGuard>
-  }
-/>
+          <Route
+            path="/trip-exchange/:tripId"
+            element={
+              <AuthGuard>
+                <TripExchange />
+              </AuthGuard>
+            }
+          />
 
-<Route
-  path="/trip-documents/:tripId"
-  element={
-    <AuthGuard>
-      <TripDocuments />
-    </AuthGuard>
-  }
-/>
+          <Route
+            path="/trip-documents/:tripId"
+            element={
+              <AuthGuard>
+                <TripDocuments />
+              </AuthGuard>
+            }
+          />
 
-<Route
-  path="/trip/:tripId/finish"
-  element={
-    <AuthGuard>
-      <TripFinish />
-    </AuthGuard>
-  }
-/>
+          <Route
+            path="/trip/:tripId/finish"
+            element={
+              <AuthGuard>
+                <TripFinish />
+              </AuthGuard>
+            }
+          />
 
-<Route
-  path="/trip/:tripId/report"
-  element={
-    <AuthGuard>
-      <TripReport />
-    </AuthGuard>
-  }
-/>
-                </Routes>
-            </MainLayout>
-        </BrowserRouter>
-    );
+          <Route
+            path="/trip/:tripId/report"
+            element={
+              <AuthGuard>
+                <TripReport />
+              </AuthGuard>
+            }
+          />
+        </Routes>
+      </MainLayout>
+    </BrowserRouter>
+  );
 }

@@ -12,6 +12,17 @@ export default function DocumentViewer({
 }) {
     if (!previewDoc) return null;
 
+    const fileData = previewDoc.fileData || "";
+    const hasFile = Boolean(fileData);
+
+    const isImage =
+        fileData.startsWith("data:image") ||
+        /\.(png|jpe?g|webp|gif)$/i.test(previewDoc.fileName || "");
+
+    const isPdf =
+        fileData.startsWith("data:application/pdf") ||
+        /\.pdf$/i.test(previewDoc.fileName || "");
+
     return (
         <div
             className="viewer-overlay"
@@ -24,29 +35,17 @@ export default function DocumentViewer({
                 centerOnInit
                 centerZoomedOut
                 limitToBounds={true}
-                wheel={{
-                    step: 0.15,
-                }}
-                doubleClick={{
-                    disabled: false,
-                }}
-                pinch={{
-                    step: 5,
-                }}
+                wheel={{ step: 0.15 }}
+                doubleClick={{ disabled: false }}
+                pinch={{ step: 5 }}
             >
-                {({
-                    zoomIn,
-                    zoomOut,
-                    resetTransform,
-                    state,
-                }) => (
+                {({ zoomIn, zoomOut, resetTransform, state }) => (
                     <>
                         <div
                             className="viewer-toolbar"
                             onClick={(e) => e.stopPropagation()}
                         >
                             <div className="viewer-left">
-
                                 <button
                                     className="viewer-btn"
                                     onClick={() =>
@@ -76,16 +75,10 @@ export default function DocumentViewer({
                                 <div className="viewer-title">
                                     {previewDoc.fileName}
                                 </div>
-
                             </div>
 
                             <div className="viewer-right">
-
-                                <button
-                                    className="viewer-btn"
-                                    onClick={() => zoomOut()}
-                                    title="Зменшити"
-                                >
+                                <button className="viewer-btn" onClick={() => zoomOut()}>
                                     ➖
                                 </button>
 
@@ -93,38 +86,30 @@ export default function DocumentViewer({
                                     {Math.round((state?.scale || 1) * 100)}%
                                 </div>
 
-                                <button
-                                    className="viewer-btn"
-                                    onClick={() => zoomIn()}
-                                    title="Збільшити"
-                                >
+                                <button className="viewer-btn" onClick={() => zoomIn()}>
                                     ➕
                                 </button>
 
-                                <button
-                                    className="viewer-btn"
-                                    onClick={() => resetTransform()}
-                                    title="Вписати у вікно"
-                                >
+                                <button className="viewer-btn" onClick={() => resetTransform()}>
                                     ⛶
                                 </button>
 
-                                <a
-                                    href={previewDoc.fileData}
-                                    download={previewDoc.fileName}
-                                    className="viewer-download"
-                                >
-                                    ⬇
-                                </a>
+                                {hasFile && (
+                                    <a
+                                        href={fileData}
+                                        download={previewDoc.fileName}
+                                        className="viewer-download"
+                                    >
+                                        ⬇
+                                    </a>
+                                )}
 
                                 <button
                                     className="viewer-close"
                                     onClick={() => setPreviewIndex(null)}
-                                    title="Закрити"
                                 >
                                     ✕
                                 </button>
-
                             </div>
                         </div>
 
@@ -133,12 +118,8 @@ export default function DocumentViewer({
                             onClick={(e) => e.stopPropagation()}
                         >
                             <div className="viewer-center">
-
                                 <TransformComponent
-                                    wrapperStyle={{
-                                        width: "100%",
-                                        height: "100%",
-                                    }}
+                                    wrapperStyle={{ width: "100%", height: "100%" }}
                                     contentStyle={{
                                         width: "100%",
                                         height: "100%",
@@ -147,32 +128,29 @@ export default function DocumentViewer({
                                         alignItems: "center",
                                     }}
                                 >
-                                    {previewDoc.fileData.startsWith("data:image") ? (
-
+                                    {!hasFile ? (
+                                        <div className="viewer-error">
+                                            Файл не збережено. Завантаж документ ще раз.
+                                        </div>
+                                    ) : isImage ? (
                                         <img
-                                            src={previewDoc.fileData}
+                                            src={fileData}
                                             alt={previewDoc.fileName}
                                             className="viewer-image"
                                             draggable={false}
                                         />
-
-                                    ) : previewDoc.fileData.startsWith("data:application/pdf") ? (
-
+                                    ) : isPdf ? (
                                         <iframe
-                                            src={previewDoc.fileData}
+                                            src={fileData}
                                             title={previewDoc.fileName}
                                             className="viewer-pdf"
                                         />
-
                                     ) : (
-
                                         <div className="viewer-error">
                                             Неможливо переглянути цей тип файлу.
                                         </div>
-
                                     )}
                                 </TransformComponent>
-
                             </div>
                         </div>
                     </>
