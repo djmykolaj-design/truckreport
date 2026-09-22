@@ -28,9 +28,20 @@ export default function TripExchange() {
   const [fromAmount, setFromAmount] = useState("");
   const [toCurrency, setToCurrency] = useState("PLN");
   const [toAmount, setToAmount] = useState("");
+  const [rate, setRate] = useState("");
   const [exchanges, setExchanges] = useState(trip.exchanges || []);
 
   const isCompleted = trip.status === "completed";
+
+  const recalc = (amount, nextRate) => {
+    const a = Number(amount);
+    const r = Number(nextRate);
+    if (!a || !r) {
+      setToAmount("");
+      return;
+    }
+    setToAmount((a * r).toFixed(2));
+  };
 
   const persist = (updatedExchanges) => {
     const currentTrips = JSON.parse(
@@ -56,7 +67,12 @@ export default function TripExchange() {
 
   const saveExchange = () => {
     if (!fromAmount || !toAmount) {
-      alert("Заповни суми");
+      alert("Вкажи суму і курс або суму отримано");
+      return;
+    }
+
+    if (fromCurrency === toCurrency) {
+      alert("Валюти мають бути різні");
       return;
     }
 
@@ -66,6 +82,7 @@ export default function TripExchange() {
       fromAmount,
       toCurrency,
       toAmount,
+      rate: rate || null,
       date: new Date().toLocaleString(),
     };
 
@@ -75,6 +92,7 @@ export default function TripExchange() {
 
     setFromAmount("");
     setToAmount("");
+    setRate("");
   };
 
   const deleteExchange = (id) => {
@@ -109,7 +127,7 @@ export default function TripExchange() {
 
       <Card
         title="Новий обмін"
-        subtitle="Додайте нову операцію обміну валют"
+        subtitle="Сума × курс = отримано"
       >
         <Select
           value={fromCurrency}
@@ -123,9 +141,22 @@ export default function TripExchange() {
 
         <Input
           type="number"
-          placeholder="Сума віддаємо"
+          placeholder="Віддаю"
           value={fromAmount}
-          onChange={(e) => setFromAmount(e.target.value)}
+          onChange={(e) => {
+            setFromAmount(e.target.value);
+            recalc(e.target.value, rate);
+          }}
+        />
+
+        <Input
+          type="number"
+          placeholder="Курс (скільки отримаю за 1)"
+          value={rate}
+          onChange={(e) => {
+            setRate(e.target.value);
+            recalc(fromAmount, e.target.value);
+          }}
         />
 
         <Select
@@ -140,7 +171,7 @@ export default function TripExchange() {
 
         <Input
           type="number"
-          placeholder="Сума отримано"
+          placeholder="Отримано (рахується само)"
           value={toAmount}
           onChange={(e) => setToAmount(e.target.value)}
         />

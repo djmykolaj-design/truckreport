@@ -16,7 +16,7 @@ export function calculateRollingSchengen(stays, referenceDate = new Date()) {
 
   for (const trip of stays) {
     const start = new Date(trip.start);
-    const end = new Date(trip.end);
+    const end = trip.end ? new Date(trip.end) : new Date(referenceDate);
 
     const effectiveStart = start < startWindow ? startWindow : start;
     const effectiveEnd = end > endWindow ? endWindow : end;

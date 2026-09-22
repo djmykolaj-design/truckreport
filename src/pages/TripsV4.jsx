@@ -138,6 +138,12 @@ export default function TripsV4() {
     }
   };
 
+  const sortedTrips = [...trips].sort((a, b) => {
+    if (a.status === "active" && b.status !== "active") return -1;
+    if (a.status !== "active" && b.status === "active") return 1;
+    return (Number(b.id) || 0) - (Number(a.id) || 0);
+  });
+
   const isMobile = window.innerWidth <= 768;
 
   if (loadingTrips) {
@@ -217,7 +223,7 @@ export default function TripsV4() {
 
         <div style={{ marginTop: "16px" }}>
           <TripList
-            trips={trips}
+            trips={sortedTrips}
             selectedTrip={selectedTrip}
             setSelectedTrip={setSelectedTrip}
           />
@@ -246,7 +252,7 @@ export default function TripsV4() {
         </div>
 
         <TripList
-          trips={trips}
+          trips={sortedTrips}
           selectedTrip={selectedTrip}
           setSelectedTrip={setSelectedTrip}
         />
