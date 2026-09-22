@@ -20,11 +20,11 @@ export async function loadStaysFromCloud() {
 
   const map = new Map();
   (data || []).forEach((row) => {
-    const key = `${row.start_date}_${row.end_date}`;
+    const key = `${row.start_date}_${row.end_date || "open"}`;
     map.set(key, {
       id: row.id,
       start: row.start_date,
-      end: row.end_date,
+      end: row.end_date || null,
     });
   });
 
@@ -54,14 +54,14 @@ export async function saveStaysToCloud(stays) {
   const rows = [];
 
   stays.forEach((s) => {
-    if (!s?.start || !s?.end) return;
-    const key = `${s.start}_${s.end}`;
+    if (!s?.start) return;
+    const key = `${s.start}_${s.end || "open"}`;
     if (seen.has(key)) return;
     seen.add(key);
     rows.push({
       user_id: user.id,
       start_date: s.start,
-      end_date: s.end,
+      end_date: s.end || null,
     });
   });
 
