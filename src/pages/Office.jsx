@@ -13,7 +13,15 @@ export default function Office() {
     async function init() {
       const me = await getMyProfile();
       setProfile(me);
-      if (isBoss(me)) setTrips(await loadFleetTrips());
+            if (isBoss(me)) {
+        const list = await loadFleetTrips();
+        list.sort((a, b) => {
+          if (a.status === "active" && b.status !== "active") return -1;
+          if (b.status === "active" && a.status !== "active") return 1;
+          return new Date(b.startDate || 0) - new Date(a.startDate || 0);
+        });
+        setTrips(list);
+      }
       setLoading(false);
     }
     init();
