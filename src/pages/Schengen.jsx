@@ -22,7 +22,7 @@ export default function Schengen() {
       try {
         const local = JSON.parse(localStorage.getItem("stays") || "[]");
         if (local.length) setStays(local);
-      } catch {}
+      } catch { }
 
       const cloud = await loadStaysFromCloud();
       if (cloud.length) {
@@ -65,6 +65,26 @@ export default function Schengen() {
     setStays((prev) => prev.filter((_, i) => i !== index));
   };
 
+  const closeStay = (index, exitDate) => {
+    if (!exitDate) {
+      alert("Вкажи дату виїзду");
+      return;
+    }
+
+    setStays((prev) =>
+      prev.map((stay, i) => {
+        if (i !== index) return stay;
+
+        if (new Date(exitDate) < new Date(stay.start)) {
+          alert("Дата виїзду не може бути раніше в'їзду.");
+          return stay;
+        }
+
+        return { ...stay, end: exitDate };
+      })
+    );
+  };
+
   const result = useMemo(
     () => calculateRollingSchengen(stays),
     [stays]
@@ -74,10 +94,10 @@ export default function Schengen() {
     result.status === "violation"
       ? "#ef4444"
       : result.status === "danger"
-      ? "#f97316"
-      : result.status === "warning"
-      ? "#eab308"
-      : "#22c55e";
+        ? "#f97316"
+        : result.status === "warning"
+          ? "#eab308"
+          : "#22c55e";
 
   const future = useMemo(() => {
     const arr = [];
@@ -142,6 +162,7 @@ export default function Schengen() {
       <SchengenHistory
         stays={stays}
         onDelete={deleteTrip}
+        onClose={closeStay}
         formatDate={formatDate}
         daysBetween={daysBetween}
       />
