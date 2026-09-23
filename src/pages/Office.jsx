@@ -16,6 +16,7 @@ export default function Office() {
   const [profile, setProfile] = useState(null);
   const [trips, setTrips] = useState([]);
   const [driverFilter, setDriverFilter] = useState("all");
+  const [onlyActive, setOnlyActive] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -52,14 +53,16 @@ export default function Office() {
     a[1].localeCompare(b[1], "uk")
   );
 
-  const visibleTrips =
-    driverFilter === "all"
-      ? trips
-      : trips.filter(
-          (t) =>
-            normName(t.driver) === driverFilter ||
-            normName(t.codriver) === driverFilter
-        );
+  const visibleTrips = trips.filter((t) => {
+    const byDriver =
+      driverFilter === "all" ||
+      normName(t.driver) === driverFilter ||
+      normName(t.codriver) === driverFilter;
+
+    const byStatus = !onlyActive || t.status === "active";
+
+    return byDriver && byStatus;
+  });
 
   return (
     <div style={{ color: "white", maxWidth: 900 }}>
@@ -74,7 +77,7 @@ export default function Office() {
         style={{
           width: "100%",
           maxWidth: 360,
-          marginBottom: 20,
+          marginBottom: 14,
           padding: "12px 14px",
           borderRadius: 12,
           border: "1px solid #30363D",
@@ -90,6 +93,24 @@ export default function Office() {
           </option>
         ))}
       </select>
+
+      <label
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 10,
+          marginBottom: 20,
+          color: "#e2e8f0",
+          cursor: "pointer",
+        }}
+      >
+        <input
+          type="checkbox"
+          checked={onlyActive}
+          onChange={(e) => setOnlyActive(e.target.checked)}
+        />
+        Тільки в дорозі
+      </label>
 
       {visibleTrips.length === 0 && (
         <p style={{ color: "#94a3b8" }}>Рейсів ще немає</p>
