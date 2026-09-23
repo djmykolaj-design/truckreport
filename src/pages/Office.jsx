@@ -29,37 +29,56 @@ export default function Office() {
         Рейси всіх водіїв • {trips.length}
       </p>
 
-      {trips.length === 0 && <p style={{ color: "#94a3b8" }}>Рейсів ще немає</p>}
+      {trips.length === 0 && (
+        <p style={{ color: "#94a3b8" }}>Рейсів ще немає</p>
+      )}
 
       {trips.map((trip) => (
         <div
           key={trip.id}
           onClick={() => navigate(`/office/${trip.id}`)}
           style={{
-            background: "#1e293b",
-            border: "1px solid #334155",
-            borderRadius: 14,
+            background: "#232B38",
+            border: "1px solid #30363D",
+            borderRadius: 16,
             padding: 16,
             marginBottom: 12,
             cursor: "pointer",
           }}
         >
-          <div style={{ fontWeight: 700, fontSize: 18 }}>
-            Рейс № {trip.tripNumber || "—"}
-          </div>
-          <div style={{ marginTop: 6 }}>
-            {trip.fromCity || "?"} → {trip.toCity || "?"}
-          </div>
-          <div style={{ color: "#94a3b8", marginTop: 6, fontSize: 13 }}>
-            {trip.startDate || ""} • {trip.driver || ""} • {trip.truck || ""}
-          </div>
           <div
             style={{
-              marginTop: 8,
-              color: trip.status === "active" ? "#22c55e" : "#94a3b8",
+              display: "flex",
+              justifyContent: "space-between",
+              gap: 12,
             }}
           >
-            {trip.status === "active" ? "В дорозі" : "Завершений"}
+            <div style={{ fontWeight: 700, fontSize: 16 }}>
+              Рейс № {trip.tripNumber || "—"}
+            </div>
+            <div
+              style={{
+                color: trip.status === "active" ? "#22c55e" : "#94a3b8",
+                fontWeight: 700,
+                fontSize: 13,
+              }}
+            >
+              {trip.status === "active" ? "В дорозі" : "Завершений"}
+            </div>
+          </div>
+
+          <div style={{ marginTop: 6, fontSize: 15 }}>
+            {trip.fromCity || "?"} → {trip.toCity || "?"}
+          </div>
+
+          <div style={{ color: "#94a3b8", marginTop: 6, fontSize: 13 }}>
+            {trip.driver || "—"} • {trip.truck || "—"}
+            {trip.trailer ? ` / ${trip.trailer}` : ""}
+          </div>
+
+          <div style={{ color: "#94a3b8", marginTop: 4, fontSize: 12 }}>
+            {trip.startDate || ""}
+            {trip.endDate ? ` — ${trip.endDate}` : ""}
           </div>
         </div>
       ))}
