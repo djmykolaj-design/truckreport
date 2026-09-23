@@ -1,15 +1,23 @@
+import { useEffect, useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
   Truck,
   Globe2,
+  Briefcase,
   LogOut,
 } from "lucide-react";
 import "./BottomNav.css";
 import { supabase } from "../../lib/supabase";
+import { getMyProfile, isBoss } from "../../services/profile";
 
 export default function BottomNav() {
   const navigate = useNavigate();
+  const [profile, setProfile] = useState(null);
+
+  useEffect(() => {
+    getMyProfile().then(setProfile);
+  }, []);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -48,6 +56,18 @@ export default function BottomNav() {
         <Globe2 size={22} />
         <span>Шенген</span>
       </NavLink>
+
+      {isBoss(profile) && (
+        <NavLink
+          to="/office"
+          className={({ isActive }) =>
+            `bottom-nav-item ${isActive ? "active" : ""}`
+          }
+        >
+          <Briefcase size={22} />
+          <span>Офіс</span>
+        </NavLink>
+      )}
 
       <button
         type="button"
