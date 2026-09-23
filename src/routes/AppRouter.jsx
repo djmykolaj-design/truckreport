@@ -15,6 +15,7 @@ import TripReport from "../pages/TripReport";
 import AuthGuard from "../components/AuthGuard";
 import Login from "../pages/Login";
 import ResetPassword from "../pages/ResetPassword";
+import Office from "../pages/Office";
 
 export default function AppRouter() {
   return (
@@ -101,6 +102,15 @@ export default function AppRouter() {
             element={
               <AuthGuard>
                 <TripReport />
+              </AuthGuard>
+            }
+          />
+
+                    <Route
+            path="/office"
+            element={
+              <AuthGuard>
+                <Office />
               </AuthGuard>
             }
           />
