@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import "./Dashboard.css";
 import useDashboard from "../hooks/useDashboard";
 import { useNavigate } from "react-router-dom";
@@ -7,8 +8,8 @@ import {
   Wallet,
   FileText,
   ArrowRight,
-  MapPin,
 } from "lucide-react";
+import { joinCompany, getMyCompany } from "../services/company";
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -26,8 +27,16 @@ export default function Dashboard() {
     schengenColor,
   } = useDashboard();
 
+  const [firmCode, setFirmCode] = useState("");
+  const [joining, setJoining] = useState(false);
+  const [myCompany, setMyCompany] = useState(null);
+
+  useEffect(() => {
+    getMyCompany().then(setMyCompany);
+  }, []);
+
   const formatExpense = () => {
-    if (!activeTripStats?.mainExpense) return "0";
+    if (!activeTripStats) return "0";
     const e = activeTripStats.expenses || {};
     const parts = [];
     if (e.EUR > 0) parts.push(`${Math.round(e.EUR)} €`);
@@ -37,18 +46,27 @@ export default function Dashboard() {
     return parts.length ? parts.join(" · ") : "0";
   };
 
+  const handleJoin = async () => {
+    if (!firmCode.trim()) return;
+    setJoining(true);
+    const company = await joinCompany(firmCode);
+    setJoining(false);
+    if (company) {
+      setMyCompany(company);
+      setFirmCode("");
+      alert(`Ти в фірмі «${company.name}»`);
+    }
+  };
+
   return (
     <div className="dashboard">
-      {/* ===== АКТИВНИЙ РЕЙС ===== */}
       <section className="hero-card">
         <div className="hero-top">
           <div className="hero-title">
             <Truck size={18} />
             <span>Активний рейс</span>
           </div>
-          {activeTrip && (
-            <div className="hero-badge">У дорозі</div>
-          )}
+          {activeTrip && <div className="hero-badge">У дорозі</div>}
         </div>
 
         {activeTrip ? (
@@ -59,9 +77,7 @@ export default function Dashboard() {
               {activeTrip.toCity || "—"}
             </div>
 
-            <div className="hero-meta">
-              TR-{activeTrip.tripNumber}
-            </div>
+            <div className="hero-meta">TR-{activeTrip.tripNumber}</div>
 
             <div className="hero-stats">
               <div className="hero-stat">
@@ -95,10 +111,7 @@ export default function Dashboard() {
         ) : (
           <>
             <div className="hero-empty">Немає активного рейсу</div>
-            <button
-              className="hero-btn"
-              onClick={() => navigate("/trips")}
-            >
+            <button className="hero-btn" onClick={() => navigate("/trips")}>
               Створити рейс
               <ArrowRight size={18} />
             </button>
@@ -106,11 +119,11 @@ export default function Dashboard() {
         )}
       </section>
 
-      {/* ===== KPI ===== */}
-     
       <div className="kpi-grid">
         <div className="kpi-card">
-          <div className="kpi-icon"><Truck size={18} /></div>
+          <div className="kpi-icon">
+            <Truck size={18} />
+          </div>
           <div className="kpi-value">{totalTrips}</div>
           <div className="kpi-title">Рейси</div>
           <div className="kpi-sub">
@@ -119,40 +132,39 @@ export default function Dashboard() {
         </div>
 
         <div className="kpi-card">
-          <div className="kpi-icon"><Fuel size={18} /></div>
+          <div className="kpi-icon">
+            <Fuel size={18} />
+          </div>
           <div className="kpi-value">
             {Math.round(activeTrip ? activeTripStats.fuelAdded : totalFuel)} л
           </div>
           <div className="kpi-title">Пальне</div>
-          <div className="kpi-sub">
-            {activeTrip ? "За цей рейс" : "Всього"}
-          </div>
+          <div className="kpi-sub">{activeTrip ? "За цей рейс" : "Всього"}</div>
         </div>
 
         <div className="kpi-card">
-          <div className="kpi-icon"><Wallet size={18} /></div>
+          <div className="kpi-icon">
+            <Wallet size={18} />
+          </div>
           <div className="kpi-value kpi-expense">
             {activeTrip ? formatExpense() : `${Math.round(expenses.EUR || 0)} €`}
           </div>
           <div className="kpi-title">Витрати</div>
-          <div className="kpi-sub">
-            {activeTrip ? "За цей рейс" : "EUR"}
-          </div>
+          <div className="kpi-sub">{activeTrip ? "За цей рейс" : "EUR"}</div>
         </div>
 
         <div className="kpi-card">
-          <div className="kpi-icon"><FileText size={18} /></div>
+          <div className="kpi-icon">
+            <FileText size={18} />
+          </div>
           <div className="kpi-value">
             {activeTrip ? activeTripStats.documentsCount : documentsCount}
           </div>
           <div className="kpi-title">Документи</div>
-          <div className="kpi-sub">
-            {activeTrip ? "За цей рейс" : "Файлів"}
-          </div>
+          <div className="kpi-sub">{activeTrip ? "За цей рейс" : "Файлів"}</div>
         </div>
       </div>
 
-      {/* ===== ШЕНГЕН ===== */}
       <section className="schengen-card">
         <div className="schengen-left">
           <div className="schengen-title">Шенгенські дні</div>
@@ -160,10 +172,7 @@ export default function Dashboard() {
             Використано {schengen.usedDays} з 90
           </div>
         </div>
-        <div
-          className="schengen-number"
-          style={{ color: schengenColor }}
-        >
+        <div className="schengen-number" style={{ color: schengenColor }}>
           {schengen.remaining}
           <span>/90</span>
         </div>
@@ -177,6 +186,44 @@ export default function Dashboard() {
             }}
           />
         </div>
+      </section>
+
+      <section className="hero-card" style={{ marginTop: 8 }}>
+        <div className="hero-title">Фірма</div>
+        {myCompany ? (
+          <div className="hero-empty" style={{ marginTop: 10 }}>
+            Ти в фірмі «{myCompany.name}»
+          </div>
+        ) : (
+          <div className="hero-empty" style={{ marginTop: 10 }}>
+            Ще не в фірмі
+          </div>
+        )}
+
+        <input
+          value={firmCode}
+          onChange={(e) => setFirmCode(e.target.value.toUpperCase())}
+          placeholder="Код фірми, наприклад SMTR1988"
+          style={{
+            width: "100%",
+            marginTop: 12,
+            padding: "12px",
+            borderRadius: 10,
+            border: "1px solid #334155",
+            background: "#1e293b",
+            color: "white",
+            boxSizing: "border-box",
+          }}
+        />
+
+        <button
+          className="hero-btn"
+          style={{ marginTop: 12 }}
+          disabled={joining || !firmCode.trim()}
+          onClick={handleJoin}
+        >
+          {joining ? "Приєдную…" : "Приєднатись до фірми"}
+        </button>
       </section>
     </div>
   );
