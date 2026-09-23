@@ -14,6 +14,7 @@ export default function TripsV4() {
   const [showForm, setShowForm] = useState(false);
   const [trips, setTrips] = useState([]);
   const [loadingTrips, setLoadingTrips] = useState(true);
+  const [cloudReady, setCloudReady] = useState(false);
   const [selectedTrip, setSelectedTrip] = useState(null);
 
   const navigate = useNavigate();
@@ -37,35 +38,25 @@ export default function TripsV4() {
     startUah, setStartUah,
   } = form;
 
-  // Завантаження: local → cloud
   useEffect(() => {
     async function init() {
-      const local = JSON.parse(
-        localStorage.getItem("cabina_trips_v4") || "[]"
-      );
-      if (local.length) setTrips(local);
-
       const cloud = await loadTripsFromCloud();
-      if (cloud.length) {
-        setTrips(cloud);
-        localStorage.setItem("cabina_trips_v4", JSON.stringify(cloud));
-      }
-
+      setTrips(cloud);
+      localStorage.setItem("cabina_trips_v4", JSON.stringify(cloud));
       setLoadingTrips(false);
+      setCloudReady(true);
     }
 
     init();
   }, []);
 
-  // Автозбереження: local + cloud
   useEffect(() => {
-    if (loadingTrips) return;
+    if (!cloudReady) return;
 
     localStorage.setItem("cabina_trips_v4", JSON.stringify(trips));
     saveAllTripsToCloud(trips);
-  }, [trips, loadingTrips]);
+  }, [trips, cloudReady]);
 
-  // Відкрити рейс з URL (?trip=...)
   useEffect(() => {
     const tripId = searchParams.get("trip");
     if (!tripId) return;
@@ -140,7 +131,7 @@ export default function TripsV4() {
 
   const sortedTrips = [...trips].sort((a, b) => {
     if (a.status === "active" && b.status !== "active") return -1;
-    if (a.status !== "active" && b.status === "active") return 1;
+    if (a.status !== "active" && b.status !== "active") return 1;
     return (Number(b.id) || 0) - (Number(a.id) || 0);
   });
 
@@ -154,7 +145,6 @@ export default function TripsV4() {
     );
   }
 
-  // ===== МОБІЛЬНА ВЕРСІЯ =====
   if (isMobile) {
     if (showForm) {
       return (
@@ -232,7 +222,6 @@ export default function TripsV4() {
     );
   }
 
-  // ===== ДЕСКТОП =====
   return (
     <div
       style={{
