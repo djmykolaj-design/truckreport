@@ -17,6 +17,7 @@ import Login from "../pages/Login";
 import ResetPassword from "../pages/ResetPassword";
 import Office from "../pages/Office";
 import OfficeTrip from "../pages/OfficeTrip";
+import SetupCompany from "../pages/SetupCompany";
 
 export default function AppRouter() {
   return (
@@ -124,6 +125,7 @@ export default function AppRouter() {
               </AuthGuard>
             }
           />
+          <Route path="/setup" element={<SetupCompany />} />
         </Routes>
       </MainLayout>
     </BrowserRouter>

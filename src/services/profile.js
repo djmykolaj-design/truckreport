@@ -13,21 +13,37 @@ export async function getMyProfile() {
 
   if (error) {
     console.error("profile load:", error);
-    return { id: user.id, role: "driver", email: user.email };
+    return {
+      id: user.id,
+      role: "driver",
+      email: user.email,
+      setup_done: false,
+    };
   }
 
   if (!data) {
-    const { data: created } = await supabase
+    const { data: created, error: createError } = await supabase
       .from("profiles")
       .insert({
         id: user.id,
         role: "driver",
         full_name: user.email,
+        setup_done: false,
       })
       .select()
       .single();
 
-    return created || { id: user.id, role: "driver", email: user.email };
+    if (createError) {
+      console.error("profile create:", createError);
+      return {
+        id: user.id,
+        role: "driver",
+        email: user.email,
+        setup_done: false,
+      };
+    }
+
+    return { ...created, email: user.email };
   }
 
   return { ...data, email: user.email };
@@ -35,4 +51,8 @@ export async function getMyProfile() {
 
 export function isBoss(profile) {
   return profile?.role === "boss";
+}
+
+export function needsSetup(profile) {
+  return !profile?.setup_done;
 }

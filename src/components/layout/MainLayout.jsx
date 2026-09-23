@@ -1,33 +1,26 @@
+import { useLocation } from "react-router-dom";
 import "./MainLayout.css";
 import Sidebar from "./Sidebar";
 import BottomNav from "./BottomNav";
-import MobileHeader from "./MobileHeader";
 import "../../styles/page.css";
-import { useLocation } from "react-router-dom";
 
 export default function MainLayout({ children }) {
   const location = useLocation();
-  const isLogin = location.pathname === "/login";
+  const hideNav =
+    location.pathname === "/login" || location.pathname === "/setup";
 
-  // На сторінці логіну — без меню і шапки
-  if (isLogin) {
-    return <>{children}</>;
+  if (hideNav) {
+    return <main className="layout-content">{children}</main>;
   }
 
   return (
     <div className="layout">
-      {/* Сайдбар тільки на десктопі */}
       <div className="desktop-only">
         <Sidebar />
       </div>
 
-      <main className="layout-content">
-        {/* Шапка тільки на мобільному */}
-        <MobileHeader />
-        {children}
-      </main>
+      <main className="layout-content">{children}</main>
 
-      {/* Нижнє меню тільки на мобільному */}
       <div className="mobile-only">
         <BottomNav />
       </div>

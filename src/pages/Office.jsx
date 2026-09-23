@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getMyProfile, isBoss } from "../services/profile";
+import { getMyCompany } from "../services/company";
 import { loadFleetTrips } from "../services/office";
 
 function normName(value) {
@@ -14,6 +15,7 @@ function normName(value) {
 export default function Office() {
   const navigate = useNavigate();
   const [profile, setProfile] = useState(null);
+  const [company, setCompany] = useState(null);
   const [trips, setTrips] = useState([]);
   const [driverFilter, setDriverFilter] = useState("all");
   const [onlyActive, setOnlyActive] = useState(false);
@@ -23,17 +25,26 @@ export default function Office() {
     async function init() {
       const me = await getMyProfile();
       setProfile(me);
+
       if (isBoss(me)) {
-        const list = await loadFleetTrips();
+        const [list, firm] = await Promise.all([
+          loadFleetTrips(),
+          getMyCompany(),
+        ]);
+
         list.sort((a, b) => {
           if (a.status === "active" && b.status !== "active") return -1;
           if (b.status === "active" && a.status !== "active") return 1;
           return new Date(b.startDate || 0) - new Date(a.startDate || 0);
         });
+
         setTrips(list);
+        setCompany(firm);
       }
+
       setLoading(false);
     }
+
     init();
   }, []);
 
@@ -64,12 +75,62 @@ export default function Office() {
     return byDriver && byStatus;
   });
 
+  const copyCode = async () => {
+    if (!company?.invite_code) return;
+    try {
+      await navigator.clipboard.writeText(company.invite_code);
+      alert("Код скопійовано");
+    } catch {
+      alert(company.invite_code);
+    }
+  };
+
   return (
     <div style={{ color: "white", maxWidth: 900 }}>
       <h1 style={{ marginBottom: 8 }}>Офіс</h1>
-      <p style={{ color: "#94a3b8", marginBottom: 16 }}>
-        Рейси всіх водіїв • {visibleTrips.length}
+
+      <p style={{ color: "#94a3b8", marginBottom: 8 }}>
+        {company?.name || "Фірма"} • рейсів {visibleTrips.length}
       </p>
+
+      {company?.invite_code && (
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 12,
+            marginBottom: 18,
+            padding: "12px 14px",
+            borderRadius: 12,
+            border: "1px solid #30363D",
+            background: "#1F2937",
+            maxWidth: 360,
+          }}
+        >
+          <div>
+            <div style={{ fontSize: 12, color: "#94a3b8" }}>Код фірми</div>
+            <div style={{ fontWeight: 700, letterSpacing: 1 }}>
+              {company.invite_code}
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={copyCode}
+            style={{
+              marginLeft: "auto",
+              border: "none",
+              borderRadius: 8,
+              padding: "8px 12px",
+              background: "#22c55e",
+              color: "white",
+              fontWeight: 700,
+              cursor: "pointer",
+            }}
+          >
+            Копіювати
+          </button>
+        </div>
+      )}
 
       <select
         value={driverFilter}

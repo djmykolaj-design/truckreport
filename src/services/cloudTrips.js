@@ -1,6 +1,6 @@
 import { supabase } from "../lib/supabase";
+import { getMyProfile } from "./profile";
 
-// Завантажити всі рейси поточного користувача
 export async function loadTripsFromCloud() {
   const {
     data: { user },
@@ -25,7 +25,6 @@ export async function loadTripsFromCloud() {
   }));
 }
 
-// Зберегти / оновити один рейс
 export async function saveTripToCloud(trip) {
   const {
     data: { user },
@@ -33,9 +32,12 @@ export async function saveTripToCloud(trip) {
 
   if (!user || !trip?.id) return;
 
+  const profile = await getMyProfile();
+
   const { error } = await supabase.from("trips").upsert({
     id: trip.id,
     user_id: user.id,
+    company_id: profile?.company_id || null,
     data: trip,
     status: trip.status || "active",
     updated_at: new Date().toISOString(),
@@ -46,7 +48,6 @@ export async function saveTripToCloud(trip) {
   }
 }
 
-// Зберегти всі рейси (після змін)
 export async function saveAllTripsToCloud(trips) {
   const {
     data: { user },
@@ -54,9 +55,12 @@ export async function saveAllTripsToCloud(trips) {
 
   if (!user) return;
 
+  const profile = await getMyProfile();
+
   const rows = trips.map((trip) => ({
     id: trip.id,
     user_id: user.id,
+    company_id: profile?.company_id || null,
     data: trip,
     status: trip.status || "active",
     updated_at: new Date().toISOString(),
@@ -69,12 +73,8 @@ export async function saveAllTripsToCloud(trips) {
   }
 }
 
-// Видалити рейс
 export async function deleteTripFromCloud(tripId) {
-  const { error } = await supabase
-    .from("trips")
-    .delete()
-    .eq("id", tripId);
+  const { error } = await supabase.from("trips").delete().eq("id", tripId);
 
   if (error) {
     console.error("deleteTripFromCloud:", error);
