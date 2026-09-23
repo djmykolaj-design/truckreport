@@ -3,17 +3,26 @@ import { useNavigate } from "react-router-dom";
 import { getMyProfile, isBoss } from "../services/profile";
 import { loadFleetTrips } from "../services/office";
 
+function normName(value) {
+  return String(value || "")
+    .replace(/\./g, "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toLowerCase();
+}
+
 export default function Office() {
   const navigate = useNavigate();
   const [profile, setProfile] = useState(null);
   const [trips, setTrips] = useState([]);
+  const [driverFilter, setDriverFilter] = useState("all");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function init() {
       const me = await getMyProfile();
       setProfile(me);
-            if (isBoss(me)) {
+      if (isBoss(me)) {
         const list = await loadFleetTrips();
         list.sort((a, b) => {
           if (a.status === "active" && b.status !== "active") return -1;
@@ -30,18 +39,63 @@ export default function Office() {
   if (loading) return <p style={{ color: "#94a3b8" }}>Завантаження…</p>;
   if (!isBoss(profile)) return <h2 style={{ color: "white" }}>Немає доступу</h2>;
 
+  const nameMap = new Map();
+  trips.forEach((trip) => {
+    [trip.driver, trip.codriver].forEach((raw) => {
+      const key = normName(raw);
+      if (!key) return;
+      if (!nameMap.has(key)) nameMap.set(key, String(raw).trim());
+    });
+  });
+
+  const drivers = [...nameMap.entries()].sort((a, b) =>
+    a[1].localeCompare(b[1], "uk")
+  );
+
+  const visibleTrips =
+    driverFilter === "all"
+      ? trips
+      : trips.filter(
+          (t) =>
+            normName(t.driver) === driverFilter ||
+            normName(t.codriver) === driverFilter
+        );
+
   return (
     <div style={{ color: "white", maxWidth: 900 }}>
       <h1 style={{ marginBottom: 8 }}>Офіс</h1>
-      <p style={{ color: "#94a3b8", marginBottom: 20 }}>
-        Рейси всіх водіїв • {trips.length}
+      <p style={{ color: "#94a3b8", marginBottom: 16 }}>
+        Рейси всіх водіїв • {visibleTrips.length}
       </p>
 
-      {trips.length === 0 && (
+      <select
+        value={driverFilter}
+        onChange={(e) => setDriverFilter(e.target.value)}
+        style={{
+          width: "100%",
+          maxWidth: 360,
+          marginBottom: 20,
+          padding: "12px 14px",
+          borderRadius: 12,
+          border: "1px solid #30363D",
+          background: "#1F2937",
+          color: "white",
+          fontSize: 15,
+        }}
+      >
+        <option value="all">Усі водії</option>
+        {drivers.map(([key, label]) => (
+          <option key={key} value={key}>
+            {label}
+          </option>
+        ))}
+      </select>
+
+      {visibleTrips.length === 0 && (
         <p style={{ color: "#94a3b8" }}>Рейсів ще немає</p>
       )}
 
-      {trips.map((trip) => (
+      {visibleTrips.map((trip) => (
         <div
           key={trip.id}
           onClick={() => navigate(`/office/${trip.id}`)}
@@ -80,7 +134,10 @@ export default function Office() {
           </div>
 
           <div style={{ color: "#94a3b8", marginTop: 6, fontSize: 13 }}>
-            {trip.driver || "—"} • {trip.truck || "—"}
+            {trip.driver || "—"}
+            {trip.codriver ? ` / ${trip.codriver}` : ""}
+            {" • "}
+            {trip.truck || "—"}
             {trip.trailer ? ` / ${trip.trailer}` : ""}
           </div>
 
