@@ -8,15 +8,19 @@ export default function SchengenHistory({
   formatDate,
   daysBetween,
 }) {
+  const ordered = stays
+    .map((stay, index) => ({ stay, index }))
+    .sort((a, b) => String(b.stay.start).localeCompare(String(a.stay.start)));
+
   return (
     <Card
       title="📋 Історія перебування"
       subtitle={`${stays.length} записів`}
     >
-      {stays.length === 0 ? (
+      {ordered.length === 0 ? (
         <p>Перебувань ще немає</p>
       ) : (
-        stays.map((stay, index) => (
+        ordered.map(({ stay, index }) => (
           <StayCard
             key={`${stay.start}-${stay.end}-${index}`}
             stay={stay}

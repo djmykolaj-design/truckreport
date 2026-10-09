@@ -58,9 +58,10 @@ export default function Schengen() {
     setEnd("");
   };
 
-  const deleteTrip = (index) => {
-    setStays((prev) => prev.filter((_, i) => i !== index));
-  };
+const deleteTrip = (index) => {
+  if (!window.confirm("Видалити це перебування?")) return;
+  setStays((prev) => prev.filter((_, i) => i !== index));
+};
 
   const closeStay = (index, exitDate) => {
   if (!exitDate) return;
