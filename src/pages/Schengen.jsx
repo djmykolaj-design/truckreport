@@ -6,10 +6,12 @@ import SchengenDashboard from "../components/business/SchengenDashboard";
 import SchengenForm from "../components/business/SchengenForm";
 import SchengenHistory from "../components/business/SchengenHistory";
 import SchengenFuture from "../components/business/SchengenFuture";
+import SchengenCalendar from "../components/business/SchengenCalendar";
 import {
   loadStaysFromCloud,
   saveStaysToCloud,
 } from "../services/cloudStays";
+
 
 export default function Schengen() {
   const [start, setStart] = useState("");
@@ -59,6 +61,24 @@ export default function Schengen() {
   const deleteTrip = (index) => {
     setStays((prev) => prev.filter((_, i) => i !== index));
   };
+
+  const closeStay = (index, exitDate) => {
+  if (!exitDate) return;
+
+  const stay = stays[index];
+  if (!stay) return;
+
+  if (exitDate < stay.start) {
+    alert("Дата виїзду не може бути раніше дати в'їзду.");
+    return;
+  }
+
+  setStays((prev) =>
+    prev.map((item, i) =>
+      i === index ? { ...item, end: exitDate } : item
+    )
+  );
+};
 
   const result = useMemo(
     () => calculateRollingSchengen(stays),
@@ -126,6 +146,8 @@ export default function Schengen() {
         formatDate={formatDate}
       />
 
+      <SchengenCalendar stays={stays} />
+
       <SchengenForm
         start={start}
         end={end}
@@ -137,6 +159,7 @@ export default function Schengen() {
       <SchengenHistory
         stays={stays}
         onDelete={deleteTrip}
+        onClose={closeStay}
         formatDate={formatDate}
         daysBetween={daysBetween}
       />

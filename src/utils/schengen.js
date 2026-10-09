@@ -1,31 +1,55 @@
-export function getDaysBetween(start, end) {
-  const s = new Date(start);
-  const e = new Date(end);
-  return Math.floor((e - s) / (1000 * 60 * 60 * 24)) + 1;
+function parseDay(value) {
+  if (!value) return null;
+  if (value instanceof Date) {
+    const copy = new Date(value);
+    copy.setHours(12, 0, 0, 0);
+    return copy;
+  }
+  const [year, month, day] = String(value).slice(0, 10).split("-").map(Number);
+  return new Date(year, month - 1, day, 12, 0, 0, 0);
 }
 
-// 🧠 PRO rolling 90/180 engine
-export function calculateRollingSchengen(stays, referenceDate = new Date()) {
-  const MS_DAY = 86400000;
+function toKey(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
 
-  const endWindow = new Date(referenceDate);
-  const startWindow = new Date(referenceDate);
-  startWindow.setDate(endWindow.getDate() - 180);
+export function getDaysBetween(start, end) {
+  const s = parseDay(start);
+  const e = end ? parseDay(end) : parseDay(new Date());
+  return Math.floor((e - s) / 86400000) + 1;
+}
 
-  let usedDays = 0;
+export function getUsedDates(stays, referenceDate = new Date()) {
+  const end = parseDay(referenceDate);
+  const start = new Date(end);
+  start.setDate(start.getDate() - 179);
 
-  for (const trip of stays) {
-    const start = new Date(trip.start);
-    const end = trip.end ? new Date(trip.end) : new Date(referenceDate);
+  const used = new Set();
 
-    const effectiveStart = start < startWindow ? startWindow : start;
-    const effectiveEnd = end > endWindow ? endWindow : end;
+  for (const trip of stays || []) {
+    if (!trip?.start) continue;
 
-    if (effectiveStart <= effectiveEnd) {
-      usedDays += getDaysBetween(effectiveStart, effectiveEnd);
+    let cursor = parseDay(trip.start);
+    let last = trip.end ? parseDay(trip.end) : new Date(end);
+
+    if (last > end) last = new Date(end);
+    if (cursor < start) cursor = new Date(start);
+    if (cursor > last) continue;
+
+    while (cursor <= last) {
+      used.add(toKey(cursor));
+      cursor.setDate(cursor.getDate() + 1);
     }
   }
 
+  return used;
+}
+
+export function calculateRollingSchengen(stays, referenceDate = new Date()) {
+  const usedDays = getUsedDates(stays, referenceDate).size;
   const remaining = 90 - usedDays;
 
   let status = "ok";
@@ -33,12 +57,10 @@ export function calculateRollingSchengen(stays, referenceDate = new Date()) {
   else if (remaining <= 5) status = "danger";
   else if (remaining <= 15) status = "warning";
 
-  const usagePercent = (usedDays / 90) * 100;
-
   return {
     usedDays,
     remaining,
     status,
-    usagePercent: Math.min(usagePercent, 100),
+    usagePercent: Math.min((usedDays / 90) * 100, 100),
   };
 }
