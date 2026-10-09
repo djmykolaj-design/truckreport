@@ -135,3 +135,34 @@ export async function getMyCompany() {
 
   return company;
 }
+
+export async function leaveCompany() {
+  const user = await currentUser();
+  if (!user) {
+    alert("Немає сесії. Увійди знову.");
+    return null;
+  }
+
+  const error = await saveProfile(user.id, {
+    company_id: null,
+    role: "solo",
+    setup_done: true,
+  });
+
+  if (error) {
+    console.error(error);
+    alert(error.message || "Не вдалося від'єднатися");
+    return null;
+  }
+
+  const { error: tripsError } = await supabase
+    .from("trips")
+    .update({ company_id: null })
+    .eq("user_id", user.id);
+
+  if (tripsError) {
+    console.error(tripsError);
+  }
+
+  return true;
+}
