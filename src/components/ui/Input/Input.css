@@ -67,6 +67,14 @@
     font-size: 13px;
 }
 
-.tr-input[type="date"] {
+.tr-input[type="date"],
+input[type="date"] {
   color-scheme: dark;
+}
+
+.tr-input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+  opacity: 0.9;
+  cursor: pointer;
 }
