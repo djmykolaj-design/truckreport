@@ -177,6 +177,29 @@ const visibleTrips = trips.filter((t) => {
         </div>
       )}
 
+      <button
+  type="button"
+  onClick={async () => {
+    if (!window.confirm("Від'єднатися від фірми? Рейси лишаться в тебе.")) return;
+    const ok = await leaveCompany();
+    if (!ok) return;
+    navigate("/");
+    window.location.reload();
+  }}
+  style={{
+    marginBottom: 18,
+    padding: "12px 16px",
+    border: "none",
+    borderRadius: 12,
+    background: "#ef4444",
+    color: "white",
+    fontWeight: 700,
+    cursor: "pointer",
+  }}
+>
+  Від'єднатися від фірми
+</button>
+
    <h2 style={{ fontSize: 18, margin: "8px 0 12px" }}>Водії</h2>
 
 {shownDrivers.length === 0 && (
