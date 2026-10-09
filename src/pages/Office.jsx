@@ -30,7 +30,7 @@ export default function Office() {
   const [company, setCompany] = useState(null);
   const [trips, setTrips] = useState([]);
   const [drivers, setDrivers] = useState([]);
-  const [selectedId, setSelectedId] = useState(null);
+  const [selectedId, setSelectedId] = useState("");
   const [onlyActive, setOnlyActive] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -111,17 +111,20 @@ export default function Office() {
   }
 
   const shownDrivers = drivers.length ? drivers : driversFromTrips(trips);
-const selected = shownDrivers.find((d) => d.id === selectedId) || null;
+  const selected = shownDrivers.find((d) => d.id === selectedId) || null;
 
-const visibleTrips = trips.filter((t) => {
-  const byDriver = !selected
-    ? true
-    : selected.fromTrips
-      ? normName(t.driver) === selected.id || normName(t.codriver) === selected.id
-      : t.userId === selected.id;
-  const byStatus = !onlyActive || t.status === "active";
-  return byDriver && byStatus;
-});
+  const visibleTrips = trips.filter((t) => {
+    const byDriver = !selected
+      ? true
+      : selected.fromTrips
+        ? normName(t.driver) === selected.id || normName(t.codriver) === selected.id
+        : t.userId === selected.id;
+    const byStatus = !onlyActive || t.status === "active";
+    return byDriver && byStatus;
+  });
+
+  const selectedStays = selected?.stays || [];
+  const selectedSchengen = selected ? calculateRollingSchengen(selectedStays) : null;
 
   const copyCode = async () => {
     if (!company?.invite_code) return;
@@ -131,6 +134,14 @@ const visibleTrips = trips.filter((t) => {
     } catch {
       alert(company.invite_code);
     }
+  };
+
+  const leave = async () => {
+    if (!window.confirm("Від'єднатися від фірми? Рейси лишаться в тебе.")) return;
+    const ok = await leaveCompany();
+    if (!ok) return;
+    navigate("/");
+    window.location.reload();
   };
 
   return (
@@ -178,68 +189,53 @@ const visibleTrips = trips.filter((t) => {
       )}
 
       <button
-  type="button"
-  onClick={async () => {
-    if (!window.confirm("Від'єднатися від фірми? Рейси лишаться в тебе.")) return;
-    const ok = await leaveCompany();
-    if (!ok) return;
-    navigate("/");
-    window.location.reload();
-  }}
-  style={{
-    marginBottom: 18,
-    padding: "12px 16px",
-    border: "none",
-    borderRadius: 12,
-    background: "#ef4444",
-    color: "white",
-    fontWeight: 700,
-    cursor: "pointer",
-  }}
->
-  Від'єднатися від фірми
-</button>
+        type="button"
+        onClick={leave}
+        style={{
+          marginBottom: 18,
+          padding: "12px 16px",
+          border: "none",
+          borderRadius: 12,
+          background: "#ef4444",
+          color: "white",
+          fontWeight: 700,
+          cursor: "pointer",
+        }}
+      >
+        Від'єднатися від фірми
+      </button>
 
-   <h2 style={{ fontSize: 18, margin: "8px 0 12px" }}>Водії</h2>
+      <label style={{ display: "block", margin: "8px 0 18px", maxWidth: 360 }}>
+        <div style={{ fontSize: 14, color: "#94a3b8", marginBottom: 8 }}>Водій</div>
+        <select
+          value={selectedId}
+          onChange={(e) => setSelectedId(e.target.value)}
+          style={{
+            width: "100%",
+            padding: "12px 14px",
+            borderRadius: 12,
+            border: "1px solid #30363D",
+            background: "#1F2937",
+            color: "white",
+            fontSize: 15,
+          }}
+        >
+          <option value="">Усі водії</option>
+          {shownDrivers.map((driver) => (
+            <option key={driver.id} value={driver.id}>
+              {driver.full_name || "Водій"}
+            </option>
+          ))}
+        </select>
+      </label>
 
-{shownDrivers.length === 0 && (
-  <p style={{ color: "#94a3b8" }}>Водіїв ще немає. Дай їм код фірми.</p>
-)}
-
-{shownDrivers.map((driver) => {
-  const schengen = calculateRollingSchengen(driver.stays || []);
-  const active = trips.find((t) =>
-    driver.fromTrips
-      ? (normName(t.driver) === driver.id || normName(t.codriver) === driver.id) && t.status === "active"
-      : t.userId === driver.id && t.status === "active"
-  );
-  const color = schengen.remaining <= 0 ? "#ef4444" : schengen.remaining <= 15 ? "#f97316" : "#22c55e";
-
-  return (
-    <div
-      key={driver.id}
-      onClick={() => setSelectedId((id) => (id === driver.id ? null : driver.id))}
-      style={{
-        background: selectedId === driver.id ? "#1f2937" : "#232B38",
-        border: selectedId === driver.id ? "1px solid #22c55e" : "1px solid #30363D",
-        borderRadius: 16,
-        padding: 16,
-        marginBottom: 12,
-        cursor: "pointer",
-      }}
-    >
-      <div style={{ fontWeight: 700 }}>{driver.full_name || "Водій"}</div>
-      <div style={{ color: "#94a3b8", marginTop: 6, fontSize: 14 }}>
-        {active
-          ? `В дорозі: ${active.fromCity || "?"} → ${active.toCity || "?"}`
-          : "Зараз не в рейсі"}
-      </div>
-      <div style={{ marginTop: 6, fontWeight: 700, color: driver.fromTrips ? "#94a3b8" : color }}>
-        {driver.fromTrips ? "Шенген після входу водія" : `Шенген: ${schengen.remaining} днів`}
-      </div>
-    </div>
-  );
-})}
+      {selected && (
+        <p style={{ color: selected.fromTrips ? "#94a3b8" : "#22c55e", marginTop: -8, marginBottom: 18 }}>
+          {selected.fromTrips
+            ? "Шенген з'явиться після входу цього водія"
+            : `Шенген: ${selectedSchengen.remaining} днів`}
+        </p>
+      )}
 
       <label
         style={{
