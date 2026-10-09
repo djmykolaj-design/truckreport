@@ -1,19 +1,23 @@
+const SCHENGEN_TZ = "Europe/Warsaw";
+
+function warsawKey(date = new Date()) {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: SCHENGEN_TZ,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(date);
+}
+
 function parseDay(value) {
   if (!value) return null;
-  if (value instanceof Date) {
-    const copy = new Date(value);
-    copy.setHours(12, 0, 0, 0);
-    return copy;
-  }
-  const [year, month, day] = String(value).slice(0, 10).split("-").map(Number);
-  return new Date(year, month - 1, day, 12, 0, 0, 0);
+  const key = value instanceof Date ? warsawKey(value) : String(value).slice(0, 10);
+  const [year, month, day] = key.split("-").map(Number);
+  return new Date(Date.UTC(year, month - 1, day, 12));
 }
 
 function toKey(date) {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
+  return date.toISOString().slice(0, 10);
 }
 
 export function getDaysBetween(start, end) {
@@ -25,7 +29,7 @@ export function getDaysBetween(start, end) {
 export function getUsedDates(stays, referenceDate = new Date()) {
   const end = parseDay(referenceDate);
   const start = new Date(end);
-  start.setDate(start.getDate() - 179);
+  start.setUTCDate(start.getUTCDate() - 179);
 
   const used = new Set();
 
@@ -41,7 +45,7 @@ export function getUsedDates(stays, referenceDate = new Date()) {
 
     while (cursor <= last) {
       used.add(toKey(cursor));
-      cursor.setDate(cursor.getDate() + 1);
+      cursor.setUTCDate(cursor.getUTCDate() + 1);
     }
   }
 
