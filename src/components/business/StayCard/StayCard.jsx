@@ -1,5 +1,11 @@
 import { useState } from "react";
 
+function todayWarsaw() {
+  return new Date().toLocaleDateString("sv-SE", {
+    timeZone: "Europe/Warsaw",
+  });
+}
+
 export default function StayCard({
   stay,
   index,
@@ -8,8 +14,7 @@ export default function StayCard({
   formatDate,
   daysBetween,
 }) {
-  const today = new Date().toISOString().slice(0, 10);
-  const [exitDate, setExitDate] = useState(today);
+  const [exitDate, setExitDate] = useState(todayWarsaw);
   const isOpen = !stay.end;
 
   return (
@@ -63,11 +68,12 @@ export default function StayCard({
               value={exitDate}
               onChange={(e) => setExitDate(e.target.value)}
               style={{
-                padding: "8px 10px",
+                padding: "8px 40px 8px 10px",
                 borderRadius: "8px",
                 border: "1px solid #374151",
                 background: "#1f2937",
                 color: "white",
+                minWidth: 140,
               }}
             />
             <button
