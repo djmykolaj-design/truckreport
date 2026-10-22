@@ -18,6 +18,7 @@ import ResetPassword from "../pages/ResetPassword";
 import Office from "../pages/Office";
 import OfficeTrip from "../pages/OfficeTrip";
 import SetupCompany from "../pages/SetupCompany";
+import Fleet from "../pages/Fleet";
 
 export default function AppRouter() {
   return (
@@ -108,7 +109,7 @@ export default function AppRouter() {
             }
           />
 
-                    <Route
+          <Route
             path="/office"
             element={
               <AuthGuard>
@@ -117,11 +118,19 @@ export default function AppRouter() {
             }
           />
 
-                    <Route
+          <Route
             path="/office/:tripId"
             element={
               <AuthGuard>
                 <OfficeTrip />
+              </AuthGuard>
+            }
+          />
+          <Route
+            path="/fleet"
+            element={
+              <AuthGuard>
+                <Fleet />
               </AuthGuard>
             }
           />

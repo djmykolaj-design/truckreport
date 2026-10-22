@@ -9,7 +9,11 @@ import {
   FileText,
   ArrowRight,
 } from "lucide-react";
-import { joinCompany, getMyCompany } from "../services/company";
+import {
+  joinCompany,
+  getMyCompany,
+  leaveCompany,
+} from "../services/company";
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -29,32 +33,73 @@ export default function Dashboard() {
 
   const [firmCode, setFirmCode] = useState("");
   const [joining, setJoining] = useState(false);
+  const [leaving, setLeaving] = useState(false);
   const [myCompany, setMyCompany] = useState(null);
 
   useEffect(() => {
-    getMyCompany().then(setMyCompany);
+    let cancelled = false;
+
+    getMyCompany().then((company) => {
+      if (!cancelled) setMyCompany(company);
+    });
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const formatExpense = () => {
     if (!activeTripStats) return "0";
+
     const e = activeTripStats.expenses || {};
     const parts = [];
+
     if (e.EUR > 0) parts.push(`${Math.round(e.EUR)} €`);
     if (e.UAH > 0) parts.push(`${Math.round(e.UAH)} ₴`);
     if (e.PLN > 0) parts.push(`${Math.round(e.PLN)} zł`);
     if (e.USD > 0) parts.push(`${Math.round(e.USD)} $`);
+
     return parts.length ? parts.join(" · ") : "0";
   };
 
   const handleJoin = async () => {
-    if (!firmCode.trim()) return;
+    if (!firmCode.trim() || joining || leaving) return;
+
     setJoining(true);
-    const company = await joinCompany(firmCode);
-    setJoining(false);
-    if (company) {
-      setMyCompany(company);
-      setFirmCode("");
-      alert(`Ти в фірмі «${company.name}»`);
+
+    try {
+      const company = await joinCompany(firmCode);
+
+      if (company) {
+        setMyCompany(company);
+        setFirmCode("");
+        alert(`Ти в фірмі «${company.name}»`);
+      }
+    } finally {
+      setJoining(false);
+    }
+  };
+
+  const handleLeave = async () => {
+    if (leaving || joining) return;
+
+    const confirmed = window.confirm(
+      `Від'єднатися від фірми «${myCompany?.name}»?\n\nТвій профіль перейде в особистий режим. Інші учасники фірми не повинні бути від'єднані.`
+    );
+
+    if (!confirmed) return;
+
+    setLeaving(true);
+
+    try {
+      const result = await leaveCompany();
+
+      if (result) {
+        setMyCompany(null);
+        alert("Ти від'єднався від фірми. Тепер ти в особистому режимі.");
+      }
+    } finally {
+      setLeaving(false);
     }
   };
 
@@ -66,6 +111,7 @@ export default function Dashboard() {
             <Truck size={18} />
             <span>Активний рейс</span>
           </div>
+
           {activeTrip && <div className="hero-badge">У дорозі</div>}
         </div>
 
@@ -86,12 +132,14 @@ export default function Dashboard() {
                 </div>
                 <div className="hero-stat-label">На старті</div>
               </div>
+
               <div className="hero-stat">
                 <div className="hero-stat-value">
                   {Math.round(activeTripStats.fuelAdded || 0)} л
                 </div>
                 <div className="hero-stat-label">Пальне</div>
               </div>
+
               <div className="hero-stat">
                 <div className="hero-stat-value hero-stat-expense">
                   {formatExpense()}
@@ -111,6 +159,7 @@ export default function Dashboard() {
         ) : (
           <>
             <div className="hero-empty">Немає активного рейсу</div>
+
             <button className="hero-btn" onClick={() => navigate("/trips")}>
               Створити рейс
               <ArrowRight size={18} />
@@ -147,7 +196,9 @@ export default function Dashboard() {
             <Wallet size={18} />
           </div>
           <div className="kpi-value kpi-expense">
-            {activeTrip ? formatExpense() : `${Math.round(expenses.EUR || 0)} €`}
+            {activeTrip
+              ? formatExpense()
+              : `${Math.round(expenses.EUR || 0)} €`}
           </div>
           <div className="kpi-title">Витрати</div>
           <div className="kpi-sub">{activeTrip ? "За цей рейс" : "EUR"}</div>
@@ -161,7 +212,9 @@ export default function Dashboard() {
             {activeTrip ? activeTripStats.documentsCount : documentsCount}
           </div>
           <div className="kpi-title">Документи</div>
-          <div className="kpi-sub">{activeTrip ? "За цей рейс" : "Файлів"}</div>
+          <div className="kpi-sub">
+            {activeTrip ? "За цей рейс" : "Файлів"}
+          </div>
         </div>
       </div>
 
@@ -172,6 +225,7 @@ export default function Dashboard() {
             Використано {schengen.usedDays} з 90
           </div>
         </div>
+
         <div className="schengen-number" style={{ color: schengenColor }}>
           {schengen.remaining}
           <span>/90</span>
@@ -190,40 +244,57 @@ export default function Dashboard() {
 
       <section className="hero-card" style={{ marginTop: 8 }}>
         <div className="hero-title">Фірма</div>
+
         {myCompany ? (
-          <div className="hero-empty" style={{ marginTop: 10 }}>
-            Ти в фірмі «{myCompany.name}»
-          </div>
+          <>
+            <div className="hero-empty" style={{ marginTop: 10 }}>
+              Ти в фірмі «{myCompany.name}»
+            </div>
+
+            <button
+              className="hero-btn"
+              style={{
+                marginTop: 12,
+                background: "#ef4444",
+              }}
+              disabled={leaving || joining}
+              onClick={handleLeave}
+            >
+              {leaving ? "Від'єдную…" : "Від'єднатися від фірми"}
+            </button>
+          </>
         ) : (
-          <div className="hero-empty" style={{ marginTop: 10 }}>
-            Ще не в фірмі
-          </div>
+          <>
+            <div className="hero-empty" style={{ marginTop: 10 }}>
+              Ще не в фірмі
+            </div>
+
+            <input
+              value={firmCode}
+              onChange={(e) => setFirmCode(e.target.value.toUpperCase())}
+              placeholder="Код фірми, наприклад SMTR1988"
+              style={{
+                width: "100%",
+                marginTop: 12,
+                padding: "12px",
+                borderRadius: 10,
+                border: "1px solid #334155",
+                background: "#1e293b",
+                color: "white",
+                boxSizing: "border-box",
+              }}
+            />
+
+            <button
+              className="hero-btn"
+              style={{ marginTop: 12 }}
+              disabled={joining || leaving || !firmCode.trim()}
+              onClick={handleJoin}
+            >
+              {joining ? "Приєдную…" : "Приєднатись до фірми"}
+            </button>
+          </>
         )}
-
-        <input
-          value={firmCode}
-          onChange={(e) => setFirmCode(e.target.value.toUpperCase())}
-          placeholder="Код фірми, наприклад SMTR1988"
-          style={{
-            width: "100%",
-            marginTop: 12,
-            padding: "12px",
-            borderRadius: 10,
-            border: "1px solid #334155",
-            background: "#1e293b",
-            color: "white",
-            boxSizing: "border-box",
-          }}
-        />
-
-        <button
-          className="hero-btn"
-          style={{ marginTop: 12 }}
-          disabled={joining || !firmCode.trim()}
-          onClick={handleJoin}
-        >
-          {joining ? "Приєдную…" : "Приєднатись до фірми"}
-        </button>
       </section>
     </div>
   );

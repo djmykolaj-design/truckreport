@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import TripList from "../components/TripList";
@@ -9,6 +10,7 @@ import {
   saveAllTripsToCloud,
   deleteTripFromCloud,
 } from "../services/cloudTrips";
+import { markVehicleInTrip } from "../services/fleetStatus";
 
 export default function TripsV4() {
   const [showForm, setShowForm] = useState(false);
@@ -65,7 +67,7 @@ export default function TripsV4() {
     if (trip) setSelectedTrip(trip);
   }, [trips, searchParams]);
 
-  const saveTrip = () => {
+  const saveTrip = async () => {
     if (!tripNumber || !truck || !fromCity || !toCity) {
       alert("Заповни обов'язкові поля");
       return;
@@ -98,8 +100,16 @@ export default function TripsV4() {
       documents: [],
     };
 
-    setTrips([newTrip, ...trips]);
+    setTrips((prev) => [newTrip, ...prev]);
     setSelectedTrip(newTrip);
+
+    // Позначаємо тягач як такий, що перебуває в рейсі.
+    // Помилка оновлення автопарку не скасовує створення рейсу.
+    try {
+      await markVehicleInTrip(truck);
+    } catch (error) {
+      console.error("Не вдалося оновити статус тягача:", error);
+    }
 
     setTripNumber("");
     setDriver("");
