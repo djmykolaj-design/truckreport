@@ -4,6 +4,7 @@ import {
   LayoutDashboard,
   Truck,
   Globe2,
+  Warehouse,
   Briefcase,
   LogOut,
 } from "lucide-react";
@@ -56,6 +57,18 @@ export default function BottomNav() {
         <Globe2 size={22} />
         <span>Шенген</span>
       </NavLink>
+
+      {isBoss(profile) && (
+        <NavLink
+          to="/fleet"
+          className={({ isActive }) =>
+            `bottom-nav-item ${isActive ? "active" : ""}`
+          }
+        >
+          <Warehouse size={22} />
+          <span>Автопарк</span>
+        </NavLink>
+      )}
 
       {isBoss(profile) && (
         <NavLink
