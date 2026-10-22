@@ -11,6 +11,7 @@ import TripExchange from "../pages/TripExchange";
 import TripFinish from "../pages/TripFinish";
 import TripDocuments from "../pages/TripDocuments";
 import TripReport from "../pages/TripReport";
+import ReportBreakdown from "../pages/ReportBreakdown";
 
 import AuthGuard from "../components/AuthGuard";
 import Login from "../pages/Login";
@@ -126,6 +127,7 @@ export default function AppRouter() {
               </AuthGuard>
             }
           />
+
           <Route
             path="/fleet"
             element={
@@ -134,6 +136,16 @@ export default function AppRouter() {
               </AuthGuard>
             }
           />
+
+          <Route
+            path="/report-breakdown"
+            element={
+              <AuthGuard>
+                <ReportBreakdown />
+              </AuthGuard>
+            }
+          />
+
           <Route path="/setup" element={<SetupCompany />} />
         </Routes>
       </MainLayout>

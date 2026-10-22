@@ -7,6 +7,7 @@ import {
   Warehouse,
   Briefcase,
   LogOut,
+  AlertTriangle,
 } from "lucide-react";
 import "./BottomNav.css";
 import { supabase } from "../../lib/supabase";
@@ -56,6 +57,16 @@ export default function BottomNav() {
       >
         <Globe2 size={22} />
         <span>Шенген</span>
+      </NavLink>
+
+      <NavLink
+        to="/report-breakdown"
+        className={({ isActive }) =>
+          `bottom-nav-item ${isActive ? "active" : ""}`
+        }
+      >
+        <AlertTriangle size={22} />
+        <span>Поломка</span>
       </NavLink>
 
       {isBoss(profile) && (

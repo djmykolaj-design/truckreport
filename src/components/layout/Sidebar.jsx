@@ -7,6 +7,7 @@ import {
   Briefcase,
   LogOut,
   Wrench,
+  AlertTriangle,
 } from "lucide-react";
 
 import "./Sidebar.css";
@@ -49,12 +50,18 @@ export default function Sidebar() {
           <span>Шенген</span>
         </NavLink>
 
+        <NavLink to="/report-breakdown" className={({ isActive }) => `sidebar-link ${isActive ? "active" : ""}`}>
+          <AlertTriangle size={22} />
+          <span>Поломка</span>
+        </NavLink>
+
         {isBoss(profile) && (
           <NavLink to="/office" className={({ isActive }) => `sidebar-link ${isActive ? "active" : ""}`}>
             <Briefcase size={22} />
             <span>Офіс</span>
           </NavLink>
         )}
+
         {isBoss(profile) && (
           <NavLink
             to="/fleet"
