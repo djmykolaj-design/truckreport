@@ -9,6 +9,7 @@ import TripFuelCard from "../components/TripFuelCard";
 import TripHeader from "../components/TripHeader";
 
 import { getTripById, updateTrip } from "../services/tripService";
+import { releaseVehiclesAfterTrip } from "../services/fleetStatus";
 import "./TripFinish.css";
 import { useParams, useNavigate } from "react-router-dom";
 
@@ -42,7 +43,7 @@ export default function TripFinish() {
 
     const finance = useTripFinance(trip);
 
-    const saveFinish = () => {
+    const saveFinish = async () => {
         if (!endDate) {
             alert("Вкажіть дату завершення рейсу");
             return;
@@ -64,6 +65,20 @@ export default function TripFinish() {
             endFuel: Number(endFuel),
             status: "completed",
         });
+
+        // Оновлюємо автопарк: пробіг і статус машин (тягач і причіп).
+        // Помилка тут не скасовує завершення рейсу.
+        try {
+                        const result = await releaseVehiclesAfterTrip(trip, endMileage);
+
+            // Запам'ятовуємо, скільки км уже додано причепу,
+            // щоб повторне збереження не додало їх вдруге.
+            if (result?.trailerKm !== null && result?.trailerKm !== undefined) {
+                updateTrip(tripId, { trailerKmApplied: result.trailerKm });
+            }
+        } catch (error) {
+            console.error("Не вдалося оновити автопарк після рейсу:", error);
+        }
 
         navigate(`/trip/${tripId}/report`);
     };
@@ -116,4 +131,3 @@ export default function TripFinish() {
         </div>
     );
 }
-

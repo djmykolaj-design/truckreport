@@ -2,67 +2,86 @@ import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
 import { useNavigate } from "react-router-dom";
 
+const fieldStyle = {
+  padding: "12px",
+  borderRadius: 10,
+  border: "1px solid #374151",
+  background: "#111827",
+  color: "white",
+  fontSize: 15,
+};
+
 export default function ReportBreakdown() {
   const navigate = useNavigate();
   const [vehicles, setVehicles] = useState([]);
   const [selectedId, setSelectedId] = useState("");
+  const [odometer, setOdometer] = useState("");
   const [comment, setComment] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
+  const [success, setSuccess] = useState(false);
 
   useEffect(() => {
     async function load() {
       const { data, error } = await supabase
         .from("fleet_vehicles")
-        .select("id, name, plate_number, vehicle_type")
+        .select("id, name, plate_number, vehicle_type, odometer")
         .order("name");
 
       if (!error && data) {
         setVehicles(data);
-        if (data.length === 1) setSelectedId(data[0].id);
+        if (data.length === 1) {
+          setSelectedId(data[0].id);
+          setOdometer(data[0].odometer ? String(data[0].odometer) : "");
+        }
       }
       setLoading(false);
     }
     load();
   }, []);
 
+  function selectVehicle(id) {
+    setSelectedId(id);
+    const vehicle = vehicles.find((item) => item.id === id);
+    setOdometer(vehicle?.odometer ? String(vehicle.odometer) : "");
+  }
+
   async function submit(e) {
     e.preventDefault();
+    setSuccess(false);
+
     if (!selectedId || !comment.trim()) {
       setMessage("Обери машину і напиши, що сталося.");
+      return;
+    }
+
+    const odo = odometer === "" ? null : Number(odometer);
+    if (odo !== null && (!Number.isFinite(odo) || odo < 0)) {
+      setMessage("Пробіг має бути невід'ємним числом.");
       return;
     }
 
     setSaving(true);
     setMessage("");
 
-    // Беремо поточні примітки, щоб додати до історії
-    const { data: current } = await supabase
-      .from("fleet_vehicles")
-      .select("notes")
-      .eq("id", selectedId)
-      .single();
-
-    const newNote = `${new Date().toLocaleDateString("uk-UA")}: ${comment.trim()}`;
-    const updatedNotes = current?.notes
-      ? `${current.notes}\n${newNote}`
-      : newNote;
-
-const { error } = await supabase
-  .from("fleet_vehicles")
-  .update({
-    pending_issue: comment.trim(),
-  })
-  .eq("id", selectedId);
+    // Кожна поломка — окремий запис: хто, коли, на якому пробігу.
+    // company_id і автора база підставляє сама.
+    const { error } = await supabase.from("fleet_issues").insert({
+      vehicle_id: selectedId,
+      description: comment.trim(),
+      odometer: odo,
+    });
 
     setSaving(false);
 
     if (error) {
+      console.error(error);
       setMessage("Не вдалося зберегти. Спробуй ще раз.");
       return;
     }
 
+    setSuccess(true);
     setMessage("Поломку зафіксовано. Шеф вирішить, коли ставити на ремонт.");
     setComment("");
     setTimeout(() => navigate(-1), 1500);
@@ -84,16 +103,9 @@ const { error } = await supabase
           Машина
           <select
             value={selectedId}
-            onChange={(e) => setSelectedId(e.target.value)}
+            onChange={(e) => selectVehicle(e.target.value)}
             required
-            style={{
-              padding: "12px",
-              borderRadius: 10,
-              border: "1px solid #374151",
-              background: "#111827",
-              color: "white",
-              fontSize: 15,
-            }}
+            style={fieldStyle}
           >
             <option value="">Обери транспорт</option>
             {vehicles.map((v) => (
@@ -105,22 +117,26 @@ const { error } = await supabase
         </label>
 
         <label style={{ display: "grid", gap: 6 }}>
+          Пробіг зараз, км
+          <input
+            type="number"
+            min="0"
+            step="1"
+            value={odometer}
+            onChange={(e) => setOdometer(e.target.value)}
+            placeholder="Можна залишити порожнім"
+            style={fieldStyle}
+          />
+        </label>
+
+        <label style={{ display: "grid", gap: 6 }}>
           Що сталося?
           <textarea
             value={comment}
             onChange={(e) => setComment(e.target.value)}
             required
             placeholder="Наприклад: не тягне, димить, стукає підвіска..."
-            style={{
-              padding: "12px",
-              borderRadius: 10,
-              border: "1px solid #374151",
-              background: "#111827",
-              color: "white",
-              minHeight: 120,
-              fontSize: 15,
-              resize: "vertical",
-            }}
+            style={{ ...fieldStyle, minHeight: 120, resize: "vertical" }}
           />
         </label>
 
@@ -148,8 +164,8 @@ const { error } = await supabase
             marginTop: 16,
             padding: 12,
             borderRadius: 10,
-            background: message.includes("зафіксовано") ? "#052e16" : "#451a1a",
-            color: message.includes("зафіксовано") ? "#bbf7d0" : "#fecaca",
+            background: success ? "#052e16" : "#451a1a",
+            color: success ? "#bbf7d0" : "#fecaca",
           }}
         >
           {message}

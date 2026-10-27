@@ -1,6 +1,14 @@
 import { supabase } from "../lib/supabase";
 import { getMyProfile } from "./profile";
 
+// Рейс належить фірмі, тільки якщо був створений у цій фірмі
+// і ти досі в ній. Інакше це особистий рейс.
+function tripCompanyId(trip, profile) {
+  const id = trip?.companyId || null;
+  if (!id || !profile?.company_id) return null;
+  return String(id) === String(profile.company_id) ? profile.company_id : null;
+}
+
 export async function loadTripsFromCloud() {
   const {
     data: { user },
@@ -10,7 +18,7 @@ export async function loadTripsFromCloud() {
 
   const { data, error } = await supabase
     .from("trips")
-    .select("id, data, status")
+    .select("id, data, status, company_id")
     .eq("user_id", user.id);
 
   if (error) {
@@ -21,6 +29,7 @@ export async function loadTripsFromCloud() {
   return (data || []).map((row) => ({
     ...row.data,
     id: row.id,
+    companyId: row.company_id || null,
     status: row.status || row.data?.status,
   }));
 }
@@ -37,7 +46,7 @@ export async function saveTripToCloud(trip) {
   const { error } = await supabase.from("trips").upsert({
     id: trip.id,
     user_id: user.id,
-    company_id: profile?.company_id || null,
+    company_id: tripCompanyId(trip, profile),
     data: trip,
     status: trip.status || "active",
     updated_at: new Date().toISOString(),
@@ -60,7 +69,7 @@ export async function saveAllTripsToCloud(trips) {
   const rows = trips.map((trip) => ({
     id: trip.id,
     user_id: user.id,
-    company_id: profile?.company_id || null,
+    company_id: tripCompanyId(trip, profile),
     data: trip,
     status: trip.status || "active",
     updated_at: new Date().toISOString(),

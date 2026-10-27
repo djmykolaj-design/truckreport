@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "../lib/supabase";
+import VehicleRepairs from "../components/fleet/VehicleRepairs";
 
 const VEHICLE_TYPES = [
     { value: "truck", label: "Вантажівка / тягач" },
@@ -158,9 +159,10 @@ export default function Fleet() {
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState("");
     const [notice, setNotice] = useState("");
+    const [issues, setIssues] = useState([]);
+    const [repairs, setRepairs] = useState([]);
 
     async function loadVehicles() {
-        setLoading(true);
         setError("");
 
         const { data, error: loadError } = await supabase
@@ -175,6 +177,25 @@ export default function Fleet() {
         } else {
             setVehicles(data || []);
         }
+
+        const [issuesResult, repairsResult] = await Promise.all([
+            supabase
+                .from("fleet_issues")
+                .select("*")
+                .neq("status", "closed")
+                .order("created_at", { ascending: false }),
+            supabase
+                .from("fleet_services")
+                .select("*")
+                .in("status", ["planned", "in_progress"])
+                .order("service_date", { ascending: true }),
+        ]);
+
+        if (issuesResult.error) console.error(issuesResult.error);
+        if (repairsResult.error) console.error(repairsResult.error);
+
+        setIssues(issuesResult.data || []);
+        setRepairs(repairsResult.data || []);
 
         setLoading(false);
     }
@@ -430,6 +451,25 @@ export default function Fleet() {
             payload.next_service_odometer = odo + interval;
         }
 
+        // Записуємо ТО в історію (дата + пробіг), а не лише в примітки
+        const { error: serviceError } = await supabase
+            .from("fleet_services")
+            .insert({
+                vehicle_id: vehicle.id,
+                service_date: new Date().toISOString().slice(0, 10),
+                odometer: odo,
+                description: vehicle.pending_issue
+                    ? `ТО. ${vehicle.pending_issue}`
+                    : "Планове ТО",
+                status: "done",
+            });
+
+        if (serviceError) {
+            console.error(serviceError);
+            setError("Не вдалося записати ТО в історію.");
+            return;
+        }
+
         const { error: updateError } = await supabase
             .from("fleet_vehicles")
             .update(payload)
@@ -440,48 +480,9 @@ export default function Fleet() {
             return;
         }
 
-        setNotice("ТО зафіксовано. Поломку перенесено в історію.");
+        setNotice("ТО зафіксовано та записано в історію.");
         await loadVehicles();
     }
-async function planRepair(vehicle) {
-    setError("");
-    setNotice("");
-
-    const dateStr = window.prompt(
-        "Запланувати ремонт на (дд.мм.рррр)",
-        ""
-    );
-
-    if (!dateStr || !dateStr.trim()) return;
-
-    const match = dateStr.trim().match(/^(\d{2})\.(\d{2})\.(\d{4})$/);
-    if (!match) {
-        setError("Невірний формат. Пиши дд.мм.рррр (наприклад 22.10.2026)");
-        return;
-    }
-
-    const [, dd, mm, yyyy] = match;
-    const isoDate = `${yyyy}-${mm}-${dd}`;
-
-    const test = new Date(isoDate);
-    if (isNaN(test.getTime())) {
-        setError("Такої дати не існує.");
-        return;
-    }
-
-    const { error: updateError } = await supabase
-        .from("fleet_vehicles")
-        .update({ next_service_date: isoDate })
-        .eq("id", vehicle.id);
-
-    if (updateError) {
-        setError("Не вдалося запланувати ремонт.");
-        return;
-    }
-
-    setNotice(`Ремонт заплановано на ${dateStr.trim()}. Статус не змінено — машина може їхати.`);
-    await loadVehicles();
-}
 
     const typeCounts = useMemo(() => {
         const counts = { all: vehicles.length };
@@ -863,7 +864,7 @@ async function planRepair(vehicle) {
                     <div style={{ display: "grid", gap: 12 }}>
                         {filteredVehicles.map((vehicle) => {
                             const badge = serviceBadge(vehicle);
-                            const isOnService = vehicle.status === "maintenance";
+                            const isOnService = ["maintenance", "repair"].includes(vehicle.status);
                             const interval = SERVICE_INTERVAL_KM[vehicle.vehicle_type];
 
                             const odo = Number(vehicle.odometer || 0);
@@ -992,6 +993,17 @@ async function planRepair(vehicle) {
                                                 </div>
                                             )}
 
+                                            <VehicleRepairs
+                                                vehicle={vehicle}
+                                                issues={issues.filter(
+                                                    (item) => item.vehicle_id === vehicle.id
+                                                )}
+                                                repairs={repairs.filter(
+                                                    (item) => item.vehicle_id === vehicle.id
+                                                )}
+                                                onChanged={loadVehicles}
+                                            />
+
                                             {vehicle.notes && (
                                                 <details style={{ marginTop: 10 }}>
                                                     <summary
@@ -1002,7 +1014,7 @@ async function planRepair(vehicle) {
                                                             fontWeight: 600,
                                                         }}
                                                     >
-                                                        Історія ремонтів / примітки
+                                                        Примітки
                                                     </summary>
                                                     <div
                                                         style={{
@@ -1060,18 +1072,6 @@ async function planRepair(vehicle) {
                                                     Поставити на ТО
                                                 </button>
                                             )}
-
-                                            <button
-                                                type="button"
-                                                style={{
-                                                    ...styles.button,
-                                                    background: "#92400e",
-                                                    color: "#ffedd5",
-                                                }}
-                                                onClick={() => planRepair(vehicle)}
-                                            >
-                                                Запланувати ремонт
-                                            </button>
 
                                             <button
                                                 type="button"

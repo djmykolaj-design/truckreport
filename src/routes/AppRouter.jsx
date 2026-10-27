@@ -2,7 +2,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 import MainLayout from "../components/layout/MainLayout";
 
-import Dashboard from "../pages/Dashboard";
+import Home from "../pages/Home";
 import Schengen from "../pages/Schengen";
 import TripsV4 from "../pages/TripsV4";
 import TripFuel from "../pages/TripFuel";
@@ -20,6 +20,7 @@ import Office from "../pages/Office";
 import OfficeTrip from "../pages/OfficeTrip";
 import SetupCompany from "../pages/SetupCompany";
 import Fleet from "../pages/Fleet";
+import CompanyOffice from "../pages/CompanyOffice";
 
 export default function AppRouter() {
   return (
@@ -29,11 +30,11 @@ export default function AppRouter() {
           <Route path="/login" element={<Login />} />
           <Route path="/reset-password" element={<ResetPassword />} />
 
-          <Route
+           <Route
             path="/"
             element={
               <AuthGuard>
-                <Dashboard />
+                <Home />
               </AuthGuard>
             }
           />
@@ -115,6 +116,15 @@ export default function AppRouter() {
             element={
               <AuthGuard>
                 <Office />
+              </AuthGuard>
+            }
+          />
+
+          <Route
+            path="/company"
+            element={
+              <AuthGuard>
+                <CompanyOffice />
               </AuthGuard>
             }
           />

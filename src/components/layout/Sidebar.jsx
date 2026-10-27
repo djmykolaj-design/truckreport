@@ -8,6 +8,7 @@ import {
   LogOut,
   Wrench,
   AlertTriangle,
+  Users,
 } from "lucide-react";
 
 import "./Sidebar.css";
@@ -28,6 +29,9 @@ export default function Sidebar() {
     navigate("/login");
   };
 
+  const boss = isBoss(profile);
+  const driver = profile && !boss;
+
   return (
     <aside className="sidebar">
       <div className="sidebar-header">
@@ -40,38 +44,42 @@ export default function Sidebar() {
           <span>Головна</span>
         </NavLink>
 
-        <NavLink to="/trips" className={({ isActive }) => `sidebar-link ${isActive ? "active" : ""}`}>
-          <Truck size={22} />
-          <span>Рейси</span>
-        </NavLink>
+        {driver && (
+          <>
+            <NavLink to="/trips" className={({ isActive }) => `sidebar-link ${isActive ? "active" : ""}`}>
+              <Truck size={22} />
+              <span>Рейси</span>
+            </NavLink>
 
-        <NavLink to="/schengen" className={({ isActive }) => `sidebar-link ${isActive ? "active" : ""}`}>
-          <Globe2 size={22} />
-          <span>Шенген</span>
-        </NavLink>
+            <NavLink to="/schengen" className={({ isActive }) => `sidebar-link ${isActive ? "active" : ""}`}>
+              <Globe2 size={22} />
+              <span>Шенген</span>
+            </NavLink>
 
-        <NavLink to="/report-breakdown" className={({ isActive }) => `sidebar-link ${isActive ? "active" : ""}`}>
-          <AlertTriangle size={22} />
-          <span>Поломка</span>
-        </NavLink>
-
-        {isBoss(profile) && (
-          <NavLink to="/office" className={({ isActive }) => `sidebar-link ${isActive ? "active" : ""}`}>
-            <Briefcase size={22} />
-            <span>Офіс</span>
-          </NavLink>
+            <NavLink to="/report-breakdown" className={({ isActive }) => `sidebar-link ${isActive ? "active" : ""}`}>
+              <AlertTriangle size={22} />
+              <span>Поломка</span>
+            </NavLink>
+          </>
         )}
 
-        {isBoss(profile) && (
-          <NavLink
-            to="/fleet"
-            className={({ isActive }) =>
-              `sidebar-link ${isActive ? "active" : ""}`
-            }
-          >
-            <Wrench size={22} />
-            <span>Автопарк</span>
-          </NavLink>
+        {boss && (
+          <>
+            <NavLink to="/fleet" className={({ isActive }) => `sidebar-link ${isActive ? "active" : ""}`}>
+              <Wrench size={22} />
+              <span>Автопарк</span>
+            </NavLink>
+
+            <NavLink to="/office" className={({ isActive }) => `sidebar-link ${isActive ? "active" : ""}`}>
+              <Users size={22} />
+              <span>Водії</span>
+            </NavLink>
+
+            <NavLink to="/company" className={({ isActive }) => `sidebar-link ${isActive ? "active" : ""}`}>
+              <Briefcase size={22} />
+              <span>Офіс</span>
+            </NavLink>
+          </>
         )}
       </nav>
 

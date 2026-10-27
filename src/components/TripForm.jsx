@@ -64,6 +64,7 @@ export default function TripForm(props) {
   const [loadingVehicles, setLoadingVehicles] = useState(true);
   const [vehiclesError, setVehiclesError] = useState("");
   const [hasCompany, setHasCompany] = useState(false);
+  const [drivers, setDrivers] = useState([]);
 
   useEffect(() => {
     let cancelled = false;
@@ -113,6 +114,17 @@ export default function TripForm(props) {
         if (cancelled) return;
 
         setVehicles(data || []);
+                const { data: people } = await supabase
+          .from("company_drivers")
+          .select("full_name, user_id")
+          .eq("company_id", profile.company_id)
+          .order("full_name", { ascending: true });
+
+        if (!cancelled) {
+          setDrivers(people || []);
+          const mine = (people || []).find((p) => p.user_id === user.id);
+          if (mine && !driver) setDriver(mine.full_name);
+        }
       } catch (error) {
         console.error("Помилка завантаження автопарку для рейсу:", error);
 
@@ -177,21 +189,49 @@ export default function TripForm(props) {
             onChange={(e) => setTripNumber(e.target.value)}
           />
 
-          <Input
-            label="Водій"
-            icon="👤"
-            placeholder="Введіть ім'я водія"
-            value={driver}
-            onChange={(e) => setDriver(e.target.value)}
-          />
+                 {hasCompany && drivers.length > 0 ? (
+            <div>
+              <label style={{ display: "block", marginBottom: 6, color: "#cbd5e1", fontSize: 13 }}>
+                👤 Водій
+              </label>
+              <select value={driver} onChange={(e) => setDriver(e.target.value)} style={selectStyle}>
+                <option value="">— Виберіть водія —</option>
+                {drivers.map((d) => (
+                  <option key={d.full_name} value={d.full_name}>{d.full_name}</option>
+                ))}
+              </select>
+            </div>
+          ) : (
+            <Input
+              label="Водій"
+              icon="👤"
+              placeholder="Введіть ім'я водія"
+              value={driver}
+              onChange={(e) => setDriver(e.target.value)}
+            />
+          )}
 
-          <Input
-            label="Напарник"
-            icon="👥"
-            placeholder="Введіть ім'я напарника"
-            value={codriver}
-            onChange={(e) => setCodriver(e.target.value)}
-          />
+          {hasCompany && drivers.length > 0 ? (
+            <div>
+              <label style={{ display: "block", marginBottom: 6, color: "#cbd5e1", fontSize: 13 }}>
+                👥 Напарник
+              </label>
+              <select value={codriver} onChange={(e) => setCodriver(e.target.value)} style={selectStyle}>
+                <option value="">— Без напарника —</option>
+                {drivers.filter((d) => d.full_name !== driver).map((d) => (
+                  <option key={d.full_name} value={d.full_name}>{d.full_name}</option>
+                ))}
+              </select>
+            </div>
+          ) : (
+            <Input
+              label="Напарник"
+              icon="👥"
+              placeholder="Введіть ім'я напарника"
+              value={codriver}
+              onChange={(e) => setCodriver(e.target.value)}
+            />
+          )}
 
           <Input
             label="Дата початку"

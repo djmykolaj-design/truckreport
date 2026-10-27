@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import TripList from "../components/TripList";
@@ -11,6 +10,7 @@ import {
   deleteTripFromCloud,
 } from "../services/cloudTrips";
 import { markVehicleInTrip } from "../services/fleetStatus";
+import { getMyProfile } from "../services/profile";
 
 export default function TripsV4() {
   const [showForm, setShowForm] = useState(false);
@@ -73,8 +73,10 @@ export default function TripsV4() {
       return;
     }
 
-    const newTrip = {
+        const me = await getMyProfile();
+        const newTrip = {
       id: Date.now(),
+      companyId: me?.company_id || null,
       tripNumber,
       driver,
       codriver,
@@ -103,12 +105,13 @@ export default function TripsV4() {
     setTrips((prev) => [newTrip, ...prev]);
     setSelectedTrip(newTrip);
 
-    // Позначаємо тягач як такий, що перебуває в рейсі.
+    // Позначаємо тягач і причіп як такі, що перебувають в рейсі.
     // Помилка оновлення автопарку не скасовує створення рейсу.
     try {
       await markVehicleInTrip(truck);
+      if (trailer) await markVehicleInTrip(trailer);
     } catch (error) {
-      console.error("Не вдалося оновити статус тягача:", error);
+      console.error("Не вдалося оновити статус тягача або причепа:", error);
     }
 
     setTripNumber("");

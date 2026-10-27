@@ -1,40 +1,12 @@
 import { supabase } from "../lib/supabase";
 
-async function currentUser() {
-  const { data, error } = await supabase.auth.getUser();
-  if (error || !data?.user) return null;
-  return data.user;
-}
-
-async function saveProfile(userId, patch) {
-  const { error } = await supabase
-    .from("profiles")
-    .upsert({
-      id: userId,
-      ...patch,
-    });
-
-  return error;
-}
+// Створення фірми, приєднання і вихід виконуються функціями в базі,
+// а не прямими змінами профілю з браузера.
 
 export async function createCompany(name) {
-  const user = await currentUser();
-  if (!user) {
-    alert("Немає сесії. Увійди знову.");
-    return null;
-  }
-
-  const invite_code = Math.random().toString(36).slice(2, 8).toUpperCase();
-
-  const { data, error } = await supabase
-    .from("companies")
-    .insert({
-      name: name.trim(),
-      owner_id: user.id,
-      invite_code,
-    })
-    .select()
-    .single();
+  const { data, error } = await supabase.rpc("create_company", {
+    p_name: name,
+  });
 
   if (error) {
     console.error(error);
@@ -42,69 +14,29 @@ export async function createCompany(name) {
     return null;
   }
 
-  const profileError = await saveProfile(user.id, {
-    company_id: data.id,
-    role: "boss",
-    full_name: user.email,
-    setup_done: true,
+  return data;
+}
+
+export async function joinCompany(code) {
+  const { data, error } = await supabase.rpc("join_company", {
+    p_code: code,
   });
 
-  if (profileError) {
-    console.error(profileError);
-    alert(profileError.message || "Фірму створено, але профіль не оновився");
+  if (error) {
+    console.error(error);
+    if (String(error.message).includes("invalid_code")) {
+      alert("Код фірми невірний");
+    } else {
+      alert(error.message || "Не вдалося приєднатися до фірми");
+    }
     return null;
   }
 
   return data;
 }
 
-export async function joinCompany(code) {
-  const user = await currentUser();
-  if (!user) {
-    alert("Немає сесії. Увійди знову.");
-    return null;
-  }
-
-  const { data: company, error } = await supabase
-    .from("companies")
-    .select("*")
-    .eq("invite_code", code.trim().toUpperCase())
-    .maybeSingle();
-
-  if (error || !company) {
-    alert("Код фірми невірний");
-    return null;
-  }
-
-  const profileError = await saveProfile(user.id, {
-    company_id: company.id,
-    role: "driver",
-    full_name: user.email,
-    setup_done: true,
-  });
-
-  if (profileError) {
-    console.error(profileError);
-    alert(profileError.message || "Не вдалося приєднати профіль");
-    return null;
-  }
-
-  return company;
-}
-
 export async function becomeSolo() {
-  const user = await currentUser();
-  if (!user) {
-    alert("Немає сесії. Увійди знову.");
-    return null;
-  }
-
-  const error = await saveProfile(user.id, {
-    company_id: null,
-    role: "solo",
-    full_name: user.email,
-    setup_done: true,
-  });
+  const { error } = await supabase.rpc("leave_company");
 
   if (error) {
     console.error(error);
@@ -115,8 +47,21 @@ export async function becomeSolo() {
   return true;
 }
 
+export async function leaveCompany() {
+  const { error } = await supabase.rpc("leave_company");
+
+  if (error) {
+    console.error(error);
+    alert(error.message || "Не вдалося від'єднатися");
+    return null;
+  }
+
+  return true;
+}
+
 export async function getMyCompany() {
-  const user = await currentUser();
+  const { data: sessionData } = await supabase.auth.getUser();
+  const user = sessionData?.user;
   if (!user) return null;
 
   const { data: profile } = await supabase
@@ -134,35 +79,4 @@ export async function getMyCompany() {
     .maybeSingle();
 
   return company;
-}
-
-export async function leaveCompany() {
-  const user = await currentUser();
-  if (!user) {
-    alert("Немає сесії. Увійди знову.");
-    return null;
-  }
-
-  const error = await saveProfile(user.id, {
-    company_id: null,
-    role: "solo",
-    setup_done: true,
-  });
-
-  if (error) {
-    console.error(error);
-    alert(error.message || "Не вдалося від'єднатися");
-    return null;
-  }
-
-  const { error: tripsError } = await supabase
-    .from("trips")
-    .update({ company_id: null })
-    .eq("user_id", user.id);
-
-  if (tripsError) {
-    console.error(tripsError);
-  }
-
-  return true;
 }

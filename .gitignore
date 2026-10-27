@@ -22,3 +22,9 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Секретні налаштування
+.env
+.env.*
+!.env.example
+src/pages/.env
