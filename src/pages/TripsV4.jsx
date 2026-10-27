@@ -68,7 +68,7 @@ export default function TripsV4() {
   }, [trips, searchParams]);
 
   const saveTrip = async () => {
-    if (!tripNumber || !truck || !fromCity || !toCity) {
+    if (!tripNumber || !truck || !fromCity || !toCity || !startDate) {
       alert("Заповни обов'язкові поля");
       return;
     }
@@ -142,9 +142,18 @@ export default function TripsV4() {
     }
   };
 
-  const sortedTrips = [...trips].sort((a, b) => {
-    if (a.status === "active" && b.status !== "active") return -1;
-    if (a.status !== "active" && b.status !== "active") return 1;
+   const sortedTrips = [...trips].sort((a, b) => {
+    const aActive = a.status === "active";
+    const bActive = b.status === "active";
+
+    // 1. Рейси в дорозі завжди зверху
+    if (aActive !== bActive) return aActive ? -1 : 1;
+
+    // 2. Далі за датою початку: нові зверху
+    const byDate = String(b.startDate || "").localeCompare(String(a.startDate || ""));
+    if (byDate !== 0) return byDate;
+
+    // 3. Однакова дата: за часом створення, нові зверху
     return (Number(b.id) || 0) - (Number(a.id) || 0);
   });
 

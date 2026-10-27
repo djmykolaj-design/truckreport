@@ -233,8 +233,8 @@ export default function TripForm(props) {
             />
           )}
 
-          <Input
-            label="Дата початку"
+         <Input
+            label="Дата початку *"
             icon="📅"
             type="date"
             value={startDate}
