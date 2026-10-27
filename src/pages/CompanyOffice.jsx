@@ -5,6 +5,7 @@ import { getMyProfile } from "../services/profile";
 import { getMyCompany, leaveCompany } from "../services/company";
 import { loadFleetTrips } from "../services/office";
 import { calculateFinance } from "../utils/financeCalculator";
+import { calculateFuel } from "../utils/fuelCalculator";
 
 const DOC_TYPES = [
   "Страховка (ОСЦПВ)",
@@ -66,6 +67,17 @@ function tripKm(trip) {
   if (!(start > 0) || !(end >= start)) return 0;
   return end - start;
 }
+
+function normPlate(value) {
+  return String(value || "").replace(/\s+/g, "").toUpperCase();
+}
+
+const VEHICLE_TYPE = {
+  truck: "Вантажівка",
+  van: "Бус",
+  car: "Легкова",
+  trailer: "Причіп",
+};
 
 function tripFuel(trip) {
   return (trip.fuelEntries || []).reduce((s, f) => s + Number(f.liters || 0), 0);
@@ -138,7 +150,7 @@ function DocsTab({ companyId, drivers, vehicles }) {
   const [docs, setDocs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [form, setForm] = useState({ type: DOC_TYPES[0], target: "company", expires: "", note: "" });
-    const [filter, setFilter] = useState({ q: "", target: "all", term: "all" });
+  const [filter, setFilter] = useState({ q: "", target: "all", term: "all" });
 
   async function load() {
     const { data, error } = await supabase
@@ -171,7 +183,7 @@ function DocsTab({ companyId, drivers, vehicles }) {
     return "Фірма";
   };
 
-    const filteredDocs = docs.filter((d) => {
+  const filteredDocs = docs.filter((d) => {
     const left = daysLeft(d.expires_on);
     const q = filter.q.trim().toLowerCase();
 
@@ -293,7 +305,7 @@ function DocsTab({ companyId, drivers, vehicles }) {
       </div>
 
       <div style={card}>
-               <h2 style={{ fontSize: 17, margin: "0 0 10px" }}>📄 Документи і терміни</h2>
+        <h2 style={{ fontSize: 17, margin: "0 0 10px" }}>📄 Документи і терміни</h2>
 
         <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 8 }}>
           <input
@@ -399,8 +411,10 @@ function DocsTab({ companyId, drivers, vehicles }) {
 
 /* ───────────── Фінанси ───────────── */
 
-function FinanceTab({ trips }) {
+function FinanceTab({ trips, vehicles, services, drivers }) {
   const [month, setMonth] = useState("all");
+  const [vehicleFilter, setVehicleFilter] = useState("all");
+  const [driverFilter, setDriverFilter] = useState("all");
 
   const months = [
     ...new Set(trips.map((t) => String(t.startDate || "").slice(0, 7)).filter(Boolean)),
@@ -408,9 +422,38 @@ function FinanceTab({ trips }) {
     .sort()
     .reverse();
 
-  const list = trips.filter(
-    (t) => month === "all" || String(t.startDate || "").slice(0, 7) === month
-  );
+  const normName = (value) =>
+    String(value || "").replace(/\./g, "").replace(/\s+/g, " ").trim().toLowerCase();
+
+  const driverNames = [
+    ...new Map(
+      [...drivers.map((d) => d.full_name), ...trips.map((t) => t.driver)]
+        .filter((n) => String(n || "").trim())
+        .map((n) => [normName(n), String(n).trim()])
+    ).values(),
+  ].sort((a, b) => a.localeCompare(b, "uk"));
+
+  const list = trips.filter((t) => {
+    if (month !== "all" && String(t.startDate || "").slice(0, 7) !== month) return false;
+
+    if (
+      vehicleFilter !== "all" &&
+      normPlate(t.truck) !== vehicleFilter &&
+      normPlate(t.trailer) !== vehicleFilter
+    ) {
+      return false;
+    }
+
+    if (
+      driverFilter !== "all" &&
+      normName(t.driver) !== driverFilter &&
+      normName(t.codriver) !== driverFilter
+    ) {
+      return false;
+    }
+
+    return true;
+  });
 
   const rows = list.map((t) => {
     const f = calculateFinance(t);
@@ -434,6 +477,92 @@ function FinanceTab({ trips }) {
   const totalKm = rows.reduce((s, r) => s + r.km, 0);
   const totalFuel = rows.reduce((s, r) => s + r.fuel, 0);
 
+  // ---- Статистика по машинах ----
+  const inPeriod = (dateStr) =>
+    month === "all" || String(dateStr || "").slice(0, 7) === month;
+
+  const stats = new Map();
+
+  const ensure = (plate) => {
+    const key = normPlate(plate);
+    if (!key) return null;
+    if (!stats.has(key)) {
+      const vehicle = vehicles.find((v) => normPlate(v.plate_number) === key) || null;
+      stats.set(key, {
+        key,
+        vehicle,
+        plate: vehicle?.plate_number || plate,
+        trips: 0,
+        km: 0,
+        fuelKm: 0,
+        engineFuel: 0,
+        totalFuelUsed: 0,
+        bought: 0,
+        fuelMoney: {},
+        expenses: {},
+        repair: 0,
+      });
+    }
+    return stats.get(key);
+  };
+
+  vehicles.forEach((v) => ensure(v.plate_number));
+
+  list.forEach((trip) => {
+    const done = trip.status !== "active";
+    const truckRow = ensure(trip.truck);
+
+    if (truckRow) {
+      truckRow.trips += 1;
+      truckRow.bought += tripFuel(trip);
+
+      (trip.fuelEntries || []).forEach((f) => {
+        truckRow.fuelMoney[f.currency] =
+          (truckRow.fuelMoney[f.currency] || 0) + Number(f.amount || 0);
+      });
+      (trip.expenses || []).forEach((e) => {
+        truckRow.expenses[e.currency] =
+          (truckRow.expenses[e.currency] || 0) + Number(e.amount || 0);
+      });
+
+      const km = tripKm(trip);
+      if (done && km > 0) {
+        truckRow.km += km;
+
+        const hasEndFuel =
+          trip.endFuel !== "" && trip.endFuel !== undefined && trip.endFuel !== null;
+
+        if (hasEndFuel) {
+          const calc = calculateFuel(trip);
+          if (calc.engineFuel > 0) {
+            truckRow.fuelKm += km;
+            truckRow.engineFuel += calc.engineFuel;
+            truckRow.totalFuelUsed += Math.max(0, calc.totalFuelUsed);
+          }
+        }
+      }
+    }
+
+    const trailerRow = ensure(trip.trailer);
+    if (trailerRow) {
+      trailerRow.trips += 1;
+      if (done) trailerRow.km += tripKm(trip);
+    }
+  });
+
+  services
+    .filter((s) => driverFilter === "all" && inPeriod(s.service_date))
+    .forEach((s) => {
+      const v = vehicles.find((x) => x.id === s.vehicle_id);
+      const row = v ? ensure(v.plate_number) : null;
+      if (row) row.repair += Number(s.cost || 0);
+    });
+
+  const vehicleRows = [...stats.values()]
+    .filter((r) => vehicleFilter === "all" || r.key === vehicleFilter)
+    .filter((r) => r.trips > 0 || r.repair > 0)
+    .sort((a, b) => b.km - a.km);
+
   const byDriver = new Map();
   rows.forEach((r) => {
     const name = r.trip.driver || "—";
@@ -455,19 +584,67 @@ function FinanceTab({ trips }) {
 
   return (
     <>
-      <label style={{ display: "block", marginBottom: 14, maxWidth: 260 }}>
-        <div style={{ color: "#94a3b8", fontSize: 13, marginBottom: 6 }}>Період</div>
-        <select
-          value={month}
-          onChange={(e) => setMonth(e.target.value)}
-          style={{ ...inputStyle, width: "100%" }}
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 12, marginBottom: 14 }}>
+        <label style={{ flex: 1, minWidth: 180 }}>
+          <div style={{ color: "#94a3b8", fontSize: 13, marginBottom: 6 }}>Період</div>
+          <select
+            value={month}
+            onChange={(e) => setMonth(e.target.value)}
+            style={{ ...inputStyle, width: "100%" }}
+          >
+            <option value="all">Увесь час</option>
+            {months.map((m) => (
+              <option key={m} value={m}>{m}</option>
+            ))}
+          </select>
+        </label>
+
+        <label style={{ flex: 1, minWidth: 180 }}>
+          <div style={{ color: "#94a3b8", fontSize: 13, marginBottom: 6 }}>Машина</div>
+          <select
+            value={vehicleFilter}
+            onChange={(e) => setVehicleFilter(e.target.value)}
+            style={{ ...inputStyle, width: "100%" }}
+          >
+            <option value="all">Усі машини</option>
+            {vehicles.map((v) => (
+              <option key={v.id} value={normPlate(v.plate_number)}>
+                {[v.name, v.plate_number].filter(Boolean).join(" — ")}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <label style={{ flex: 1, minWidth: 180 }}>
+          <div style={{ color: "#94a3b8", fontSize: 13, marginBottom: 6 }}>Водій</div>
+          <select
+            value={driverFilter}
+            onChange={(e) => setDriverFilter(e.target.value)}
+            style={{ ...inputStyle, width: "100%" }}
+          >
+            <option value="all">Усі водії</option>
+            {driverNames.map((name) => (
+              <option key={normName(name)} value={normName(name)}>
+                {name}
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
+
+      {(month !== "all" || vehicleFilter !== "all" || driverFilter !== "all") && (
+        <button
+          type="button"
+          onClick={() => {
+            setMonth("all");
+            setVehicleFilter("all");
+            setDriverFilter("all");
+          }}
+          style={{ ...btn, background: "#475569", marginBottom: 14 }}
         >
-          <option value="all">Увесь час</option>
-          {months.map((m) => (
-            <option key={m} value={m}>{m}</option>
-          ))}
-        </select>
-      </label>
+          Скинути фільтри
+        </button>
+      )}
 
       <div
         style={{
@@ -488,6 +665,72 @@ function FinanceTab({ trips }) {
             ? `${((totalFuel / totalKm) * 100).toFixed(1)} л/100 км`
             : "—"
         )}
+      </div>
+
+      <div style={card}>
+        <h2 style={{ fontSize: 17, margin: "0 0 4px" }}>🚚 По машинах</h2>
+        {vehicleRows.length === 0 && <p style={{ color: "#94a3b8" }}>Даних немає.</p>}
+
+        {vehicleRows.map((r) => {
+          const avg = r.fuelKm > 0 ? (r.engineFuel / r.fuelKm) * 100 : null;
+          const avgAll = r.fuelKm > 0 ? (r.totalFuelUsed / r.fuelKm) * 100 : null;
+          const hasReef = avg !== null && avgAll !== null && avgAll - avg > 0.2;
+
+          return (
+            <div
+              key={r.key}
+              style={{ padding: "12px 0", borderTop: "1px solid #30363D", fontSize: 13 }}
+            >
+              <div style={{ display: "flex", justifyContent: "space-between", gap: 10, flexWrap: "wrap" }}>
+                <div style={{ fontWeight: 700, fontSize: 15 }}>
+                  {[r.vehicle?.name, r.plate].filter(Boolean).join(" — ")}
+                  <span style={{ color: "#94a3b8", fontWeight: 400, fontSize: 12 }}>
+                    {" "}
+                    {VEHICLE_TYPE[r.vehicle?.vehicle_type] || ""}
+                  </span>
+                </div>
+                <div style={{ color: "#94a3b8" }}>
+                  {r.vehicle?.odometer
+                    ? `одометр: ${Number(r.vehicle.odometer).toLocaleString("uk-UA")} км`
+                    : ""}
+                </div>
+              </div>
+
+              <div style={{ color: "#cbd5e1", marginTop: 4 }}>
+                рейсів {r.trips} • {r.km.toLocaleString("uk-UA")} км
+              </div>
+
+              {r.vehicle?.vehicle_type !== "trailer" && (
+                <>
+                  <div style={{ color: "#94a3b8", marginTop: 2 }}>
+                    заправлено: {r.bought ? `${Math.round(r.bought)} л` : "—"}
+                    {avg !== null && (
+                      <>
+                        {" "}• витрата: <b style={{ color: "#22c55e" }}>{avg.toFixed(1)} л/100 км</b>
+                        {hasReef && ` (з рефом ${avgAll.toFixed(1)})`}
+                      </>
+                    )}
+                  </div>
+                  <div style={{ color: "#94a3b8", marginTop: 2 }}>
+                    пальне, гроші: {fmtMoney(r.fuelMoney)}
+                  </div>
+                </>
+              )}
+
+              <div style={{ color: "#94a3b8", marginTop: 2 }}>
+                усі витрати рейсів: {fmtMoney(r.expenses)}
+              </div>
+              <div style={{ color: "#94a3b8", marginTop: 2 }}>
+                ремонти і ТО: {r.repair ? r.repair.toLocaleString("uk-UA") : "—"}
+              </div>
+            </div>
+          );
+        })}
+
+        <div style={{ color: "#94a3b8", fontSize: 12, marginTop: 8 }}>
+          Витрата рахується за завершеними рейсами з кінцевим пробігом і залишком пального.
+          Гроші по пальному й витратах рейсів показано в тих валютах, у яких їх вносили.
+        </div>
       </div>
 
       <div style={card}>
@@ -557,7 +800,7 @@ export default function CompanyOffice() {
         return;
       }
 
-      const [company, trips, driversRes, vehiclesRes] = await Promise.all([
+      const [company, trips, driversRes, vehiclesRes, servicesRes] = await Promise.all([
         getMyCompany(),
         loadFleetTrips(),
         supabase
@@ -567,9 +810,14 @@ export default function CompanyOffice() {
           .order("full_name"),
         supabase
           .from("fleet_vehicles")
-          .select("id, name, plate_number")
+          .select("id, name, plate_number, vehicle_type, odometer")
           .eq("company_id", me.company_id)
           .order("name"),
+        supabase
+          .from("fleet_services")
+          .select("vehicle_id, service_date, cost")
+          .eq("company_id", me.company_id)
+          .eq("status", "done"),
       ]);
 
       setData({
@@ -579,6 +827,7 @@ export default function CompanyOffice() {
         trips,
         drivers: driversRes.data || [],
         vehicles: vehiclesRes.data || [],
+        services: servicesRes.data || [],
       });
     }
 
@@ -623,7 +872,14 @@ export default function CompanyOffice() {
       {tab === "docs" && (
         <DocsTab companyId={data.companyId} drivers={data.drivers} vehicles={data.vehicles} />
       )}
-      {tab === "finance" && <FinanceTab trips={data.trips} />}
+      {tab === "finance" && (
+        <FinanceTab
+          trips={data.trips}
+          vehicles={data.vehicles}
+          services={data.services}
+          drivers={data.drivers}
+        />
+      )}
     </div>
   );
 }

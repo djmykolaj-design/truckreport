@@ -147,7 +147,7 @@ export default function BossDashboard() {
       since.setMonth(since.getMonth() - 6);
       const sinceStr = since.toISOString().slice(0, 10);
 
-      const [company, vehiclesRes, issuesRes, servicesRes, trips, drivers] =
+      const [company, vehiclesRes, issuesRes, servicesRes, trips, drivers, docsRes] =
         await Promise.all([
           getMyCompany(),
           supabase.from("fleet_vehicles").select("*").eq("company_id", companyId),
@@ -165,6 +165,10 @@ export default function BossDashboard() {
             .gte("service_date", sinceStr),
           loadFleetTrips(),
           loadCompanyDrivers(),
+          supabase
+            .from("company_documents")
+            .select("id, doc_type, expires_on, vehicle_id, driver_id, note")
+            .eq("company_id", companyId),
         ]);
 
       if (cancelled) return;
@@ -178,6 +182,7 @@ export default function BossDashboard() {
         services: servicesRes.data || [],
         trips,
         drivers,
+        docs: docsRes.data || [],
       });
     }
 
@@ -214,7 +219,7 @@ export default function BossDashboard() {
     );
   }
 
-  const { company, vehicles, issues, services, trips, drivers } = state;
+  const { company, vehicles, issues, services, trips, drivers, docs } = state;
 
   const vehicleById = new Map(vehicles.map((v) => [v.id, v]));
   const countBy = (status) => vehicles.filter((v) => (v.status || "available") === status).length;
@@ -257,7 +262,18 @@ export default function BossDashboard() {
     .filter((x) => x.s.remaining <= 15)
     .sort((a, b) => a.s.remaining - b.s.remaining);
 
-  const attentionCount = issues.length + serviceAlerts.length + schengenAlerts.length;
+  const docAlerts = (docs || [])
+    .map((d) => ({
+      d,
+      left: d.expires_on
+        ? Math.ceil((new Date(d.expires_on).getTime() - Date.now()) / 86400000)
+        : null,
+    }))
+    .filter((x) => x.left !== null && x.left <= 30)
+    .sort((a, b) => a.left - b.left);
+
+  const attentionCount =
+    issues.length + serviceAlerts.length + schengenAlerts.length + docAlerts.length;
 
   const row = {
     display: "flex",
@@ -363,6 +379,22 @@ export default function BossDashboard() {
             </div>
           </div>
         ))}
+
+        {docAlerts.map(({ d, left }) => {
+          const v = d.vehicle_id ? vehicleById.get(d.vehicle_id) : null;
+          const person = d.driver_id ? drivers.find((x) => x.id === d.driver_id) : null;
+          return (
+            <div key={d.id} style={row} onClick={() => navigate("/company")}>
+              <div style={{ fontWeight: 700 }}>
+                📄 {d.doc_type}
+                {v ? `: ${vehicleTitle(v)}` : person ? `: ${person.full_name}` : ""}
+              </div>
+              <div style={{ color: left < 0 ? "#ef4444" : "#eab308", fontSize: 13, whiteSpace: "nowrap" }}>
+                {left < 0 ? `прострочено ${Math.abs(left)} дн.` : `ще ${left} дн.`}
+              </div>
+            </div>
+          );
+        })}
       </div>
 
       <div style={{ ...card, marginBottom: 18 }}>
@@ -420,7 +452,7 @@ export default function BossDashboard() {
       <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
         {[
           ["🔧 Автопарк", "/fleet"],
-        ["👥 Водії", "/office"],
+          ["👥 Водії", "/office"],
           ["💼 Офіс", "/company"],
         ].map(([label, path]) => (
           <button
