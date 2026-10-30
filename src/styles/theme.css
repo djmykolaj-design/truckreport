@@ -195,3 +195,31 @@ textarea:focus {
 main > div {
   margin-left: 0;
 }
+
+/* ---------- Поля дати (особливо для iPhone) ---------- */
+
+input[type="date"] {
+  -webkit-appearance: none;
+  appearance: none;
+  box-sizing: border-box;
+  min-width: 150px;
+  min-height: 42px;
+  flex: 1 1 150px;
+  text-align: left;
+}
+
+input[type="date"]::-webkit-date-and-time-value {
+  min-width: 0;
+  text-align: left;
+}
+
+input[type="date"]::-webkit-datetime-edit {
+  padding: 0;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator {
+  margin-left: 8px;
+  opacity: 0.7;
+  cursor: pointer;
+  filter: invert(1);
+}
