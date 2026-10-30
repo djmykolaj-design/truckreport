@@ -4,6 +4,7 @@ import "./styles/mobile.css";
 
 import "./styles/index.css";
 import "./index.css";
+import "./styles/theme.css";
 
 import App from "./App.jsx";
 

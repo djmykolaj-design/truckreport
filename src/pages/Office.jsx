@@ -11,27 +11,44 @@ import {
   deleteCompanyDriver,
 } from "../services/office";
 import { calculateRollingSchengen } from "../utils/schengen";
+import { Plate } from "../components/boss/Plate";
 
 function normName(value) {
   return String(value || "").replace(/\./g, "").replace(/\s+/g, " ").trim().toLowerCase();
 }
 
+const panel = {
+  marginBottom: 16,
+  padding: "14px 16px",
+  borderRadius: 14,
+  border: "1px solid var(--border)",
+  background: "var(--surface)",
+};
+
 const inputStyle = {
   padding: "10px 12px",
   borderRadius: 10,
-  border: "1px solid #30363D",
-  background: "#1F2937",
-  color: "white",
+  border: "1px solid var(--border)",
+  background: "var(--bg)",
+  color: "var(--text)",
   fontSize: 14,
 };
 
 const smallBtn = {
-  border: "none",
-  borderRadius: 8,
+  border: "1px solid var(--border)",
+  borderRadius: 10,
   padding: "8px 12px",
-  color: "white",
-  fontWeight: 700,
+  background: "transparent",
+  color: "var(--text)",
+  fontWeight: 600,
   cursor: "pointer",
+};
+
+const okBtn = {
+  ...smallBtn,
+  border: "none",
+  background: "var(--primary)",
+  color: "#06210f",
 };
 
 export default function Office() {
@@ -77,7 +94,7 @@ export default function Office() {
     init();
   }, []);
 
-  if (loading) return <p style={{ color: "#94a3b8" }}>Завантаження…</p>;
+  if (loading) return <p style={{ color: "var(--text-secondary)" }}>Завантаження…</p>;
 
   if (!isBoss(profile)) {
     const leave = async () => {
@@ -91,11 +108,11 @@ export default function Office() {
     };
 
     return (
-      <div style={{ color: "white", maxWidth: 520 }}>
-        <h1 style={{ marginBottom: 8 }}>Фірма</h1>
+      <div style={{ color: "var(--text)", maxWidth: 520 }}>
+        <h1 style={{ margin: "0 0 8px", fontSize: 30, fontWeight: 600 }}>Фірма</h1>
         {company ? (
           <>
-            <p style={{ color: "#94a3b8" }}>{company.name}</p>
+            <p style={{ color: "var(--text-secondary)" }}>{company.name}</p>
             <button
               type="button"
               onClick={leave}
@@ -103,11 +120,11 @@ export default function Office() {
                 marginTop: 18,
                 width: "100%",
                 padding: 14,
-                border: "none",
+                border: "1px solid color-mix(in srgb, var(--danger) 45%, transparent)",
                 borderRadius: 12,
-                background: "#ef4444",
-                color: "white",
-                fontWeight: 700,
+                background: "transparent",
+                color: "var(--danger)",
+                fontWeight: 600,
                 cursor: "pointer",
               }}
             >
@@ -115,7 +132,7 @@ export default function Office() {
             </button>
           </>
         ) : (
-          <p style={{ color: "#94a3b8" }}>Ти не прив'язаний до фірми.</p>
+          <p style={{ color: "var(--text-secondary)" }}>Ти не прив'язаний до фірми.</p>
         )}
       </div>
     );
@@ -169,80 +186,21 @@ export default function Office() {
     if (await updateCompanyDriver(d.id, { user_id: userId || null })) await loadAll();
   };
 
-  const copyCode = async () => {
-    if (!company?.invite_code) return;
-    try {
-      await navigator.clipboard.writeText(company.invite_code);
-      alert("Код скопійовано");
-    } catch {
-      alert(company.invite_code);
-    }
-  };
-
-  const leave = async () => {
-    if (!window.confirm("Від'єднатися від фірми? Рейси фірми більше не будуть їй видимі.")) return;
-    const ok = await leaveCompany();
-    if (!ok) return;
-    navigate("/");
-    window.location.reload();
-  };
-
   return (
-    <div style={{ color: "white", maxWidth: 900 }}>
-            <h1 style={{ marginBottom: 8 }}>Водії</h1>
-      <p style={{ color: "#94a3b8", marginBottom: 8 }}>
+    <div style={{ color: "var(--text)", maxWidth: 900 }}>
+      <h1 style={{ margin: "0 0 4px", fontSize: 30, fontWeight: 600 }}>Водії</h1>
+      <p style={{ color: "var(--text-secondary)", margin: "0 0 18px" }}>
         {company?.name || "Фірма"} • водіїв {drivers.length} • рейсів {visibleTrips.length}
       </p>
 
-      {company?.invite_code && (
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 12,
-            marginBottom: 18,
-            padding: "12px 14px",
-            borderRadius: 12,
-            border: "1px solid #30363D",
-            background: "#1F2937",
-            maxWidth: 360,
-          }}
-        >
-          <div>
-            <div style={{ fontSize: 12, color: "#94a3b8" }}>Код фірми</div>
-            <div style={{ fontWeight: 700, letterSpacing: 1 }}>{company.invite_code}</div>
-          </div>
-          <button type="button" onClick={copyCode} style={{ ...smallBtn, marginLeft: "auto", background: "#22c55e" }}>
-            Копіювати
-          </button>
-        </div>
-      )}
-
-      <button
-        type="button"
-        onClick={leave}
-        style={{ ...smallBtn, marginBottom: 18, padding: "12px 16px", borderRadius: 12, background: "#ef4444" }}
-      >
-        Від'єднатися від фірми
-      </button>
-
-      <details
-        open={drivers.length === 0}
-        style={{
-          marginBottom: 18,
-          padding: "12px 14px",
-          borderRadius: 12,
-          border: "1px solid #30363D",
-          background: "#1F2937",
-        }}
-      >
-        <summary style={{ cursor: "pointer", fontWeight: 700 }}>
-          👥 Водії фірми ({drivers.length})
+      <details open={drivers.length === 0} style={panel}>
+        <summary style={{ cursor: "pointer", fontWeight: 600 }}>
+          Список водіїв ({drivers.length})
         </summary>
 
-        <p style={{ color: "#94a3b8", fontSize: 13, margin: "10px 0" }}>
+        <p style={{ color: "var(--text-secondary)", fontSize: 13, margin: "10px 0" }}>
           Саме цей список водії бачать при створенні рейсу. Щоб бачити Шенген водія,
-          прив'яжіть його акаунт (він має вступити у фірму за кодом).
+          прив'яжіть його акаунт (він має вступити у фірму за кодом із розділу «Офіс»).
         </p>
 
         {drivers.map((d) => (
@@ -254,10 +212,10 @@ export default function Office() {
               alignItems: "center",
               gap: 8,
               padding: "8px 0",
-              borderTop: "1px solid #30363D",
+              borderTop: "1px solid var(--border)",
             }}
           >
-            <div style={{ fontWeight: 700, minWidth: 140 }}>{d.full_name}</div>
+            <div style={{ fontWeight: 600, minWidth: 140 }}>{d.full_name}</div>
 
             <select
               value={d.user_id || ""}
@@ -274,7 +232,7 @@ export default function Office() {
                 ))}
             </select>
 
-            <button type="button" onClick={() => removeDriver(d)} style={{ ...smallBtn, background: "#475569" }}>
+            <button type="button" onClick={() => removeDriver(d)} style={smallBtn}>
               Видалити
             </button>
           </div>
@@ -287,7 +245,7 @@ export default function Office() {
             gap: 8,
             marginTop: 12,
             paddingTop: 12,
-            borderTop: "1px solid #30363D",
+            borderTop: "1px solid var(--border)",
           }}
         >
           <input
@@ -308,33 +266,25 @@ export default function Office() {
               </option>
             ))}
           </select>
-          <button type="button" onClick={addDriver} style={{ ...smallBtn, background: "#22c55e" }}>
+          <button type="button" onClick={addDriver} style={okBtn}>
             Додати
           </button>
         </div>
       </details>
 
-            {drivers.length > 0 && (
-        <div
-          style={{
-            marginBottom: 18,
-            padding: "12px 14px",
-            borderRadius: 12,
-            border: "1px solid #30363D",
-            background: "#1F2937",
-          }}
-        >
-          <div style={{ fontWeight: 700, marginBottom: 8 }}>🇪🇺 Шенген водіїв</div>
+      {drivers.length > 0 && (
+        <div style={panel}>
+          <div style={{ fontWeight: 600, marginBottom: 8 }}>Шенген водіїв</div>
 
           {drivers.map((d) => {
             const s = d.user_id ? calculateRollingSchengen(d.stays || []) : null;
             const color = !s
-              ? "#94a3b8"
+              ? "var(--text-secondary)"
               : s.status === "ok"
-                ? "#22c55e"
+                ? "var(--primary)"
                 : s.status === "warning"
-                  ? "#eab308"
-                  : "#ef4444";
+                  ? "var(--warning)"
+                  : "var(--danger)";
 
             return (
               <div
@@ -344,11 +294,11 @@ export default function Office() {
                   justifyContent: "space-between",
                   gap: 12,
                   padding: "8px 0",
-                  borderTop: "1px solid #30363D",
+                  borderTop: "1px solid var(--border)",
                 }}
               >
-                <span style={{ fontWeight: 600 }}>{d.full_name}</span>
-                <span style={{ color, fontWeight: 700 }}>
+                <span style={{ fontWeight: 500 }}>{d.full_name}</span>
+                <span style={{ color, fontWeight: 600 }}>
                   {s
                     ? `лишилось ${s.remaining} з 90 (використано ${s.usedDays})`
                     : "акаунт не прив'язано"}
@@ -357,97 +307,116 @@ export default function Office() {
             );
           })}
 
-          <div style={{ color: "#94a3b8", fontSize: 12, marginTop: 8 }}>
+          <div style={{ color: "var(--text-secondary)", fontSize: 12, marginTop: 8 }}>
             Рахується за останні 180 днів із записів, які водій вносить у розділі «Шенген».
           </div>
         </div>
       )}
 
-      <label style={{ display: "block", margin: "8px 0 18px", maxWidth: 360 }}>
-        <div style={{ fontSize: 14, color: "#94a3b8", marginBottom: 8 }}>Водій</div>
-        <select
-          value={selectedId}
-          onChange={(e) => setSelectedId(e.target.value)}
-          style={{ ...inputStyle, width: "100%", fontSize: 15, padding: "12px 14px", borderRadius: 12 }}
+      <div style={{ display: "flex", flexWrap: "wrap", alignItems: "flex-end", gap: 16, margin: "8px 0 14px" }}>
+        <label style={{ display: "block", minWidth: 260 }}>
+          <div style={{ fontSize: 13, color: "var(--text-secondary)", marginBottom: 6 }}>Водій</div>
+          <select
+            value={selectedId}
+            onChange={(e) => setSelectedId(e.target.value)}
+            style={{ ...inputStyle, width: "100%" }}
+          >
+            <option value="">Усі водії</option>
+            {drivers.map((driver) => (
+              <option key={driver.id} value={driver.id}>
+                {driver.full_name}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <label
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+            paddingBottom: 10,
+            color: "var(--text)",
+            cursor: "pointer",
+          }}
         >
-          <option value="">Усі водії</option>
-          {drivers.map((driver) => (
-            <option key={driver.id} value={driver.id}>
-              {driver.full_name}
-            </option>
-          ))}
-        </select>
-      </label>
+          <input type="checkbox" checked={onlyActive} onChange={(e) => setOnlyActive(e.target.checked)} />
+          Тільки в дорозі
+        </label>
+      </div>
 
       {selected && (
-        <p style={{ color: selectedSchengen ? "#22c55e" : "#94a3b8", marginTop: -8, marginBottom: 18 }}>
+        <p
+          style={{
+            color: selectedSchengen ? "var(--primary)" : "var(--text-secondary)",
+            margin: "0 0 14px",
+          }}
+        >
           {selectedSchengen
             ? `Шенген: ${selectedSchengen.remaining} днів`
             : "Шенген з'явиться, коли ви прив'яжете акаунт водія"}
         </p>
       )}
 
-      <label
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 10,
-          margin: "18px 0",
-          color: "#e2e8f0",
-          cursor: "pointer",
-        }}
-      >
-        <input type="checkbox" checked={onlyActive} onChange={(e) => setOnlyActive(e.target.checked)} />
-        Тільки в дорозі
-      </label>
-
       <h2 style={{ fontSize: 18, margin: "0 0 12px" }}>
         {selected ? `Рейси: ${selected.full_name}` : "Усі рейси фірми"}
       </h2>
 
-      {visibleTrips.length === 0 && <p style={{ color: "#94a3b8" }}>Рейсів ще немає</p>}
+      {visibleTrips.length === 0 && (
+        <p style={{ color: "var(--text-secondary)" }}>
+          {onlyActive ? "Зараз ніхто не в дорозі." : "Рейсів ще немає."}
+        </p>
+      )}
 
-      {visibleTrips.map((trip) => (
-        <div
-          key={trip.id}
-          onClick={() => navigate(`/office/${trip.id}`)}
-          style={{
-            background: "#232B38",
-            border: "1px solid #30363D",
-            borderRadius: 16,
-            padding: 16,
-            marginBottom: 12,
-            cursor: "pointer",
-          }}
-        >
-          <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
-            <div style={{ fontWeight: 700, fontSize: 16 }}>Рейс № {trip.tripNumber || "—"}</div>
-            <div
-              style={{
-                color: trip.status === "active" ? "#22c55e" : "#94a3b8",
-                fontWeight: 700,
-                fontSize: 13,
-              }}
-            >
-              {trip.status === "active" ? "В дорозі" : "Завершений"}
+      {visibleTrips.map((trip) => {
+        const active = trip.status === "active";
+
+        return (
+          <div
+            key={trip.id}
+            onClick={() => navigate(`/office/${trip.id}`)}
+            style={{
+              background: "var(--surface)",
+              border: "1px solid var(--border)",
+              borderLeft: `3px solid ${active ? "var(--primary)" : "var(--border)"}`,
+              borderRadius: 14,
+              padding: "14px 16px",
+              marginBottom: 10,
+              cursor: "pointer",
+            }}
+          >
+            <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
+              <div style={{ fontWeight: 600, fontSize: 16 }}>
+                {trip.fromCity || "?"} → {trip.toCity || "?"}
+              </div>
+              <div
+                style={{
+                  color: active ? "var(--primary)" : "var(--text-secondary)",
+                  fontWeight: 600,
+                  fontSize: 13,
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {active ? "В дорозі" : "Завершений"}
+              </div>
+            </div>
+
+            <div style={{ color: "var(--text-secondary)", marginTop: 6, fontSize: 13 }}>
+              Рейс № {trip.tripNumber || "—"} • {trip.driver || "—"}
+              {trip.codriver ? ` / ${trip.codriver}` : ""}
+            </div>
+
+            <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8, marginTop: 8 }}>
+              {trip.truck && <Plate value={trip.truck} />}
+              {trip.trailer && <Plate value={trip.trailer} />}
+              <span style={{ color: "var(--text-secondary)", fontSize: 12, marginLeft: "auto" }}>
+                {trip.startDate || ""}
+                {trip.endDate ? ` — ${trip.endDate}` : ""}
+              </span>
             </div>
           </div>
-          <div style={{ marginTop: 6, fontSize: 15 }}>
-            {trip.fromCity || "?"} → {trip.toCity || "?"}
-          </div>
-          <div style={{ color: "#94a3b8", marginTop: 6, fontSize: 13 }}>
-            {trip.driver || "—"}
-            {trip.codriver ? ` / ${trip.codriver}` : ""}
-            {" • "}
-            {trip.truck || "—"}
-            {trip.trailer ? ` / ${trip.trailer}` : ""}
-          </div>
-          <div style={{ color: "#94a3b8", marginTop: 4, fontSize: 12 }}>
-            {trip.startDate || ""}
-            {trip.endDate ? ` — ${trip.endDate}` : ""}
-          </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }

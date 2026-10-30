@@ -37,28 +37,37 @@ const inputStyle = {
     width: "100%",
     boxSizing: "border-box",
     padding: "10px 12px",
-    border: "1px solid #374151",
+    border: "1px solid var(--border)",
     borderRadius: 9,
-    background: "#111827",
-    color: "#f9fafb",
+    background: "var(--bg)",
+    color: "var(--text)",
     fontSize: 14,
 };
 
 const labelStyle = {
     display: "grid",
     gap: 6,
-    color: "#cbd5e1",
+    color: "var(--text-secondary)",
     fontSize: 13,
 };
 
-function btn(background, color = "#f9fafb") {
+function btn(tone) {
+    const color =
+        tone === "warn"
+            ? "var(--warning)"
+            : tone === "ok"
+                ? "var(--primary)"
+                : "var(--text)";
+
     return {
-        border: 0,
+        border: `1px solid ${
+            tone ? `color-mix(in srgb, ${color} 45%, transparent)` : "var(--border)"
+        }`,
         borderRadius: 8,
         padding: "8px 12px",
-        background,
+        background: "transparent",
         color,
-        fontWeight: 700,
+        fontWeight: 600,
         fontSize: 13,
         cursor: "pointer",
     };
@@ -88,11 +97,11 @@ function Modal({ title, onClose, children }) {
                     maxWidth: 420,
                     maxHeight: "90vh",
                     overflowY: "auto",
-                    background: "#1f2937",
-                    border: "1px solid #374151",
+                    background: "var(--surface)",
+                    border: "1px solid var(--border)",
                     borderRadius: 14,
                     padding: 18,
-                    color: "#f9fafb",
+                    color: "var(--text)",
                 }}
             >
                 <h3 style={{ margin: "0 0 14px", fontSize: 18 }}>{title}</h3>
@@ -126,7 +135,7 @@ function CreateRepairForm({ issue, busy, onSubmit, onCancel }) {
                     onChange={(event) => setDate(event.target.value)}
                 />
             </label>
-            <p style={{ margin: 0, color: "#94a3b8", fontSize: 12 }}>
+            <p style={{ margin: 0, color: "var(--text-secondary)", fontSize: 12 }}>
                 Сьогодні або раніше: машина одразу стає «На ремонті».
                 Пізніша дата: лише запланується, машина може їхати.
             </p>
@@ -139,13 +148,13 @@ function CreateRepairForm({ issue, busy, onSubmit, onCancel }) {
                 />
             </label>
             {formError && (
-                <div style={{ color: "#fecaca", fontSize: 13 }}>{formError}</div>
+                <div style={{ color: "var(--danger)", fontSize: 13 }}>{formError}</div>
             )}
             <div style={{ display: "flex", gap: 8 }}>
-                <button type="submit" disabled={busy} style={btn("#b45309", "#fff7ed")}>
+                <button type="submit" disabled={busy} style={btn("warn")}>
                     {busy ? "Збереження..." : "Зберегти"}
                 </button>
-                <button type="button" onClick={onCancel} style={btn("#374151")}>
+                <button type="button" onClick={onCancel} style={btn()}>
                     Скасувати
                 </button>
             </div>
@@ -222,13 +231,13 @@ function FinishRepairForm({ vehicle, busy, onSubmit, onCancel }) {
                 />
             </label>
             {formError && (
-                <div style={{ color: "#fecaca", fontSize: 13 }}>{formError}</div>
+                <div style={{ color: "var(--danger)", fontSize: 13 }}>{formError}</div>
             )}
             <div style={{ display: "flex", gap: 8 }}>
-                <button type="submit" disabled={busy} style={btn("#166534", "#dcfce7")}>
+                <button type="submit" disabled={busy} style={btn("ok")}>
                     {busy ? "Збереження..." : "Завершити ремонт"}
                 </button>
-                <button type="button" onClick={onCancel} style={btn("#374151")}>
+                <button type="button" onClick={onCancel} style={btn()}>
                     Скасувати
                 </button>
             </div>
@@ -485,18 +494,18 @@ export default function VehicleRepairs({ vehicle, issues, repairs, onChanged }) 
     const sectionTitle = {
         fontSize: 13,
         fontWeight: 700,
-        color: "#e5e7eb",
+        color: "var(--text)",
         marginBottom: 6,
     };
 
     const rowBox = {
         padding: "9px 11px",
         borderRadius: 8,
-        background: "#111827",
-        border: "1px solid #374151",
+        background: "var(--bg)",
+        border: "1px solid var(--border)",
         marginBottom: 6,
         fontSize: 13,
-        color: "#e5e7eb",
+        color: "var(--text)",
     };
 
     return (
@@ -507,8 +516,8 @@ export default function VehicleRepairs({ vehicle, issues, repairs, onChanged }) 
                     style={{
                         padding: 10,
                         borderRadius: 8,
-                        background: "#451a1a",
-                        color: "#fecaca",
+                        background: "color-mix(in srgb, var(--danger) 12%, var(--surface))",
+                        color: "var(--danger)",
                         fontSize: 13,
                     }}
                 >
@@ -524,12 +533,12 @@ export default function VehicleRepairs({ vehicle, issues, repairs, onChanged }) 
                     {issues.map((issue) => (
                         <div
                             key={issue.id}
-                            style={{ ...rowBox, borderColor: "#7f1d1d", background: "#2a1212" }}
+                            style={{ ...rowBox, borderColor: "color-mix(in srgb, var(--danger) 45%, transparent)", background: "color-mix(in srgb, var(--danger) 8%, var(--surface))" }}
                         >
-                            <div style={{ color: "#fecaca", fontWeight: 600 }}>
+                            <div style={{ color: "var(--danger)", fontWeight: 600 }}>
                                 {issue.description}
                             </div>
-                            <div style={{ color: "#94a3b8", marginTop: 4, fontSize: 12 }}>
+                            <div style={{ color: "var(--text-secondary)", marginTop: 4, fontSize: 12 }}>
                                 {fmtDate(issue.created_at)}
                                 {issue.odometer != null ? ` · ${fmtKm(issue.odometer)}` : ""}
                                 {" · "}
@@ -548,7 +557,7 @@ export default function VehicleRepairs({ vehicle, issues, repairs, onChanged }) 
                                     <button
                                         type="button"
                                         disabled={busy}
-                                        style={btn("#b45309", "#fff7ed")}
+                                        style={btn("warn")}
                                         onClick={() => setDialog({ mode: "create", issue })}
                                     >
                                         Поставити на ремонт
@@ -557,7 +566,7 @@ export default function VehicleRepairs({ vehicle, issues, repairs, onChanged }) 
                                         <button
                                             type="button"
                                             disabled={busy}
-                                            style={btn("#374151")}
+                                            style={btn()}
                                             onClick={() => markSeen(issue)}
                                         >
                                             Переглянуто
@@ -566,7 +575,7 @@ export default function VehicleRepairs({ vehicle, issues, repairs, onChanged }) 
                                     <button
                                         type="button"
                                         disabled={busy}
-                                        style={btn("#374151")}
+                                        style={btn()}
                                         onClick={() => closeIssue(issue)}
                                     >
                                         Закрити без ремонту
@@ -584,7 +593,7 @@ export default function VehicleRepairs({ vehicle, issues, repairs, onChanged }) 
                     {repairs.map((service) => (
                         <div key={service.id} style={rowBox}>
                             <div style={{ fontWeight: 600 }}>{service.description}</div>
-                            <div style={{ color: "#94a3b8", marginTop: 4, fontSize: 12 }}>
+                            <div style={{ color: "var(--text-secondary)", marginTop: 4, fontSize: 12 }}>
                                 {fmtDate(service.service_date)} ·{" "}
                                 {REPAIR_LABELS[service.status] || service.status}
                             </div>
@@ -600,7 +609,7 @@ export default function VehicleRepairs({ vehicle, issues, repairs, onChanged }) 
                                     <button
                                         type="button"
                                         disabled={busy}
-                                        style={btn("#b45309", "#fff7ed")}
+                                        style={btn("warn")}
                                         onClick={() => startRepair(service)}
                                     >
                                         Розпочати ремонт
@@ -609,7 +618,7 @@ export default function VehicleRepairs({ vehicle, issues, repairs, onChanged }) 
                                 <button
                                     type="button"
                                     disabled={busy}
-                                    style={btn("#166534", "#dcfce7")}
+                                    style={btn("ok")}
                                     onClick={() => setDialog({ mode: "finish", service })}
                                 >
                                     Завершити ремонт
@@ -617,7 +626,7 @@ export default function VehicleRepairs({ vehicle, issues, repairs, onChanged }) 
                                 <button
                                     type="button"
                                     disabled={busy}
-                                    style={btn("#374151")}
+                                    style={btn()}
                                     onClick={() => cancelRepair(service)}
                                 >
                                     Скасувати
@@ -632,7 +641,7 @@ export default function VehicleRepairs({ vehicle, issues, repairs, onChanged }) 
                 <button
                     type="button"
                     disabled={busy}
-                    style={btn("#92400e", "#ffedd5")}
+                    style={btn("warn")}
                     onClick={() => setDialog({ mode: "create", issue: null })}
                 >
                     Запланувати ремонт
@@ -643,7 +652,7 @@ export default function VehicleRepairs({ vehicle, issues, repairs, onChanged }) 
                 <summary
                     style={{
                         cursor: "pointer",
-                        color: "#94a3b8",
+                        color: "var(--text-secondary)",
                         fontSize: 13,
                         fontWeight: 600,
                     }}
@@ -653,11 +662,11 @@ export default function VehicleRepairs({ vehicle, issues, repairs, onChanged }) 
 
                 <div style={{ marginTop: 8 }}>
                     {historyLoading && history === null && (
-                        <div style={{ color: "#94a3b8", fontSize: 13 }}>Завантаження...</div>
+                        <div style={{ color: "var(--text-secondary)", fontSize: 13 }}>Завантаження...</div>
                     )}
 
                     {history !== null && history.length === 0 && (
-                        <div style={{ color: "#94a3b8", fontSize: 13 }}>
+                        <div style={{ color: "var(--text-secondary)", fontSize: 13 }}>
                             Записів ще немає.
                         </div>
                     )}
@@ -672,7 +681,7 @@ export default function VehicleRepairs({ vehicle, issues, repairs, onChanged }) 
                                         : ""}
                                 </div>
                                 {item.description && (
-                                    <div style={{ color: "#cbd5e1", marginTop: 4 }}>
+                                    <div style={{ color: "var(--text-secondary)", marginTop: 4 }}>
                                         {item.description}
                                     </div>
                                 )}

@@ -1,3 +1,4 @@
+import { Plate } from "../components/boss/Plate";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "../lib/supabase";
 import VehicleRepairs from "../components/fleet/VehicleRepairs";
@@ -48,25 +49,25 @@ const styles = {
         width: "100%",
         boxSizing: "border-box",
         padding: "11px 12px",
-        border: "1px solid #374151",
-        borderRadius: 9,
-        background: "#111827",
-        color: "#f9fafb",
+        border: "1px solid var(--border)",
+        borderRadius: 10,
+        background: "var(--bg)",
+        color: "var(--text)",
         fontSize: 14,
     },
     label: {
         display: "grid",
         gap: 6,
-        color: "#cbd5e1",
+        color: "var(--text-secondary)",
         fontSize: 13,
     },
     button: {
         border: 0,
-        borderRadius: 9,
+        borderRadius: 10,
         padding: "11px 15px",
-        background: "#22c55e",
-        color: "#052e16",
-        fontWeight: 700,
+        background: "var(--primary)",
+        color: "#06210f",
+        fontWeight: 600,
         cursor: "pointer",
     },
 };
@@ -135,14 +136,14 @@ function serviceBadge(vehicle) {
             text: `Наступне ТО: ${new Date(
                 vehicle.next_service_date
             ).toLocaleDateString("uk-UA")}`,
-            color: "#94a3b8",
+            color: "var(--text-secondary)",
         };
     }
 
     if (nextOdo !== null) {
         return {
             text: `Наступне ТО: ${nextOdo.toLocaleString("uk-UA")} км`,
-            color: "#94a3b8",
+            color: "var(--text-secondary)",
         };
     }
 
@@ -480,9 +481,48 @@ export default function Fleet() {
             return;
         }
 
-        setNotice("ТО зафіксовано та записано в історію.");
+        setNotice("ТО зафіксовано. Поломку перенесено в історію.");
         await loadVehicles();
     }
+async function planRepair(vehicle) {
+    setError("");
+    setNotice("");
+
+    const dateStr = window.prompt(
+        "Запланувати ремонт на (дд.мм.рррр)",
+        ""
+    );
+
+    if (!dateStr || !dateStr.trim()) return;
+
+    const match = dateStr.trim().match(/^(\d{2})\.(\d{2})\.(\d{4})$/);
+    if (!match) {
+        setError("Невірний формат. Пиши дд.мм.рррр (наприклад 22.10.2026)");
+        return;
+    }
+
+    const [, dd, mm, yyyy] = match;
+    const isoDate = `${yyyy}-${mm}-${dd}`;
+
+    const test = new Date(isoDate);
+    if (isNaN(test.getTime())) {
+        setError("Такої дати не існує.");
+        return;
+    }
+
+    const { error: updateError } = await supabase
+        .from("fleet_vehicles")
+        .update({ next_service_date: isoDate })
+        .eq("id", vehicle.id);
+
+    if (updateError) {
+        setError("Не вдалося запланувати ремонт.");
+        return;
+    }
+
+    setNotice(`Ремонт заплановано на ${dateStr.trim()}. Статус не змінено — машина може їхати.`);
+    await loadVehicles();
+}
 
     const typeCounts = useMemo(() => {
         const counts = { all: vehicles.length };
@@ -523,14 +563,14 @@ export default function Fleet() {
     return (
         <main
             style={{
-                color: "#f9fafb",
+                color: "var(--text)",
                 maxWidth: 1100,
-                margin: "0 auto",
+                margin: 0,
                 paddingBottom: 32,
             }}
         >
             <h1 style={{ margin: "0 0 8px", fontSize: 28 }}>Автопарк</h1>
-            <p style={{ color: "#9ca3af", marginTop: 0 }}>
+            <p style={{ color: "var(--text-secondary)", marginTop: 0 }}>
                 Облік транспорту, фільтр за типом, контроль ТО та поломок.
             </p>
 
@@ -566,8 +606,8 @@ export default function Fleet() {
 
             <section
                 style={{
-                    background: "#1f2937",
-                    border: "1px solid #374151",
+                    background: "var(--surface)",
+                    border: "1px solid var(--border)",
                     borderRadius: 14,
                     padding: 18,
                     marginTop: 20,
@@ -783,8 +823,8 @@ export default function Fleet() {
                                 onClick={resetForm}
                                 style={{
                                     ...styles.button,
-                                    background: "#374151",
-                                    color: "#f9fafb",
+                                    background: "var(--surface-light)",
+                                    color: "var(--text)",
                                 }}
                             >
                                 Скасувати
@@ -836,9 +876,9 @@ export default function Fleet() {
                                 type="button"
                                 onClick={() => setTypeFilter(item.value)}
                                 style={{
-                                    border: active ? "1px solid #22c55e" : "1px solid #374151",
-                                    background: active ? "#14532d" : "#111827",
-                                    color: active ? "#bbf7d0" : "#e5e7eb",
+                                    border: active ? "1px solid var(--primary)" : "1px solid var(--border)",
+                                    background: active ? "color-mix(in srgb, var(--primary) 18%, transparent)" : "transparent",
+                                    color: active ? "var(--primary)" : "var(--text)",
                                     borderRadius: 999,
                                     padding: "8px 14px",
                                     cursor: "pointer",
@@ -853,9 +893,9 @@ export default function Fleet() {
                 </div>
 
                 {loading ? (
-                    <p style={{ color: "#9ca3af" }}>Завантаження автопарку...</p>
+                    <p style={{ color: "var(--text-secondary)" }}>Завантаження автопарку...</p>
                 ) : filteredVehicles.length === 0 ? (
-                    <p style={{ color: "#9ca3af" }}>
+                    <p style={{ color: "var(--text-secondary)" }}>
                         {vehicles.length === 0
                             ? "Транспорт ще не додано."
                             : "За цим фільтром нічого не знайдено."}
@@ -894,15 +934,15 @@ export default function Fleet() {
                                 ((days !== null && days <= 14) ||
                                     (nextOdo !== null && nextOdo - odo <= 2000));
 
-                            let cardBorder = "1px solid #374151";
-                            let cardBg = "#1f2937";
+                            let cardBorder = "1px solid var(--border)";
+                            let cardBg = "var(--surface)";
 
                             if (isOverdue || isSoon) {
-                                cardBorder = "1px solid #ef4444";
-                                cardBg = "#3f1d1d";
+                                cardBorder = "1px solid color-mix(in srgb, var(--danger) 55%, transparent)";
+                                cardBg = "color-mix(in srgb, var(--danger) 8%, var(--surface))";
                             } else if (isOnService) {
-                                cardBorder = "1px solid #f59e0b";
-                                cardBg = "#3b2a12";
+                                cardBorder = "1px solid color-mix(in srgb, var(--warning) 55%, transparent)";
+                                cardBg = "color-mix(in srgb, var(--warning) 8%, var(--surface))";
                             }
 
                             return (
@@ -911,7 +951,7 @@ export default function Fleet() {
                                     style={{
                                         background: cardBg,
                                         border: cardBorder,
-                                        borderRadius: 12,
+                                        borderRadius: 14,
                                         padding: 16,
                                     }}
                                 >
@@ -927,30 +967,30 @@ export default function Fleet() {
                                             <h3 style={{ margin: "0 0 7px", fontSize: 18 }}>
                                                 {vehicle.name}
                                             </h3>
-                                            <div style={{ color: "#d1d5db" }}>
+                                            <div style={{ color: "var(--text)" }}>
                                                 {typeLabel(vehicle.vehicle_type)}
                                                 {interval
                                                     ? ` · інтервал ТО ${interval.toLocaleString("uk-UA")} км`
                                                     : ""}
                                             </div>
-                                            <div style={{ marginTop: 8 }}>
-                                                Номер: <strong>{vehicle.plate_number}</strong>
+                                            <div style={{ marginTop: 10 }}>
+                                                <Plate value={vehicle.plate_number} />
                                             </div>
-                                            <div style={{ color: "#9ca3af", marginTop: 5 }}>
+                                            <div style={{ color: "var(--text-secondary)", marginTop: 5 }}>
                                                 VIN: {vehicle.vin || "Не вказано"}
                                             </div>
-                                            <div style={{ color: "#9ca3af", marginTop: 5 }}>
+                                            <div style={{ color: "var(--text-secondary)", marginTop: 5 }}>
                                                 Марка / модель:{" "}
                                                 {[vehicle.brand, vehicle.model]
                                                     .filter(Boolean)
                                                     .join(" ") || "Не вказано"}
                                             </div>
-                                            <div style={{ color: "#9ca3af", marginTop: 5 }}>
+                                            <div style={{ color: "var(--text-secondary)", marginTop: 5 }}>
                                                 Рік: {vehicle.manufacture_year || "—"} · Пробіг:{" "}
                                                 {Number(vehicle.odometer || 0).toLocaleString("uk-UA")}{" "}
                                                 км
                                             </div>
-                                            <div style={{ color: "#9ca3af", marginTop: 5 }}>
+                                            <div style={{ color: "var(--text-secondary)", marginTop: 5 }}>
                                                 Останнє ТО:{" "}
                                                 {vehicle.last_service_date
                                                     ? new Date(
@@ -1009,7 +1049,7 @@ export default function Fleet() {
                                                     <summary
                                                         style={{
                                                             cursor: "pointer",
-                                                            color: "#94a3b8",
+                                                            color: "var(--text-secondary)",
                                                             fontSize: 13,
                                                             fontWeight: 600,
                                                         }}
@@ -1020,9 +1060,9 @@ export default function Fleet() {
                                                         style={{
                                                             marginTop: 8,
                                                             padding: "8px 10px",
-                                                            background: "#111827",
+                                                            background: "var(--bg)",
                                                             borderRadius: 8,
-                                                            color: "#cbd5e1",
+                                                            color: "var(--text-secondary)",
                                                             fontSize: 13,
                                                             whiteSpace: "pre-line",
                                                             lineHeight: 1.5,
@@ -1062,11 +1102,7 @@ export default function Fleet() {
                                             {vehicle.status !== "maintenance" && (
                                                 <button
                                                     type="button"
-                                                    style={{
-                                                        ...styles.button,
-                                                        background: "#b45309",
-                                                        color: "#fff7ed",
-                                                    }}
+                                                    className="fl-btn fl-btn--warn"
                                                     onClick={() => putOnService(vehicle)}
                                                 >
                                                     Поставити на ТО
@@ -1075,11 +1111,7 @@ export default function Fleet() {
 
                                             <button
                                                 type="button"
-                                                style={{
-                                                    ...styles.button,
-                                                    background: "#166534",
-                                                    color: "#dcfce7",
-                                                }}
+                                                className="fl-btn fl-btn--ok"
                                                 onClick={() => completeService(vehicle)}
                                             >
                                                 Зафіксувати ТО
@@ -1087,11 +1119,7 @@ export default function Fleet() {
 
                                             <button
                                                 type="button"
-                                                style={{
-                                                    ...styles.button,
-                                                    background: "#374151",
-                                                    color: "#f9fafb",
-                                                }}
+                                                className="fl-btn"
                                                 onClick={() => editVehicle(vehicle)}
                                             >
                                                 Редагувати

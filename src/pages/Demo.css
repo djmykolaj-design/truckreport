@@ -1,0 +1,138 @@
+.dm {
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.dm-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 10px 24px;
+  background: color-mix(in srgb, var(--warning) 14%, var(--bg));
+  border-bottom: 1px solid color-mix(in srgb, var(--warning) 35%, transparent);
+  color: var(--warning);
+  font-size: 14px;
+}
+
+.dm-banner button {
+  padding: 7px 14px;
+  border: 0;
+  border-radius: 10px;
+  background: var(--primary);
+  color: #06210f;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.dm-top {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  flex-wrap: wrap;
+  padding: 14px 24px;
+  border-bottom: 1px solid var(--border);
+  background: var(--sidebar);
+}
+
+.dm-brand {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.dm-tabs {
+  display: flex;
+  gap: 4px;
+}
+
+.dm-tabs button {
+  position: relative;
+  padding: 9px 14px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.dm-tabs button:hover {
+  background: var(--surface-light);
+  color: var(--text);
+}
+
+.dm-tabs button.is-active {
+  background: var(--surface-light);
+  color: var(--text);
+  font-weight: 600;
+}
+
+.dm-tabs button.is-active::after {
+  content: "";
+  position: absolute;
+  left: 14px;
+  right: 14px;
+  bottom: 3px;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--primary);
+}
+
+.dm-body {
+  padding: 24px;
+  max-width: 1128px;
+  margin: 0 auto;
+}
+
+.dm-driver {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 14px 18px;
+  border-top: 1px solid var(--border);
+}
+
+.dm-driver b {
+  display: block;
+  font-weight: 500;
+}
+
+.dm-driver small {
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+.dm-schengen {
+  color: var(--warning);
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.dm-schengen.is-bad {
+  color: var(--danger);
+}
+
+.dm-schengen.is-ok {
+  color: var(--primary);
+}
+
+@media (max-width: 640px) {
+  .dm-banner,
+  .dm-top {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .dm-body {
+    padding: 16px;
+  }
+}

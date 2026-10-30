@@ -7,7 +7,9 @@ import "../../styles/page.css";
 export default function MainLayout({ children }) {
   const location = useLocation();
   const hideNav =
-    location.pathname === "/login" || location.pathname === "/setup";
+    location.pathname === "/login" ||
+    location.pathname === "/setup" ||
+    location.pathname === "/demo";
 
   if (hideNav) {
     return <main className="layout-content">{children}</main>;

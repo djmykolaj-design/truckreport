@@ -21,6 +21,7 @@ import OfficeTrip from "../pages/OfficeTrip";
 import SetupCompany from "../pages/SetupCompany";
 import Fleet from "../pages/Fleet";
 import CompanyOffice from "../pages/CompanyOffice";
+import Demo from "../pages/Demo";
 
 export default function AppRouter() {
   return (
@@ -28,6 +29,7 @@ export default function AppRouter() {
       <MainLayout>
         <Routes>
           <Route path="/login" element={<Login />} />
+          <Route path="/demo" element={<Demo />} />
           <Route path="/reset-password" element={<ResetPassword />} />
 
            <Route

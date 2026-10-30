@@ -1,0 +1,103 @@
+/* ───────────── Номерний знак ───────────── */
+
+.plate {
+  display: inline-flex;
+  align-items: stretch;
+  justify-self: start;
+  width: fit-content;
+  overflow: hidden;
+  border-radius: 5px;
+  border: 1px solid #c9c7bb;
+  background: #f6f5ef;
+  color: #15171a;
+  font-family: var(--font-display);
+  font-size: 13px;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.plate-eu {
+  display: flex;
+  align-items: flex-end;
+  padding: 6px 4px 3px;
+  background: #1f4fb8;
+  color: #fff;
+  font-size: 8px;
+  font-style: normal;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.plate b {
+  padding: 5px 8px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+}
+
+/* ───────────── Статус ───────────── */
+
+.pill {
+  --c: var(--text-muted);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px 3px 8px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--c) 15%, transparent);
+  color: var(--c);
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.pill i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--c);
+}
+
+.pill--ok {
+  --c: var(--success);
+}
+
+.pill--info {
+  --c: var(--info);
+}
+
+.pill--warn {
+  --c: var(--warning);
+}
+
+.pill--danger {
+  --c: var(--danger);
+}
+
+.pill--mute {
+  --c: var(--text-muted);
+}
+
+.fl-btn {
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.fl-btn:hover {
+  background: var(--surface-light);
+}
+
+.fl-btn--warn {
+  border-color: color-mix(in srgb, var(--warning) 45%, transparent);
+  color: var(--warning);
+}
+
+.fl-btn--ok {
+  border-color: color-mix(in srgb, var(--primary) 45%, transparent);
+  color: var(--primary);
+}

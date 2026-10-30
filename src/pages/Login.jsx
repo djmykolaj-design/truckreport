@@ -237,6 +237,15 @@ export default function Login() {
           ? "Вже є акаунт? Увійти"
           : "Немає акаунта? Реєстрація"}
       </button>
+           <div style={{ marginTop: 6 }}>
+        <button
+          type="button"
+          onClick={() => navigate("/demo")}
+          style={{ ...secondaryButton, color: "#22c55e" }}
+        >
+          Переглянути демо
+        </button>
+      </div>
     </div>
   );
 }

@@ -1,0 +1,197 @@
+/* ============================================================
+   TruckReport — тема «асфальт»
+   Підключається ОСТАННЬОЮ (після index.css), тому перекриває
+   змінні та шрифти по всьому застосунку.
+   ============================================================ */
+
+:root {
+  /* Поверхні */
+  --bg: #101318;
+  --background: #101318;
+  --surface: #171b22;
+  --surface-light: #1f252e;
+  --sidebar: #14181e;
+
+  /* Лінії */
+  --border: #262d38;
+
+  /* Текст */
+  --text: #eef1f4;
+  --text-secondary: #9aa4b2;
+  --text-muted: #6b7684;
+
+  /* Бренд і статуси */
+  --primary: #22c55e;
+  --primary-hover: #16a34a;
+  --success: #22c55e;
+  --warning: #f5b301;
+  --danger: #ef4444;
+  --info: #4c9bff;
+
+  /* Шрифти */
+  --font-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: "IBM Plex Sans Condensed", "IBM Plex Sans", system-ui, sans-serif;
+
+  /* Радіуси: різні для різних ролей */
+  --radius-sm: 8px;
+  --radius: 14px;
+  --radius-lg: 18px;
+}
+
+body {
+  font-family: var(--font-body);
+  background: var(--bg);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
+  letter-spacing: -0.005em;
+}
+
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
+}
+
+/* Видимий фокус з клавіатури */
+:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* ---------- Бічне меню: спокійніше й компактніше ---------- */
+
+.sidebar {
+  width: 272px;
+  min-width: 272px;
+  padding: 20px 16px;
+  background: var(--sidebar);
+  border-radius: var(--radius-lg);
+}
+
+.sidebar .sidebar-header {
+  padding: 4px 0 20px;
+  margin-bottom: 16px;
+}
+
+.sidebar .sidebar-brand {
+  max-width: 220px;
+}
+
+.sidebar .sidebar-menu {
+  gap: 4px;
+}
+
+.sidebar .sidebar-link {
+  padding: 12px 14px;
+  gap: 14px;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  transform: none;
+  box-shadow: none;
+  background: transparent;
+}
+
+.sidebar .sidebar-link:hover {
+  background: var(--surface-light);
+  color: var(--text);
+  transform: none;
+}
+
+.sidebar .sidebar-link:hover svg {
+  transform: none;
+}
+
+.sidebar .sidebar-link.active {
+  background: var(--surface-light);
+  color: var(--text);
+  font-weight: 600;
+  transform: none;
+  box-shadow: none;
+}
+
+.sidebar .sidebar-link.active svg {
+  color: var(--primary);
+}
+
+.sidebar .sidebar-link.active::before {
+  left: 0;
+  top: 8px;
+  bottom: 8px;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+  background: var(--primary);
+}
+
+/* ---------- Нижнє меню (телефон) ---------- */
+
+.bottom-nav {
+  background: var(--sidebar);
+  border-top: 1px solid var(--border);
+}
+
+.bottom-nav-item.active {
+  color: var(--primary);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ---------- Старі сторінки: перекриваємо вшиті кольори ---------- */
+
+[style*="#232B38"],
+[style*="#232b38"] {
+  background: var(--surface) !important;
+  border-color: var(--border) !important;
+}
+
+[style*="#1F2937"],
+[style*="#1f2937"] {
+  background: var(--surface-light) !important;
+  border-color: var(--border) !important;
+}
+
+[style*="#30363D"],
+[style*="#30363d"] {
+  border-color: var(--border) !important;
+}
+
+[style*="#94a3b8"] {
+  color: var(--text-secondary) !important;
+}
+
+/* Інпути й селекти */
+input,
+select,
+textarea {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text);
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: var(--primary);
+  outline: none;
+}
+
+/* Усі сторінки шефа вирівнюємо по лівому краю */
+.main-content > div,
+main > div {
+  margin-left: 0;
+}

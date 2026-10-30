@@ -24,9 +24,9 @@ const CURRENCIES = ["EUR", "USD", "PLN", "UAH"];
 const SYMBOL = { EUR: "€", USD: "$", PLN: "zł", UAH: "₴" };
 
 const card = {
-  background: "#232B38",
-  border: "1px solid #30363D",
-  borderRadius: 16,
+  background: "var(--surface)",
+  border: "1px solid var(--border)",
+  borderRadius: 14,
   padding: 16,
   marginBottom: 14,
 };
@@ -34,19 +34,33 @@ const card = {
 const inputStyle = {
   padding: "10px 12px",
   borderRadius: 10,
-  border: "1px solid #30363D",
-  background: "#1F2937",
-  color: "white",
+  border: "1px solid var(--border)",
+  background: "var(--surface-light)",
+  color: "var(--text)",
   fontSize: 14,
 };
 
 const btn = {
-  border: "none",
-  borderRadius: 8,
+  border: "1px solid var(--border)",
+  borderRadius: 10,
   padding: "8px 12px",
-  color: "white",
-  fontWeight: 700,
+  background: "transparent",
+  color: "var(--text)",
+  fontWeight: 600,
   cursor: "pointer",
+};
+
+const btnOk = {
+  ...btn,
+  border: "none",
+  background: "var(--primary)",
+  color: "#06210f",
+};
+
+const btnDanger = {
+  ...btn,
+  border: "1px solid color-mix(in srgb, var(--danger) 45%, transparent)",
+  color: "var(--danger)",
 };
 
 function daysLeft(dateStr) {
@@ -108,26 +122,26 @@ function FirmTab({ company, drivers, vehicles }) {
   return (
     <>
       <div style={card}>
-        <div style={{ color: "#94a3b8", fontSize: 13 }}>Назва фірми</div>
+        <div style={{ color: "var(--text-secondary)", fontSize: 13 }}>Назва фірми</div>
         <div style={{ fontSize: 22, fontWeight: 800, margin: "4px 0 12px" }}>
           {company?.name || "—"}
         </div>
-        <div style={{ color: "#94a3b8", fontSize: 13 }}>
+        <div style={{ color: "var(--text-secondary)", fontSize: 13 }}>
           Водіїв: {drivers.length} • Машин: {vehicles.length}
         </div>
       </div>
 
       <div style={card}>
-        <div style={{ color: "#94a3b8", fontSize: 13 }}>Код фірми для водіїв</div>
+        <div style={{ color: "var(--text-secondary)", fontSize: 13 }}>Код фірми для водіїв</div>
         <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 6 }}>
           <div style={{ fontWeight: 800, fontSize: 20, letterSpacing: 1 }}>
             {company?.invite_code || "—"}
           </div>
-          <button type="button" onClick={copyCode} style={{ ...btn, background: "#22c55e" }}>
+          <button type="button" onClick={copyCode} style={btnOk}>
             Копіювати
           </button>
         </div>
-        <p style={{ color: "#94a3b8", fontSize: 12, marginBottom: 0 }}>
+        <p style={{ color: "var(--text-secondary)", fontSize: 12, marginBottom: 0 }}>
           Водій вводить цей код у застосунку, щоб вступити у фірму. Після цього
           прив'яжіть його акаунт у розділі «Водії».
         </p>
@@ -136,7 +150,7 @@ function FirmTab({ company, drivers, vehicles }) {
       <button
         type="button"
         onClick={leave}
-        style={{ ...btn, background: "#ef4444", padding: "12px 16px", borderRadius: 12 }}
+        style={{ ...btnDanger, padding: "12px 16px", borderRadius: 12 }}
       >
         Від'єднатися від фірми
       </button>
@@ -254,7 +268,7 @@ function DocsTab({ companyId, drivers, vehicles }) {
   return (
     <>
       <div style={card}>
-        <h2 style={{ fontSize: 17, margin: "0 0 10px" }}>➕ Додати документ</h2>
+        <h2 style={{ fontSize: 17, margin: "0 0 10px" }}>Додати документ</h2>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
           <select
             value={form.type}
@@ -298,20 +312,20 @@ function DocsTab({ companyId, drivers, vehicles }) {
             placeholder="Примітка (номер полісу тощо)"
             style={{ ...inputStyle, flex: 2, minWidth: 200 }}
           />
-          <button type="button" onClick={add} style={{ ...btn, background: "#22c55e" }}>
+          <button type="button" onClick={add} style={btnOk}>
             Додати
           </button>
         </div>
       </div>
 
       <div style={card}>
-        <h2 style={{ fontSize: 17, margin: "0 0 10px" }}>📄 Документи і терміни</h2>
+        <h2 style={{ fontSize: 17, margin: "0 0 10px" }}>Документи і терміни</h2>
 
         <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 8 }}>
           <input
             value={filter.q}
             onChange={(e) => setFilter({ ...filter, q: e.target.value })}
-            placeholder="🔍 Пошук: назва, примітка, машина, водій"
+            placeholder="Пошук: назва, примітка, машина, водій"
             style={{ ...inputStyle, flex: 2, minWidth: 220 }}
           />
 
@@ -348,22 +362,22 @@ function DocsTab({ companyId, drivers, vehicles }) {
           </select>
         </div>
 
-        <div style={{ color: "#94a3b8", fontSize: 12, marginBottom: 4 }}>
+        <div style={{ color: "var(--text-secondary)", fontSize: 12, marginBottom: 4 }}>
           Показано {filteredDocs.length} з {docs.length}
         </div>
 
-        {loading && <p style={{ color: "#94a3b8" }}>Завантаження…</p>}
+        {loading && <p style={{ color: "var(--text-secondary)" }}>Завантаження…</p>}
         {!loading && docs.length === 0 && (
-          <p style={{ color: "#94a3b8" }}>Документів ще немає.</p>
+          <p style={{ color: "var(--text-secondary)" }}>Документів ще немає.</p>
         )}
         {!loading && docs.length > 0 && filteredDocs.length === 0 && (
-          <p style={{ color: "#94a3b8" }}>За цими фільтрами нічого не знайдено.</p>
+          <p style={{ color: "var(--text-secondary)" }}>За цими фільтрами нічого не знайдено.</p>
         )}
 
         {filteredDocs.map((d) => {
           const left = daysLeft(d.expires_on);
           const color =
-            left === null ? "#94a3b8" : left < 0 ? "#ef4444" : left <= 30 ? "#eab308" : "#22c55e";
+            left === null ? "var(--text-secondary)" : left < 0 ? "var(--danger)" : left <= 30 ? "var(--warning)" : "var(--primary)";
           const text =
             left === null
               ? "без дати"
@@ -380,12 +394,12 @@ function DocsTab({ companyId, drivers, vehicles }) {
                 alignItems: "center",
                 gap: 10,
                 padding: "10px 0",
-                borderTop: "1px solid #30363D",
+                borderTop: "1px solid var(--border)",
               }}
             >
               <div style={{ flex: 1, minWidth: 200 }}>
                 <div style={{ fontWeight: 700 }}>{d.doc_type}</div>
-                <div style={{ color: "#94a3b8", fontSize: 13 }}>
+                <div style={{ color: "var(--text-secondary)", fontSize: 13 }}>
                   {targetName(d)}
                   {d.note ? ` • ${d.note}` : ""}
                 </div>
@@ -398,7 +412,7 @@ function DocsTab({ companyId, drivers, vehicles }) {
                 style={inputStyle}
                 title="Змінити дату (після продовження)"
               />
-              <button type="button" onClick={() => remove(d)} style={{ ...btn, background: "#475569" }}>
+              <button type="button" onClick={() => remove(d)} style={{ ...btn, background: "var(--surface-light)" }}>
                 Видалити
               </button>
             </div>
@@ -577,7 +591,7 @@ function FinanceTab({ trips, vehicles, services, drivers }) {
 
   const stat = (title, value) => (
     <div style={{ ...card, marginBottom: 0 }}>
-      <div style={{ color: "#94a3b8", fontSize: 13 }}>{title}</div>
+      <div style={{ color: "var(--text-secondary)", fontSize: 13 }}>{title}</div>
       <div style={{ fontSize: 17, fontWeight: 800, marginTop: 4 }}>{value}</div>
     </div>
   );
@@ -586,7 +600,7 @@ function FinanceTab({ trips, vehicles, services, drivers }) {
     <>
       <div style={{ display: "flex", flexWrap: "wrap", gap: 12, marginBottom: 14 }}>
         <label style={{ flex: 1, minWidth: 180 }}>
-          <div style={{ color: "#94a3b8", fontSize: 13, marginBottom: 6 }}>Період</div>
+          <div style={{ color: "var(--text-secondary)", fontSize: 13, marginBottom: 6 }}>Період</div>
           <select
             value={month}
             onChange={(e) => setMonth(e.target.value)}
@@ -600,7 +614,7 @@ function FinanceTab({ trips, vehicles, services, drivers }) {
         </label>
 
         <label style={{ flex: 1, minWidth: 180 }}>
-          <div style={{ color: "#94a3b8", fontSize: 13, marginBottom: 6 }}>Машина</div>
+          <div style={{ color: "var(--text-secondary)", fontSize: 13, marginBottom: 6 }}>Машина</div>
           <select
             value={vehicleFilter}
             onChange={(e) => setVehicleFilter(e.target.value)}
@@ -616,7 +630,7 @@ function FinanceTab({ trips, vehicles, services, drivers }) {
         </label>
 
         <label style={{ flex: 1, minWidth: 180 }}>
-          <div style={{ color: "#94a3b8", fontSize: 13, marginBottom: 6 }}>Водій</div>
+          <div style={{ color: "var(--text-secondary)", fontSize: 13, marginBottom: 6 }}>Водій</div>
           <select
             value={driverFilter}
             onChange={(e) => setDriverFilter(e.target.value)}
@@ -640,7 +654,7 @@ function FinanceTab({ trips, vehicles, services, drivers }) {
             setVehicleFilter("all");
             setDriverFilter("all");
           }}
-          style={{ ...btn, background: "#475569", marginBottom: 14 }}
+          style={{ ...btn, background: "var(--surface-light)", marginBottom: 14 }}
         >
           Скинути фільтри
         </button>
@@ -668,8 +682,8 @@ function FinanceTab({ trips, vehicles, services, drivers }) {
       </div>
 
       <div style={card}>
-        <h2 style={{ fontSize: 17, margin: "0 0 4px" }}>🚚 По машинах</h2>
-        {vehicleRows.length === 0 && <p style={{ color: "#94a3b8" }}>Даних немає.</p>}
+        <h2 style={{ fontSize: 17, margin: "0 0 4px" }}>По машинах</h2>
+        {vehicleRows.length === 0 && <p style={{ color: "var(--text-secondary)" }}>Даних немає.</p>}
 
         {vehicleRows.map((r) => {
           const avg = r.fuelKm > 0 ? (r.engineFuel / r.fuelKm) * 100 : null;
@@ -679,63 +693,63 @@ function FinanceTab({ trips, vehicles, services, drivers }) {
           return (
             <div
               key={r.key}
-              style={{ padding: "12px 0", borderTop: "1px solid #30363D", fontSize: 13 }}
+              style={{ padding: "12px 0", borderTop: "1px solid var(--border)", fontSize: 13 }}
             >
               <div style={{ display: "flex", justifyContent: "space-between", gap: 10, flexWrap: "wrap" }}>
                 <div style={{ fontWeight: 700, fontSize: 15 }}>
                   {[r.vehicle?.name, r.plate].filter(Boolean).join(" — ")}
-                  <span style={{ color: "#94a3b8", fontWeight: 400, fontSize: 12 }}>
+                  <span style={{ color: "var(--text-secondary)", fontWeight: 400, fontSize: 12 }}>
                     {" "}
                     {VEHICLE_TYPE[r.vehicle?.vehicle_type] || ""}
                   </span>
                 </div>
-                <div style={{ color: "#94a3b8" }}>
+                <div style={{ color: "var(--text-secondary)" }}>
                   {r.vehicle?.odometer
                     ? `одометр: ${Number(r.vehicle.odometer).toLocaleString("uk-UA")} км`
                     : ""}
                 </div>
               </div>
 
-              <div style={{ color: "#cbd5e1", marginTop: 4 }}>
+              <div style={{ color: "var(--text)", marginTop: 4 }}>
                 рейсів {r.trips} • {r.km.toLocaleString("uk-UA")} км
               </div>
 
               {r.vehicle?.vehicle_type !== "trailer" && (
                 <>
-                  <div style={{ color: "#94a3b8", marginTop: 2 }}>
+                  <div style={{ color: "var(--text-secondary)", marginTop: 2 }}>
                     заправлено: {r.bought ? `${Math.round(r.bought)} л` : "—"}
                     {avg !== null && (
                       <>
-                        {" "}• витрата: <b style={{ color: "#22c55e" }}>{avg.toFixed(1)} л/100 км</b>
+                        {" "}• витрата: <b style={{ color: "var(--primary)" }}>{avg.toFixed(1)} л/100 км</b>
                         {hasReef && ` (з рефом ${avgAll.toFixed(1)})`}
                       </>
                     )}
                   </div>
-                  <div style={{ color: "#94a3b8", marginTop: 2 }}>
+                  <div style={{ color: "var(--text-secondary)", marginTop: 2 }}>
                     пальне, гроші: {fmtMoney(r.fuelMoney)}
                   </div>
                 </>
               )}
 
-              <div style={{ color: "#94a3b8", marginTop: 2 }}>
+              <div style={{ color: "var(--text-secondary)", marginTop: 2 }}>
                 усі витрати рейсів: {fmtMoney(r.expenses)}
               </div>
-              <div style={{ color: "#94a3b8", marginTop: 2 }}>
+              <div style={{ color: "var(--text-secondary)", marginTop: 2 }}>
                 ремонти і ТО: {r.repair ? r.repair.toLocaleString("uk-UA") : "—"}
               </div>
             </div>
           );
         })}
 
-        <div style={{ color: "#94a3b8", fontSize: 12, marginTop: 8 }}>
+        <div style={{ color: "var(--text-secondary)", fontSize: 12, marginTop: 8 }}>
           Витрата рахується за завершеними рейсами з кінцевим пробігом і залишком пального.
           Гроші по пальному й витратах рейсів показано в тих валютах, у яких їх вносили.
         </div>
       </div>
 
       <div style={card}>
-        <h2 style={{ fontSize: 17, margin: "0 0 4px" }}>👤 По водіях</h2>
-        {byDriver.size === 0 && <p style={{ color: "#94a3b8" }}>Даних немає.</p>}
+        <h2 style={{ fontSize: 17, margin: "0 0 4px" }}>По водіях</h2>
+        {byDriver.size === 0 && <p style={{ color: "var(--text-secondary)" }}>Даних немає.</p>}
         {[...byDriver.values()].map((d) => (
           <div
             key={d.name}
@@ -745,12 +759,12 @@ function FinanceTab({ trips, vehicles, services, drivers }) {
               flexWrap: "wrap",
               gap: 8,
               padding: "10px 0",
-              borderTop: "1px solid #30363D",
+              borderTop: "1px solid var(--border)",
             }}
           >
             <div>
               <div style={{ fontWeight: 700 }}>{d.name}</div>
-              <div style={{ color: "#94a3b8", fontSize: 13 }}>
+              <div style={{ color: "var(--text-secondary)", fontSize: 13 }}>
                 рейсів {d.trips} • {d.km.toLocaleString("uk-UA")} км
               </div>
             </div>
@@ -760,22 +774,22 @@ function FinanceTab({ trips, vehicles, services, drivers }) {
       </div>
 
       <div style={card}>
-        <h2 style={{ fontSize: 17, margin: "0 0 4px" }}>🚛 По рейсах</h2>
+        <h2 style={{ fontSize: 17, margin: "0 0 4px" }}>По рейсах</h2>
         {rows.map(({ trip, issued, spent, km, fuel }) => (
           <div
             key={trip.id}
-            style={{ padding: "10px 0", borderTop: "1px solid #30363D", fontSize: 13 }}
+            style={{ padding: "10px 0", borderTop: "1px solid var(--border)", fontSize: 13 }}
           >
             <div style={{ fontWeight: 700, fontSize: 14 }}>
               № {trip.tripNumber || "—"} • {trip.fromCity || "?"} → {trip.toCity || "?"}{" "}
-              <span style={{ color: "#94a3b8", fontWeight: 400 }}>
+              <span style={{ color: "var(--text-secondary)", fontWeight: 400 }}>
                 ({trip.driver || "—"}, {trip.startDate || ""})
               </span>
             </div>
-            <div style={{ color: "#94a3b8", marginTop: 2 }}>
+            <div style={{ color: "var(--text-secondary)", marginTop: 2 }}>
               видано: {fmtMoney(issued)} • витрачено: {fmtMoney(spent)}
             </div>
-            <div style={{ color: "#94a3b8" }}>
+            <div style={{ color: "var(--text-secondary)" }}>
               {km ? `${km.toLocaleString("uk-UA")} км` : "км невідомо"} •{" "}
               {fuel ? `${Math.round(fuel)} л` : "пальне не внесено"}
             </div>
@@ -834,18 +848,18 @@ export default function CompanyOffice() {
     load();
   }, []);
 
-  if (data.loading) return <p style={{ color: "#94a3b8" }}>Завантаження…</p>;
-  if (data.denied) return <p style={{ color: "#94a3b8" }}>Ця сторінка доступна шефу фірми.</p>;
+  if (data.loading) return <p style={{ color: "var(--text-secondary)" }}>Завантаження…</p>;
+  if (data.denied) return <p style={{ color: "var(--text-secondary)" }}>Ця сторінка доступна шефу фірми.</p>;
 
   const tabs = [
-    ["firm", "🏢 Фірма"],
-    ["docs", "📄 Документи"],
-    ["finance", "💰 Фінанси"],
+    ["firm", "Фірма"],
+    ["docs", "Документи"],
+    ["finance", "Фінанси"],
   ];
 
   return (
-    <div style={{ color: "white", maxWidth: 900 }}>
-      <h1 style={{ marginBottom: 12 }}>Офіс</h1>
+    <div style={{ color: "var(--text)", maxWidth: 900 }}>
+      <h1 style={{ margin: "0 0 14px", fontSize: 30, fontWeight: 600 }}>Офіс</h1>
 
       <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 18 }}>
         {tabs.map(([key, label]) => (
@@ -857,8 +871,9 @@ export default function CompanyOffice() {
               ...btn,
               padding: "10px 16px",
               borderRadius: 12,
-              background: tab === key ? "#22c55e" : "#1F2937",
-              border: "1px solid #30363D",
+              background: tab === key ? "var(--primary)" : "transparent",
+              color: tab === key ? "#06210f" : "var(--text)",
+              border: "1px solid var(--border)",
             }}
           >
             {label}
