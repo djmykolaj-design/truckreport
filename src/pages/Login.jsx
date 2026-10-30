@@ -336,7 +336,11 @@ export default function Login() {
         style={googleButton}
       >
         <GoogleIcon />
-        {googleLoading ? "Переходимо до Google..." : "Увійти через Google"}
+              {googleLoading
+          ? "Переходимо до Google..."
+          : isRegister
+            ? "Зареєструватись через Google"
+            : "Увійти через Google"}
       </button>
 
       <div style={{ marginTop: 16 }}>
