@@ -3,12 +3,32 @@ import { supabase } from "../lib/supabase";
 // Створення фірми, приєднання і вихід виконуються функціями в базі,
 // а не прямими змінами профілю з браузера.
 
+// Чекаємо на сесію до ~3 секунд (після входу через Google вона з'являється не одразу)
+async function requireSession() {
+  for (let i = 0; i < 6; i++) {
+    const { data } = await supabase.auth.getSession();
+    if (data?.session?.access_token) return data.session;
+    await new Promise((r) => setTimeout(r, 500));
+  }
+  return null;
+}
+
+async function callRpc(name, args) {
+  const session = await requireSession();
+  if (!session) {
+    console.error("[rpc] немає сесії, виклик", name, "піде як anon");
+    alert("Сесія не знайдена. Увійдіть ще раз.");
+    return { data: null, error: { message: "no_session" } };
+  }
+  console.log("[rpc]", name, "user:", session.user?.email);
+  return supabase.rpc(name, args);
+}
+
 export async function createCompany(name) {
-  const { data, error } = await supabase.rpc("create_company", {
-    p_name: name,
-  });
+  const { data, error } = await callRpc("create_company", { p_name: name });
 
   if (error) {
+    if (error.message === "no_session") return null;
     console.error(error);
     alert(error.message || "Не вдалося створити фірму");
     return null;
@@ -18,11 +38,10 @@ export async function createCompany(name) {
 }
 
 export async function joinCompany(code) {
-  const { data, error } = await supabase.rpc("join_company", {
-    p_code: code,
-  });
+  const { data, error } = await callRpc("join_company", { p_code: code });
 
   if (error) {
+    if (error.message === "no_session") return null;
     console.error(error);
     if (String(error.message).includes("invalid_code")) {
       alert("Код фірми невірний");
@@ -36,9 +55,10 @@ export async function joinCompany(code) {
 }
 
 export async function becomeSolo() {
-  const { error } = await supabase.rpc("leave_company");
+  const { error } = await callRpc("leave_company");
 
   if (error) {
+    if (error.message === "no_session") return null;
     console.error(error);
     alert(error.message || "Не вдалося зберегти режим");
     return null;
@@ -48,9 +68,10 @@ export async function becomeSolo() {
 }
 
 export async function leaveCompany() {
-  const { error } = await supabase.rpc("leave_company");
+  const { error } = await callRpc("leave_company");
 
   if (error) {
+    if (error.message === "no_session") return null;
     console.error(error);
     alert(error.message || "Не вдалося від'єднатися");
     return null;
