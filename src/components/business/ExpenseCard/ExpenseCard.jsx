@@ -48,7 +48,7 @@ export default function ExpenseCard({
             <div className="tr-expense-footer">
 
                 <div className="tr-expense-date">
-                    🕒 {expense.date}
+                    {expense.date}
                 </div>
 
             </div>

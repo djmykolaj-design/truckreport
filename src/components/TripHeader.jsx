@@ -18,21 +18,21 @@ export default function TripHeader({
 }) {
     return (
         <Card
-            title={`🏁 Завершення рейсу №${trip.tripNumber}`}
+            title={`Завершення рейсу №${trip.tripNumber}`}
             subtitle="Заповніть кінцеві дані рейсу. Після цього буде сформовано фінальний звіт."
         >
 
             <div className="trip-finish-section">
 
                 <div className="trip-finish-section-title">
-                    🏁 Кінцеві дані рейсу
+                    Кінцеві дані рейсу
                 </div>
 
                 <div className="trip-finish-grid">
 
                     <Input
                         label="Дата завершення"
-                        icon="📅"
+                        icon=""
                         type="date"
                         value={endDate}
                         onChange={(e) =>
@@ -42,7 +42,7 @@ export default function TripHeader({
 
                     <Input
                         label="Кінцевий пробіг"
-                        icon="🛣️"
+                        icon=""
                         type="number"
                         placeholder="Наприклад: 456789"
                         value={endMileage}
@@ -53,7 +53,7 @@ export default function TripHeader({
 
                     <Input
                         label="Залишок дизеля"
-                        icon="⛽"
+                        icon=""
                         type="number"
                         placeholder="Наприклад: 320"
                         value={endFuel}
@@ -71,7 +71,7 @@ export default function TripHeader({
                 <PrimaryButton
                     fullWidth
                     onClick={saveFinish}
-                    icon="🏁"
+                    icon=""
                     size="lg"
                 >
                     Завершити рейс та сформувати звіт

@@ -90,13 +90,13 @@ export default function TripsV3() {
         }}
       >
         <div style={cardStyle}>
-          <h2>🚛 РЕЙСИ</h2>
+          <h2>РЕЙСИ</h2>
 
           <button
             onClick={() => setShowForm(true)}
             style={greenButton}
           >
-            ➕ Новий рейс
+            Новий рейс
           </button>
         </div>
 
@@ -113,7 +113,7 @@ export default function TripsV3() {
             }}
           >
             <strong>
-              🚛 Рейс №{trip.tripNumber}
+              Рейс №{trip.tripNumber}
             </strong>
 
             <br />
@@ -131,7 +131,7 @@ export default function TripsV3() {
       >
         {showForm && (
           <div style={cardStyle}>
-            <h2>➕ Новий рейс</h2>
+            <h2>Новий рейс</h2>
 
             <input
               placeholder="Номер рейсу"
@@ -200,7 +200,7 @@ export default function TripsV3() {
               onClick={saveTrip}
               style={greenButton}
             >
-              💾 Зберегти рейс
+              Зберегти рейс
             </button>
           </div>
         )}
@@ -208,40 +208,40 @@ export default function TripsV3() {
         {!showForm && selectedTrip && (
           <div style={cardStyle}>
             <h1>
-              🚛 Рейс №{selectedTrip.tripNumber}
+              Рейс №{selectedTrip.tripNumber}
             </h1>
 
-            <p>👤 {selectedTrip.driver}</p>
+            <p>{selectedTrip.driver}</p>
 
-            <p>👥 {selectedTrip.codriver}</p>
+            <p>{selectedTrip.codriver}</p>
 
-            <p>🚛 {selectedTrip.truck}</p>
+            <p>{selectedTrip.truck}</p>
 
-            <p>🚛 {selectedTrip.plate}</p>
+            <p>{selectedTrip.plate}</p>
 
-            <p>📍 {selectedTrip.route}</p>
+            <p>{selectedTrip.route}</p>
 
-            <p>📅 {selectedTrip.date}</p>
+            <p>{selectedTrip.date}</p>
 
             <div style={modulesGrid}>
               <div style={moduleStyle}>
-                📏 Кілометри
+                Кілометри
               </div>
 
               <div style={moduleStyle}>
-                ⛽ Пальне
+                Пальне
               </div>
 
               <div style={moduleStyle}>
-                ❄️ Реф
+                Реф
               </div>
 
               <div style={moduleStyle}>
-                💰 Витрати
+                Витрати
               </div>
 
               <div style={moduleStyle}>
-                📄 Документи
+                Документи
               </div>
             </div>
 
@@ -251,7 +251,7 @@ export default function TripsV3() {
               }
               style={deleteButton}
             >
-              🗑 Видалити рейс
+              Видалити рейс
             </button>
           </div>
         )}

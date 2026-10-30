@@ -1,3 +1,4 @@
+import { Paperclip } from "lucide-react";
 import "./UploadButton.css";
 
 export default function UploadButton({
@@ -6,8 +7,17 @@ export default function UploadButton({
     disabled,
 }) {
     return (
-        <label className="upload-button">
-            📎 {file ? file.name : "Обрати документ"}
+        <label
+            className="upload-button"
+            style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 8,
+            }}
+        >
+            <Paperclip size={16} />
+            {file ? file.name : "Обрати документ"}
 
             <input
                 type="file"

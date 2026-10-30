@@ -11,30 +11,30 @@ export function TripInfoSection(trip) {
                 widths: [170, "*"],
 
                 body: [
-                    row("📍 Маршрут", `${trip.fromCity} → ${trip.toCity}`),
+                    row("Маршрут", `${trip.fromCity} → ${trip.toCity}`),
 
                     row(
-                        "📅 Період",
+                        "Період",
                         `${trip.startDate || "-"} — ${trip.endDate || "-"}`
                     ),
 
                     row(
-                        "👤 Водій",
+                        "Водій",
                         trip.driver || "-"
                     ),
 
                     row(
-                        "👥 Напарник",
+                        "Напарник",
                         trip.codriver || "-"
                     ),
 
                     row(
-                        "🚛 Автомобіль",
+                        "Автомобіль",
                         trip.truck || "-"
                     ),
 
                     row(
-                        "🚚 Причіп",
+                        "Причіп",
                         trip.trailer || "-"
                     ),
                 ],

@@ -247,3 +247,129 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   background-size: auto, 48px 48px, 48px 48px, auto;
   background-attachment: local;
 }
+
+/* ---------- Сторінки водія ---------- */
+
+/* Меню: активний пункт спокійний, без зеленого свічення */
+.sidebar .sidebar-link.active {
+  background: var(--surface-light) !important;
+  color: var(--text) !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+.sidebar .sidebar-link:hover {
+  transform: none !important;
+}
+
+.sidebar .sidebar-link.active svg {
+  color: var(--primary) !important;
+}
+
+/* Кнопки: без тіней і підстрибування */
+.tr-btn,
+.btn,
+.hero-btn {
+  box-shadow: none;
+}
+
+.tr-btn:hover,
+.btn:hover {
+  transform: none;
+}
+
+.tr-btn-primary,
+.btn-primary,
+.hero-btn {
+  background: var(--primary);
+  color: #06210f;
+  font-weight: 600;
+  border-radius: 10px;
+}
+
+.tr-btn-primary:hover,
+.btn-primary:hover {
+  background: var(--primary-hover);
+}
+
+.tr-btn-danger,
+.btn-danger {
+  background: transparent;
+  color: var(--danger);
+  border: 1px solid color-mix(in srgb, var(--danger) 45%, transparent);
+}
+
+.tr-btn-danger:hover,
+.btn-danger:hover {
+  background: color-mix(in srgb, var(--danger) 10%, transparent);
+}
+
+/* Червона кнопка «Від'єднатися» на головній водія (колір заданий у коді) */
+.hero-btn[style*="rgb(239, 68, 68)"] {
+  background: transparent !important;
+  color: var(--danger);
+  border: 1px solid color-mix(in srgb, var(--danger) 45%, transparent);
+}
+
+/* Коричнева кнопка «Надіслати поломку» */
+button[type="submit"][style*="rgb(180, 83, 9)"] {
+  background: transparent !important;
+  color: var(--warning) !important;
+  border: 1px solid color-mix(in srgb, var(--warning) 50%, transparent) !important;
+  font-weight: 600 !important;
+}
+
+/* Картки */
+.hero-card,
+.kpi-card,
+.schengen-card,
+.tr-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  box-shadow: none;
+}
+
+.tr-card:hover {
+  transform: none;
+  border-color: var(--border);
+}
+
+/* Список рейсів */
+.trip-card-wrapper {
+  margin-bottom: 10px;
+}
+
+.trip-card-wrapper:hover {
+  transform: none;
+}
+
+.trip-card-wrapper:hover .tr-card {
+  background: var(--surface-light);
+}
+
+.trip-card-wrapper.selected .tr-card {
+  border: 1px solid var(--primary);
+}
+
+.trip-status {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.trip-no {
+  margin-left: auto;
+  color: var(--text);
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.trip-route {
+  margin: 8px 0 10px;
+  font-size: 15px;
+}
+
+.trip-plate {
+  margin-top: 2px;
+}

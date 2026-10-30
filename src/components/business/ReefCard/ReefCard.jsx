@@ -41,7 +41,7 @@ export default function ReefCard({
                 <div>
 
                     <h3>
-                        ❄️ {reef.name}
+                        {reef.name}
                     </h3>
 
                     <div className="reef-type">
@@ -68,32 +68,32 @@ export default function ReefCard({
             <div className="reef-info">
 
                 <div>
-                    ⏱ {reef.hours} год
+                    {reef.hours} год
                 </div>
 
                 {reef.type === "main" ? (
 
                     <div>
-                        ❄️ {spent.toFixed(1)} л
+                        {spent.toFixed(1)} л
                     </div>
 
                 ) : (
 
                     <>
                         <div>
-                            ⛽ Початковий:
+                            Початковий:
                             {" "}
                             {reef.startFuel} л
                         </div>
 
                         <div>
-                            ⛽ Кінцевий:
+                            Кінцевий:
                             {" "}
                             {reef.endFuel} л
                         </div>
 
                         <div>
-                            ❄️ Витрачено:
+                            Витрачено:
                             {" "}
                             {spent.toFixed(1)} л
                         </div>
@@ -168,15 +168,15 @@ export default function ReefCard({
                         >
 
                             <div>
-                                ⛽ {r.liters} л
+                                {r.liters} л
                             </div>
 
                             <div>
-                                💰 {r.amount} {r.currency}
+                                {r.amount} {r.currency}
                             </div>
 
                             <small>
-                                🕒 {r.date}
+                                {r.date}
                             </small>
 
                             {!isCompleted && (

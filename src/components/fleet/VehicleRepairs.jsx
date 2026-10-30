@@ -528,7 +528,7 @@ export default function VehicleRepairs({ vehicle, issues, repairs, onChanged }) 
             {issues.length > 0 && (
                 <div>
                     <div style={sectionTitle}>
-                        🔴 Поломки від водіїв ({issues.length})
+                        Поломки від водіїв ({issues.length})
                     </div>
                     {issues.map((issue) => (
                         <div
@@ -589,7 +589,7 @@ export default function VehicleRepairs({ vehicle, issues, repairs, onChanged }) 
 
             {repairs.length > 0 && (
                 <div>
-                    <div style={sectionTitle}>🔧 Ремонти ({repairs.length})</div>
+                    <div style={sectionTitle}>Ремонти ({repairs.length})</div>
                     {repairs.map((service) => (
                         <div key={service.id} style={rowBox}>
                             <div style={{ fontWeight: 600 }}>{service.description}</div>

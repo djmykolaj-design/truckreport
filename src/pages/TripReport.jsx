@@ -14,6 +14,7 @@ import Card from "../components/ui/Card/Card";
 import PrimaryButton from "../components/ui/Button/PrimaryButton";
 
 import { getTripById, updateTrip } from "../services/tripService";
+import { Route, Fuel, Wallet, FileText } from "lucide-react";
 
 export default function TripReport() {
     const { tripId } = useParams();
@@ -51,7 +52,7 @@ export default function TripReport() {
 
         setSaved(true);
 
-        alert("✅ Рейс успішно завершено!");
+        alert("Рейс успішно завершено!");
     };
 
     const printReport = () => {
@@ -85,22 +86,22 @@ export default function TripReport() {
     const currencies = [
         {
             code: "EUR",
-            icon: "💶",
+            icon: "",
             name: "Євро",
         },
         {
             code: "USD",
-            icon: "💵",
+            icon: "",
             name: "Долари",
         },
         {
             code: "PLN",
-            icon: "🇵🇱",
+            icon: "",
             name: "Злоті",
         },
         {
             code: "UAH",
-            icon: "🇺🇦",
+            icon: "",
             name: "Гривні",
         },
     ];
@@ -123,7 +124,7 @@ export default function TripReport() {
 
             <div className="trip-report-header">
                 <h1>
-                    📋 Звіт рейсу №{trip.tripNumber}
+                    Звіт рейсу №{trip.tripNumber}
                 </h1>
 
                 <p>
@@ -136,11 +137,11 @@ export default function TripReport() {
                 QUICK STATS
             ========================= */}
 
-            <div className="report-stats">
+                       <div className="report-stats">
 
                 <div className="report-stat">
                     <div className="report-stat-icon">
-                        🛣
+                        <Route size={22} />
                     </div>
 
                     <div className="report-stat-value">
@@ -155,7 +156,7 @@ export default function TripReport() {
 
                 <div className="report-stat">
                     <div className="report-stat-icon">
-                        ⛽
+                        <Fuel size={22} />
                     </div>
 
                     <div className="report-stat-value">
@@ -170,7 +171,7 @@ export default function TripReport() {
 
                 <div className="report-stat">
                     <div className="report-stat-icon">
-                        💰
+                        <Wallet size={22} />
                     </div>
 
                     <div className="report-stat-value">
@@ -185,7 +186,7 @@ export default function TripReport() {
 
                 <div className="report-stat">
                     <div className="report-stat-icon">
-                        📄
+                        <FileText size={22} />
                     </div>
 
                     <div className="report-stat-value">
@@ -205,7 +206,7 @@ export default function TripReport() {
             ========================= */}
 
             <Card
-                title="🚛 Основна інформація"
+                title="Основна інформація"
                 subtitle="Дані рейсу"
             >
 
@@ -213,7 +214,7 @@ export default function TripReport() {
 
                     <div className="report-info-item">
                         <span className="report-info-label">
-                            👤 Водій
+                            Водій
                         </span>
 
                         <span className="report-info-value">
@@ -225,7 +226,7 @@ export default function TripReport() {
                     {trip.codriver && (
                         <div className="report-info-item">
                             <span className="report-info-label">
-                                👥 Напарник
+                                Напарник
                             </span>
 
                             <span className="report-info-value">
@@ -237,7 +238,7 @@ export default function TripReport() {
 
                     <div className="report-info-item">
                         <span className="report-info-label">
-                            🚛 Тягач
+                            Тягач
                         </span>
 
                         <span className="report-info-value">
@@ -248,7 +249,7 @@ export default function TripReport() {
 
                     <div className="report-info-item">
                         <span className="report-info-label">
-                            🚚 Причіп
+                            Причіп
                         </span>
 
                         <span className="report-info-value">
@@ -259,7 +260,7 @@ export default function TripReport() {
 
                     <div className="report-info-item">
                         <span className="report-info-label">
-                            📅 Початок
+                            Початок
                         </span>
 
                         <span className="report-info-value">
@@ -270,7 +271,7 @@ export default function TripReport() {
 
                     <div className="report-info-item">
                         <span className="report-info-label">
-                            🏁 Завершення
+                            Завершення
                         </span>
 
                         <span className="report-info-value">
@@ -288,7 +289,7 @@ export default function TripReport() {
             ========================= */}
 
             <Card
-                title="📍 Маршрут"
+                title="Маршрут"
                 subtitle="Напрямок рейсу"
             >
 
@@ -330,7 +331,7 @@ export default function TripReport() {
             ========================= */}
 
             <Card
-                title="⛽ Пальне"
+                title="Пальне"
                 subtitle="Підсумок використання пального"
             >
 
@@ -339,7 +340,7 @@ export default function TripReport() {
                     <div className="report-fuel-block">
 
                         <div className="report-fuel-title">
-                            🚛 Двигун
+                            Двигун
                         </div>
 
 
@@ -395,7 +396,7 @@ export default function TripReport() {
                     <div className="report-fuel-block">
 
                         <div className="report-fuel-title">
-                            📊 Загальна витрата
+                            Загальна витрата
                         </div>
 
 
@@ -449,7 +450,7 @@ export default function TripReport() {
             ========================= */}
 
             <Card
-                title="💰 Фінанси"
+                title="Фінанси"
                 subtitle="Рух коштів за рейс"
             >
 
@@ -553,7 +554,7 @@ export default function TripReport() {
             ========================= */}
 
             <Card
-                title="💸 Витрати"
+                title="Витрати"
                 subtitle={`${expenses.length} записів`}
             >
 
@@ -579,14 +580,14 @@ export default function TripReport() {
                                     <div className="report-expense-category">
 
                                         {item.type === "exchange"
-                                            ? "💱 Обмін валют"
+                                            ? "Обмін валют"
                                             : item.category}
 
                                     </div>
 
 
                                     <div className="report-expense-date">
-                                        🕒 {item.date}
+                                        {item.date}
                                     </div>
 
 
@@ -625,7 +626,7 @@ export default function TripReport() {
             ========================= */}
 
             <Card
-                title="🧊 Окремий реф"
+                title="Окремий реф"
                 subtitle="Витрата пального рефрижератором"
             >
 
@@ -686,7 +687,7 @@ export default function TripReport() {
             ========================= */}
 
             <Card
-                title="📄 Документи"
+                title="Документи"
                 subtitle="Документи, прикріплені до рейсу"
             >
 
@@ -695,7 +696,7 @@ export default function TripReport() {
                     <div className="report-doc-stat">
 
                         <div className="report-doc-stat-label">
-                            📎 Усього
+                            Усього
                         </div>
 
                         <div className="report-doc-stat-value">
@@ -708,7 +709,7 @@ export default function TripReport() {
                     <div className="report-doc-stat">
 
                         <div className="report-doc-stat-label">
-                            📷 Фото
+                            Фото
                         </div>
 
                         <div className="report-doc-stat-value">
@@ -721,7 +722,7 @@ export default function TripReport() {
                     <div className="report-doc-stat">
 
                         <div className="report-doc-stat-label">
-                            📄 PDF
+                            PDF
                         </div>
 
                         <div className="report-doc-stat-value">
@@ -760,7 +761,7 @@ export default function TripReport() {
 
                                     <div>
                                         <div className="report-expense-category">
-                                            📄 {doc.fileName}
+                                            {doc.fileName}
                                         </div>
 
                                         <div className="report-expense-date">
@@ -792,7 +793,7 @@ export default function TripReport() {
             ========================= */}
 
             <Card
-                title="📝 Примітки"
+                title="Примітки"
                 subtitle="Додаткова інформація по рейсу"
             >
 
@@ -822,7 +823,7 @@ export default function TripReport() {
                 <PrimaryButton
                     variant="primary"
                     size="md"
-                    icon="💾"
+                    icon=""
                     onClick={saveReport}
                 >
                     Зберегти звіт
@@ -832,7 +833,7 @@ export default function TripReport() {
                 <PrimaryButton
                     variant="secondary"
                     size="md"
-                    icon="📄"
+                    icon=""
                     onClick={() =>
                         generateTripPdf(trip)
                     }
@@ -845,7 +846,7 @@ export default function TripReport() {
                 <PrimaryButton
                     variant="secondary"
                     size="md"
-                    icon="🖨"
+                    icon=""
                     onClick={printReport}
                 >
                     Друк
@@ -863,7 +864,7 @@ export default function TripReport() {
                         fontWeight: 700,
                     }}
                 >
-                    ✅ Звіт успішно збережено
+                    Звіт успішно збережено
                 </div>
 
             )}

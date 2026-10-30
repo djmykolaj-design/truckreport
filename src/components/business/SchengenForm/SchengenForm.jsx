@@ -11,7 +11,7 @@ export default function SchengenForm({
 }) {
     return (
         <Card
-            title="➕ Додати перебування"
+            title="Додати перебування"
             subtitle="Вкажіть дату в'їзду та дату виїзду із Шенгенської зони"
         >
             <Input
@@ -30,7 +30,7 @@ export default function SchengenForm({
                 fullWidth
                 onClick={onAdd}
             >
-                ➕ Додати перебування
+                Додати перебування
             </PrimaryButton>
         </Card>
     );

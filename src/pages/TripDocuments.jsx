@@ -221,14 +221,14 @@ export default function TripDocuments() {
           ← До рейсу
         </button>
 
-        <h1>📄 Документи</h1>
+        <h1>Документи</h1>
 
         <Card
           title={`Рейс №${trip.tripNumber}`}
           subtitle={`${trip.fromCity} → ${trip.toCity}`}
         >
           <p>
-            📅 {trip.startDate}
+            {trip.startDate}
             {trip.endDate ? ` — ${trip.endDate}` : ""}
           </p>
         </Card>
@@ -264,7 +264,7 @@ export default function TripDocuments() {
             onClick={addDocument}
             disabled={isCompleted || saving}
           >
-            {saving ? "Завантаження..." : "💾 Додати документ"}
+            {saving ? "Завантаження..." : "Додати документ"}
           </PrimaryButton>
         </Card>
 

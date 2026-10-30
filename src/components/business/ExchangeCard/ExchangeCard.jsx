@@ -20,7 +20,7 @@ export default function ExchangeCard({
         onClick={() => onDelete(exchange.id)}
         disabled={isCompleted}
       >
-        🗑 Видалити
+        Видалити
       </button>
     </div>
   );

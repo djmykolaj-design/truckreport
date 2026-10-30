@@ -185,9 +185,9 @@ export default function TripExpenses() {
   ].sort((a, b) => new Date(b.date) - new Date(a.date));
 
   const currencies = [
-    { icon: "💶", currency: "EUR", data: finance.EUR },
-    { icon: "💵", currency: "USD", data: finance.USD },
-    { icon: "🇵🇱", currency: "PLN", data: finance.PLN },
+    { icon: "", currency: "EUR", data: finance.EUR },
+    { icon: "", currency: "USD", data: finance.USD },
+    { icon: "", currency: "PLN", data: finance.PLN },
     { icon: "₴", currency: "UAH", data: finance.UAH },
   ];
 
@@ -211,7 +211,7 @@ export default function TripExpenses() {
         ← До рейсу
       </button>
 
-      <h1>💰 Витрати рейсу №{trip.tripNumber}</h1>
+      <h1>Витрати рейсу №{trip.tripNumber}</h1>
 
       <Card title="Нова витрата" subtitle="Додайте нову витрату до рейсу">
         <Select
@@ -253,7 +253,7 @@ export default function TripExpenses() {
           onClick={saveExpense}
           disabled={isCompleted}
         >
-          💾 Зберегти витрату
+          Зберегти витрату
         </PrimaryButton>
       </Card>
 
@@ -289,7 +289,7 @@ export default function TripExpenses() {
           onClick={saveReceived}
           disabled={isCompleted}
         >
-          💾 Додати кошти
+          Додати кошти
         </PrimaryButton>
       </Card>
 

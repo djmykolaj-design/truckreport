@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { BossDashboardView } from "./BossDashboard";
 import { Plate, StatusPill } from "../components/boss/Plate";
+import TripModules from "../components/TripModules";
 import { calculateRollingSchengen } from "../utils/schengen";
 import "./Demo.css";
 
@@ -11,6 +12,12 @@ function iso(offsetDays) {
   const d = new Date();
   d.setDate(d.getDate() + offsetDays);
   return d.toISOString().slice(0, 10);
+}
+
+function fmtDate(s) {
+  if (!s) return "";
+  const [y, m, d] = s.split("-");
+  return `${d}.${m}.${y}`;
 }
 
 function buildDemo() {
@@ -212,10 +219,117 @@ function DriversDemo({ drivers, trips }) {
   );
 }
 
+/* Так акаунт водія бачить свої рейси: активний рейс, підсумки, Шенген */
+function DriverDemo({ driver, trips }) {
+  const mine = trips
+    .filter((t) => t.driver === driver.full_name || t.codriver === driver.full_name)
+    .sort((a, b) => (a.startDate < b.startDate ? 1 : -1));
+
+  const active = mine.find((t) => t.status === "active");
+  const done = mine.filter((t) => t.status === "completed");
+
+  const km = (t) => Math.max(0, Number(t.endMileage) - Number(t.startMileage)) || 0;
+  const fuel = Math.round(done.reduce((s, t) => s + km(t) * 0.31, 0));
+  const spent = done.reduce((s, t) => s + 450 + ((Number(t.tripNumber) * 53) % 380), 0);
+
+  const sch = calculateRollingSchengen(driver.stays);
+  const used = 90 - sch.remaining;
+  const pct = Math.min(100, Math.round((used / 90) * 100));
+  const tone = sch.remaining <= 5 ? "is-bad" : sch.remaining <= 15 ? "is-warn" : "is-ok";
+
+  const days = active
+    ? Math.max(1, Math.round((Date.now() - new Date(active.startDate).getTime()) / 86400000) + 1)
+    : 0;
+
+  return (
+    <div className="bd">
+      <div className="bd-head">
+        <h1>{driver.full_name}</h1>
+        <span>кабінет водія</span>
+      </div>
+
+      <section className="bd-panel dm-pad">
+        <div className="dm-label">Активний рейс</div>
+        {active ? (
+          <>
+            <div className="dm-route">
+              {active.fromCity} → {active.toCity}
+              <span className="dm-tr">TR-{active.tripNumber}</span>
+            </div>
+            <div className="dm-meta">
+              <Plate value={active.truck} />
+              {active.trailer && <Plate value={active.trailer} />}
+              <span>
+                з {fmtDate(active.startDate)} • {days} {days === 1 ? "день" : "дні"} у дорозі
+              </span>
+            </div>
+            <TripModules trip={active} tripId={active.id} navigate={() => {}} />
+          </>
+        ) : (
+          <div className="dm-empty">Немає активного рейсу</div>
+        )}
+      </section>
+
+      <div className="dm-kpis">
+        <div className="dm-kpi">
+          <b>{mine.length}</b>
+          <span>Рейси</span>
+        </div>
+        <div className="dm-kpi">
+          <b>{fuel.toLocaleString("uk-UA")} л</b>
+          <span>Пальне</span>
+        </div>
+        <div className="dm-kpi">
+          <b>{spent.toLocaleString("uk-UA")} €</b>
+          <span>Витрати</span>
+        </div>
+        <div className="dm-kpi">
+          <b>{done.length * 3}</b>
+          <span>Документи</span>
+        </div>
+      </div>
+
+      <section className="bd-panel dm-pad">
+        <div className="dm-sch-head">
+          <div>
+            <div className="dm-label">Шенгенські дні</div>
+            <small>Використано {used} з 90</small>
+          </div>
+          <div className={`dm-sch-num ${tone}`}>
+            {sch.remaining}
+            <span>/90</span>
+          </div>
+        </div>
+        <div className="dm-bar">
+          <i className={tone} style={{ width: `${pct}%` }} />
+        </div>
+      </section>
+
+      <section className="bd-panel">
+        <div className="dm-label dm-pad-top">Останні рейси</div>
+        {mine.slice(0, 6).map((t) => (
+          <div key={t.id} className="dm-trip">
+            <div className="dm-trip-top">
+              <span className={`dm-dot ${t.status === "active" ? "is-active" : ""}`} />
+              <span>{t.status === "active" ? "Активний" : "Завершений"}</span>
+              <span className="dm-tr">TR-{t.tripNumber}</span>
+            </div>
+            <div className="dm-trip-route">
+              {t.fromCity} → {t.toCity}
+            </div>
+            <Plate value={t.truck} />
+          </div>
+        ))}
+      </section>
+    </div>
+  );
+}
+
 const TABS = [
   ["home", "Головна"],
   ["fleet", "Автопарк"],
   ["drivers", "Водії"],
+  ["driver", "Кабінет водія"],
 ];
 
 export default function Demo() {
@@ -260,6 +374,7 @@ export default function Demo() {
         {tab === "home" && <BossDashboardView state={state} navigate={go} />}
         {tab === "fleet" && <FleetDemo vehicles={state.vehicles} trips={state.trips} />}
         {tab === "drivers" && <DriversDemo drivers={state.drivers} trips={state.trips} />}
+        {tab === "driver" && <DriverDemo driver={state.drivers[0]} trips={state.trips} />}
       </main>
     </div>
   );

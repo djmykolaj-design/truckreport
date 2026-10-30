@@ -123,7 +123,7 @@ export default function TripExchange() {
         ← До рейсу
       </button>
 
-      <h1>💱 Обмін валют рейсу №{trip.tripNumber}</h1>
+      <h1>Обмін валют рейсу №{trip.tripNumber}</h1>
 
       <Card
         title="Новий обмін"
@@ -177,7 +177,7 @@ export default function TripExchange() {
         />
 
         <PrimaryButton onClick={saveExchange} disabled={isCompleted}>
-          💾 Зберегти обмін
+          Зберегти обмін
         </PrimaryButton>
       </Card>
 

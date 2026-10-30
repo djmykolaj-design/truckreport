@@ -11,7 +11,7 @@ export default function SchengenFuture({
 
     return (
         <Card
-            title="📅 Повернення днів"
+            title="Повернення днів"
             subtitle="Найближчі дати, коли збільшиться доступний ліміт"
         >
             {upcoming.length === 0 ? (

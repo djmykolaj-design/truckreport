@@ -13,12 +13,12 @@ export default function TripFuelCard({
 }) {
     return (
         <div className="card">
-            <p>📏 Пробіг: {mileage} км</p>
+            <p>Пробіг: {mileage} км</p>
 
             <br />
 
             <div className="cardSection">
-                <strong>🚛 Машина</strong>
+                <strong>Машина</strong>
             </div>
 
             <InfoRow
@@ -36,7 +36,7 @@ export default function TripFuelCard({
                     <br />
 
                     <div className="cardSection">
-                        <strong>❄️ Основний реф</strong>
+                        <strong>Основний реф</strong>
                     </div>
 
                     <InfoRow
@@ -56,7 +56,7 @@ export default function TripFuelCard({
                     <br />
 
                     <div className="cardSection">
-                        <strong>🧊 Окремий реф</strong>
+                        <strong>Окремий реф</strong>
                     </div>
 
                     <InfoRow
@@ -74,7 +74,7 @@ export default function TripFuelCard({
             <br />
 
             <div className="cardSection">
-                <strong>⛽ Загалом</strong>
+                <strong>Загалом</strong>
             </div>
 
             <InfoRow

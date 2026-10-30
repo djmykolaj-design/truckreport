@@ -284,7 +284,7 @@ export default function TripFuel() {
         ← До рейсу
       </button>
 
-      <h1>⛽ Пальне рейсу №{trip.tripNumber}</h1>
+      <h1>Пальне рейсу №{trip.tripNumber}</h1>
 
       <div style={{ display: "flex", gap: "10px", marginBottom: "20px" }}>
         <button
@@ -295,7 +295,7 @@ export default function TripFuel() {
           }}
           onClick={() => setTab("diesel")}
         >
-          ⛽ Дизель
+          Дизель
         </button>
 
         <button
@@ -306,7 +306,7 @@ export default function TripFuel() {
           }}
           onClick={() => setTab("reef")}
         >
-          ❄️ Реф
+          Реф
         </button>
       </div>
 
@@ -356,7 +356,7 @@ export default function TripFuel() {
             onClick={saveFuel}
             disabled={isCompleted}
           >
-            💾 Зберегти
+            Зберегти
           </PrimaryButton>
         </Card>
       )}
@@ -427,7 +427,7 @@ export default function TripFuel() {
               cursor: isCompleted ? "not-allowed" : "pointer",
             }}
           >
-            💾 Зберегти
+            Зберегти
           </button>
         </Card>
       )}

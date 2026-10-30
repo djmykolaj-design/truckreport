@@ -67,19 +67,19 @@ export default function Trips() {
           marginBottom: "20px",
         }}
       >
-        <h1>🚛 РЕЙСИ</h1>
+        <h1>РЕЙСИ</h1>
 
         <button
           onClick={() => setShowForm(true)}
           style={greenButton}
         >
-          ➕ Новий рейс
+          Новий рейс
         </button>
       </div>
 
       {showForm && (
         <div style={formCard}>
-          <h2>🚛 Новий рейс</h2>
+          <h2>Новий рейс</h2>
 
           <input
             placeholder="Номер рейсу"
@@ -120,7 +120,7 @@ export default function Trips() {
             onClick={saveTrip}
             style={greenButton}
           >
-            💾 Зберегти рейс
+            Зберегти рейс
           </button>
         </div>
       )}
@@ -150,18 +150,18 @@ export default function Trips() {
                 : "2px solid transparent",
           }}
         >
-          <h2>🚛 Рейс №{trip.tripNumber || "-"}</h2>
+          <h2>Рейс №{trip.tripNumber || "-"}</h2>
 
-          <p>🚛 {trip.truck}</p>
+          <p>{trip.truck}</p>
 
           {trip.codriver && (
-            <p>👥 {trip.codriver}</p>
+            <p>{trip.codriver}</p>
           )}
 
-          <p>📍 {trip.route}</p>
+          <p>{trip.route}</p>
 
           {trip.startDate && (
-            <p>📅 {trip.startDate}</p>
+            <p>{trip.startDate}</p>
           )}
 
           <button
@@ -179,23 +179,23 @@ export default function Trips() {
       {selectedTrip && (
         <div style={detailsCard}>
           <h2>
-            🚛 Рейс №{selectedTrip.tripNumber}
+            Рейс №{selectedTrip.tripNumber}
           </h2>
 
-          <p>🚛 {selectedTrip.truck}</p>
+          <p>{selectedTrip.truck}</p>
 
           {selectedTrip.codriver && (
-            <p>👥 {selectedTrip.codriver}</p>
+            <p>{selectedTrip.codriver}</p>
           )}
 
-          <p>📍 {selectedTrip.route}</p>
+          <p>{selectedTrip.route}</p>
 
           <div style={modulesGrid}>
-            <div style={moduleStyle}>📏 Кілометри</div>
-            <div style={moduleStyle}>⛽ Пальне</div>
-            <div style={moduleStyle}>❄️ Реф</div>
-            <div style={moduleStyle}>💰 Витрати</div>
-            <div style={moduleStyle}>📄 Документи</div>
+            <div style={moduleStyle}>Кілометри</div>
+            <div style={moduleStyle}>Пальне</div>
+            <div style={moduleStyle}>Реф</div>
+            <div style={moduleStyle}>Витрати</div>
+            <div style={moduleStyle}>Документи</div>
           </div>
         </div>
       )}

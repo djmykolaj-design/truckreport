@@ -3,6 +3,17 @@ import {
     TransformWrapper,
     TransformComponent,
 } from "react-zoom-pan-pinch";
+import {
+    ChevronLeft,
+    ChevronRight,
+    Minus,
+    Plus,
+    Maximize2,
+    Download,
+    X,
+} from "lucide-react";
+
+const ICON = 18;
 
 export default function DocumentViewer({
     previewDoc,
@@ -48,6 +59,7 @@ export default function DocumentViewer({
                             <div className="viewer-left">
                                 <button
                                     className="viewer-btn"
+                                    aria-label="Попередній документ"
                                     onClick={() =>
                                         setPreviewIndex(
                                             previewIndex === 0
@@ -56,11 +68,12 @@ export default function DocumentViewer({
                                         )
                                     }
                                 >
-                                    ◀
+                                    <ChevronLeft size={ICON} />
                                 </button>
 
                                 <button
                                     className="viewer-btn"
+                                    aria-label="Наступний документ"
                                     onClick={() =>
                                         setPreviewIndex(
                                             previewIndex === documents.length - 1
@@ -69,7 +82,7 @@ export default function DocumentViewer({
                                         )
                                     }
                                 >
-                                    ▶
+                                    <ChevronRight size={ICON} />
                                 </button>
 
                                 <div className="viewer-title">
@@ -78,20 +91,32 @@ export default function DocumentViewer({
                             </div>
 
                             <div className="viewer-right">
-                                <button className="viewer-btn" onClick={() => zoomOut()}>
-                                    ➖
+                                <button
+                                    className="viewer-btn"
+                                    aria-label="Зменшити"
+                                    onClick={() => zoomOut()}
+                                >
+                                    <Minus size={ICON} />
                                 </button>
 
                                 <div className="viewer-zoom">
                                     {Math.round((state?.scale || 1) * 100)}%
                                 </div>
 
-                                <button className="viewer-btn" onClick={() => zoomIn()}>
-                                    ➕
+                                <button
+                                    className="viewer-btn"
+                                    aria-label="Збільшити"
+                                    onClick={() => zoomIn()}
+                                >
+                                    <Plus size={ICON} />
                                 </button>
 
-                                <button className="viewer-btn" onClick={() => resetTransform()}>
-                                    ⛶
+                                <button
+                                    className="viewer-btn"
+                                    aria-label="Скинути масштаб"
+                                    onClick={() => resetTransform()}
+                                >
+                                    <Maximize2 size={ICON} />
                                 </button>
 
                                 {hasFile && (
@@ -99,16 +124,18 @@ export default function DocumentViewer({
                                         href={fileData}
                                         download={previewDoc.fileName}
                                         className="viewer-download"
+                                        aria-label="Завантажити"
                                     >
-                                        ⬇
+                                        <Download size={ICON} />
                                     </a>
                                 )}
 
                                 <button
                                     className="viewer-close"
+                                    aria-label="Закрити"
                                     onClick={() => setPreviewIndex(null)}
                                 >
-                                    ✕
+                                    <X size={ICON} />
                                 </button>
                             </div>
                         </div>

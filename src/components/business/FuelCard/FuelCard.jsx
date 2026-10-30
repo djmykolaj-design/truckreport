@@ -27,11 +27,11 @@ export default function FuelCard({
       </div>
 
       <div className="fuel-card-liters">
-        ⛽ {fuel.liters} л
+        {fuel.liters} л
       </div>
 
       <div className="fuel-card-price">
-        💰 {fuel.amount} {fuel.currency}
+        {fuel.amount} {fuel.currency}
       </div>
 
       {fuel.comment && (
@@ -41,7 +41,7 @@ export default function FuelCard({
       )}
 
       <div className="fuel-card-date">
-        🕒 {fuel.date}
+        {fuel.date}
       </div>
 
     </div>

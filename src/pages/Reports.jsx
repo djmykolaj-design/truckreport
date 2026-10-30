@@ -7,7 +7,7 @@ export default function Reports() {
             }}
         >
             <h1 style={{ marginBottom: "25px" }}>
-                📑 Звіти
+                Звіти
             </h1>
 
             <div

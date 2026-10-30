@@ -15,7 +15,7 @@ export default function DocumentCard({
                 <div className="document-card__info">
 
                     <div className="document-card__type">
-                        📄 {document.type}
+                        {document.type}
                     </div>
 
                     <div className="document-card__name">
@@ -25,7 +25,7 @@ export default function DocumentCard({
                 </div>
 
                 <div className="document-card__date">
-                    🕒 {document.createdAt}
+                    {document.createdAt}
                 </div>
 
             </div>
@@ -43,7 +43,7 @@ export default function DocumentCard({
                     className="document-btn document-btn--blue"
                     onClick={() => onPreview(index)}
                 >
-                    👁 Переглянути
+                    Переглянути
                 </button>
 
                 <a
@@ -51,7 +51,7 @@ export default function DocumentCard({
                     href={document.url || document.fileData}
                     download={document.fileName}
                 >
-                    ⬇ Завантажити
+                    Завантажити
                 </a>
 
                 <button
@@ -60,7 +60,7 @@ export default function DocumentCard({
                     disabled={isCompleted}
                     onClick={() => onDelete(document.id)}
                 >
-                    🗑 Видалити
+                    Видалити
                 </button>
 
             </div>

@@ -227,9 +227,9 @@ export default function TripsV4() {
     return (
       <div style={{ padding: "12px", paddingBottom: "90px" }}>
         <div style={cardStyle}>
-          <h2 style={{ margin: "0 0 16px" }}>🚛 Рейси</h2>
+          <h2 style={{ margin: "0 0 16px" }}>Рейси</h2>
           <button onClick={() => setShowForm(true)} style={greenButton}>
-            ➕ Новий рейс
+            Новий рейс
           </button>
         </div>
 
@@ -256,9 +256,9 @@ export default function TripsV4() {
     >
       <div style={{ width: "360px" }}>
         <div style={cardStyle}>
-          <h2>🚛 РЕЙСИ</h2>
+          <h2>РЕЙСИ</h2>
           <button onClick={() => setShowForm(true)} style={greenButton}>
-            ➕ Новий рейс
+            Новий рейс
           </button>
         </div>
 

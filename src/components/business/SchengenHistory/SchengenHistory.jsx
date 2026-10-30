@@ -14,7 +14,7 @@ export default function SchengenHistory({
 
   return (
     <Card
-      title="📋 Історія перебування"
+      title="Історія перебування"
       subtitle={`${stays.length} записів`}
     >
       {ordered.length === 0 ? (

@@ -48,7 +48,7 @@ export default function TripsV2() {
             marginBottom: "15px",
           }}
         >
-          <h2>🚛 РЕЙСИ</h2>
+          <h2>РЕЙСИ</h2>
 
           <button
             style={{
@@ -62,7 +62,7 @@ export default function TripsV2() {
               fontWeight: "bold",
             }}
           >
-            ➕ Новий рейс
+            Новий рейс
           </button>
         </div>
 
@@ -86,7 +86,7 @@ export default function TripsV2() {
             }}
           >
             <strong>
-              🚛 Рейс №{trip.number}
+              Рейс №{trip.number}
             </strong>
 
             <br />
@@ -106,20 +106,20 @@ export default function TripsV2() {
         }}
       >
         <h1>
-          🚛 Рейс №{selectedTrip.number}
+          Рейс №{selectedTrip.number}
         </h1>
 
-        <p>👤 {selectedTrip.driver}</p>
+        <p>{selectedTrip.driver}</p>
 
-        <p>👥 {selectedTrip.codriver}</p>
+        <p>{selectedTrip.codriver}</p>
 
-        <p>🚛 {selectedTrip.truck}</p>
+        <p>{selectedTrip.truck}</p>
 
-        <p>🚛 {selectedTrip.plate}</p>
+        <p>{selectedTrip.plate}</p>
 
-        <p>📍 {selectedTrip.route}</p>
+        <p>{selectedTrip.route}</p>
 
-        <p>📅 {selectedTrip.date}</p>
+        <p>{selectedTrip.date}</p>
 
         <div
           style={{
@@ -130,23 +130,23 @@ export default function TripsV2() {
           }}
         >
           <div style={moduleStyle}>
-            📏 Кілометри
+            Кілометри
           </div>
 
           <div style={moduleStyle}>
-            ⛽ Пальне
+            Пальне
           </div>
 
           <div style={moduleStyle}>
-            ❄️ Реф
+            Реф
           </div>
 
           <div style={moduleStyle}>
-            💰 Витрати
+            Витрати
           </div>
 
           <div style={moduleStyle}>
-            📄 Документи
+            Документи
           </div>
         </div>
       </div>

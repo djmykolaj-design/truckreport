@@ -18,7 +18,7 @@ export default function SchengenStats({
             <div className="stat-card">
 
                 <div className="stat-title">
-                    🟢 Залишилось
+                    Залишилось
                 </div>
 
                 <div
@@ -37,7 +37,7 @@ export default function SchengenStats({
             <div className="stat-card">
 
                 <div className="stat-title">
-                    🚦 Статус
+                    Статус
                 </div>
 
                 <div
@@ -64,7 +64,7 @@ export default function SchengenStats({
             <div className="stat-card">
 
                 <div className="stat-title">
-                    📅 Наступний день
+                    Наступний день
                 </div>
 
                 <div className="stat-value">

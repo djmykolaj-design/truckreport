@@ -173,17 +173,17 @@ export default function TripForm(props) {
 
   return (
     <Card
-      title="➕ Новий рейс"
+      title="Новий рейс"
       subtitle="Заповніть основні дані нового рейсу"
     >
       {/* Основна інформація */}
       <div className="trip-form-section">
-        <div className="trip-form-section-title">📋 Основна інформація</div>
+        <div className="trip-form-section-title">Основна інформація</div>
 
         <div className="trip-form-grid">
           <Input
             label="Номер рейсу"
-            icon="🚛"
+            icon=""
             placeholder="Введіть номер рейсу"
             value={tripNumber}
             onChange={(e) => setTripNumber(e.target.value)}
@@ -192,7 +192,7 @@ export default function TripForm(props) {
                  {hasCompany && drivers.length > 0 ? (
             <div>
               <label style={{ display: "block", marginBottom: 6, color: "#cbd5e1", fontSize: 13 }}>
-                👤 Водій
+                Водій
               </label>
               <select value={driver} onChange={(e) => setDriver(e.target.value)} style={selectStyle}>
                 <option value="">— Виберіть водія —</option>
@@ -204,7 +204,7 @@ export default function TripForm(props) {
           ) : (
             <Input
               label="Водій"
-              icon="👤"
+              icon=""
               placeholder="Введіть ім'я водія"
               value={driver}
               onChange={(e) => setDriver(e.target.value)}
@@ -214,7 +214,7 @@ export default function TripForm(props) {
           {hasCompany && drivers.length > 0 ? (
             <div>
               <label style={{ display: "block", marginBottom: 6, color: "#cbd5e1", fontSize: 13 }}>
-                👥 Напарник
+                Напарник
               </label>
               <select value={codriver} onChange={(e) => setCodriver(e.target.value)} style={selectStyle}>
                 <option value="">— Без напарника —</option>
@@ -226,7 +226,7 @@ export default function TripForm(props) {
           ) : (
             <Input
               label="Напарник"
-              icon="👥"
+              icon=""
               placeholder="Введіть ім'я напарника"
               value={codriver}
               onChange={(e) => setCodriver(e.target.value)}
@@ -235,7 +235,7 @@ export default function TripForm(props) {
 
          <Input
             label="Дата початку *"
-            icon="📅"
+            icon=""
             type="date"
             value={startDate}
             onChange={(e) => setStartDate(e.target.value)}
@@ -245,7 +245,7 @@ export default function TripForm(props) {
 
       {/* Транспорт */}
       <div className="trip-form-section">
-        <div className="trip-form-section-title">🚚 Транспорт</div>
+        <div className="trip-form-section-title">Транспорт</div>
 
         {loadingVehicles && <p>Завантаження автопарку...</p>}
 
@@ -268,7 +268,7 @@ export default function TripForm(props) {
                   fontSize: 13,
                 }}
               >
-                🚛 Тягач / автомобіль / бус
+                Тягач / автомобіль / бус
               </label>
 
               <select
@@ -303,7 +303,7 @@ export default function TripForm(props) {
                   fontSize: 13,
                 }}
               >
-                🚚 Причіп / напівпричіп
+                Причіп / напівпричіп
               </label>
 
               <select
@@ -334,7 +334,7 @@ export default function TripForm(props) {
           <div className="trip-form-grid">
             <Input
               label="Тягач / автомобіль"
-              icon="🚛"
+              icon=""
               placeholder="Номер або назва"
               value={truck}
               onChange={(e) => setTruck(e.target.value)}
@@ -342,7 +342,7 @@ export default function TripForm(props) {
 
             <Input
               label="Причіп"
-              icon="🚚"
+              icon=""
               placeholder="Номер причепа (необовʼязково)"
               value={trailer}
               onChange={(e) => setTrailer(e.target.value)}
@@ -353,12 +353,12 @@ export default function TripForm(props) {
 
       {/* Маршрут */}
       <div className="trip-form-section">
-        <div className="trip-form-section-title">📍 Маршрут</div>
+        <div className="trip-form-section-title">Маршрут</div>
 
         <div className="trip-form-grid">
           <Input
             label="Звідки"
-            icon="📍"
+            icon=""
             placeholder="Місто відправлення"
             value={fromCity}
             onChange={(e) => setFromCity(e.target.value)}
@@ -366,7 +366,7 @@ export default function TripForm(props) {
 
           <Input
             label="Куди"
-            icon="📍"
+            icon=""
             placeholder="Місто призначення"
             value={toCity}
             onChange={(e) => setToCity(e.target.value)}
@@ -376,12 +376,12 @@ export default function TripForm(props) {
 
       {/* Стартові показники */}
       <div className="trip-form-section">
-        <div className="trip-form-section-title">⛽ Стартові показники</div>
+        <div className="trip-form-section-title">Стартові показники</div>
 
         <div className="trip-form-grid">
           <Input
             label="Стартове пальне"
-            icon="⛽"
+            icon=""
             type="number"
             placeholder="Літри"
             value={startFuel}
@@ -390,7 +390,7 @@ export default function TripForm(props) {
 
           <Input
             label="Стартовий пробіг"
-            icon="📏"
+            icon=""
             type="number"
             placeholder="Кілометри"
             value={startMileage}
@@ -401,12 +401,12 @@ export default function TripForm(props) {
 
       {/* Видана валюта */}
       <div className="trip-form-section">
-        <div className="trip-form-section-title">💰 Видана валюта</div>
+        <div className="trip-form-section-title">Видана валюта</div>
 
         <div className="trip-form-grid trip-form-grid-money">
           <Input
             label="EUR"
-            icon="💶"
+            icon=""
             type="number"
             placeholder="0.00"
             value={startEuro}
@@ -415,7 +415,7 @@ export default function TripForm(props) {
 
           <Input
             label="USD"
-            icon="💵"
+            icon=""
             type="number"
             placeholder="0.00"
             value={startUsd}
@@ -424,7 +424,7 @@ export default function TripForm(props) {
 
           <Input
             label="PLN"
-            icon="🇵🇱"
+            icon=""
             type="number"
             placeholder="0.00"
             value={startPln}
@@ -448,7 +448,7 @@ export default function TripForm(props) {
           type="button"
           fullWidth
           onClick={saveTrip}
-          icon="💾"
+          icon=""
           size="lg"
         >
           Зберегти рейс

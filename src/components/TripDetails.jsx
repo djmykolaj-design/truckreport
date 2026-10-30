@@ -33,25 +33,25 @@ export default function TripDetails({
                 <div className="trip-header-top">
                     <div>
                         <h1 className="trip-title">
-                            🚛 Рейс № {trip.tripNumber}
+                            Рейс № {trip.tripNumber}
                         </h1>
 
                         <div className="trip-route">
-                            📍 {trip.fromCity} → {trip.toCity}
+                            {trip.fromCity} → {trip.toCity}
                         </div>
 
                         <div className="trip-date">
-                            📅 {trip.startDate}
+                            {trip.startDate}
                             {trip.endDate && ` — ${trip.endDate}`}
                         </div>
 
                         <div className="trip-driver">
-                            👤 {trip.driver}
+                            {trip.driver}
                             {trip.codriver && ` | ${trip.codriver}`}
                         </div>
 
                         <div className="trip-vehicle">
-                            🚛 {trip.truck}
+                            {trip.truck}
                             {trip.trailer && ` | ${trip.trailer}`}
                         </div>
                     </div>
@@ -63,14 +63,14 @@ export default function TripDetails({
                             }`}
                     >
                         {trip.status === "completed"
-                            ? "🔒 Завершений"
-                            : "🟢 Активний"}
+                            ? "Завершений"
+                            : "Активний"}
                     </div>
                 </div>
 
                 <div className="trip-stats">
                     <StatCard
-                        icon="📏"
+                        icon=""
                         title="Пробіг"
                         value={
                             trip.status === "completed"
@@ -85,7 +85,7 @@ export default function TripDetails({
                     />
 
                     <StatCard
-                        icon="📊"
+                        icon=""
                         title="Середня витрата"
                         value={
                             trip.status === "completed"
@@ -100,7 +100,7 @@ export default function TripDetails({
                     />
 
                     <StatCard
-                        icon="⛽"
+                        icon=""
                         title="Паливо"
                         value={
                             trip.status === "completed"
@@ -115,7 +115,7 @@ export default function TripDetails({
                     />
 
                     <StatCard
-                        icon="❄️"
+                        icon=""
                         title="Рефрижератор"
                         value={
                             trip.status === "completed"
@@ -143,7 +143,7 @@ export default function TripDetails({
                         className="trip-action-btn"
                         onClick={() => generateTripPdf(trip)}
                     >
-                        📄 PDF-файл
+                        PDF-файл
                     </button>
 
                     <button
@@ -176,7 +176,7 @@ export default function TripDetails({
                             }
                         }}
                     >
-                        📤 Поділитися
+                        Поділитися
                     </button>
                 </div>
             )}
@@ -184,7 +184,7 @@ export default function TripDetails({
                 onClick={() => deleteTrip(trip.id)}
                 style={deleteButton}
             >
-                🗑 Видалити рейс
+                Видалити рейс
             </button>
         </div>
     );

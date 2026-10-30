@@ -1029,7 +1029,7 @@ async function planRepair(vehicle) {
                                                         fontWeight: 600,
                                                     }}
                                                 >
-                                                    🔴 {vehicle.pending_issue}
+                                                    {vehicle.pending_issue}
                                                 </div>
                                             )}
 
