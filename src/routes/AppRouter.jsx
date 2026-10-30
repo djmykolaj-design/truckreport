@@ -22,6 +22,7 @@ import SetupCompany from "../pages/SetupCompany";
 import Fleet from "../pages/Fleet";
 import CompanyOffice from "../pages/CompanyOffice";
 import Demo from "../pages/Demo";
+import Legal from "../pages/Legal";
 
 export default function AppRouter() {
   return (
@@ -30,9 +31,11 @@ export default function AppRouter() {
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/demo" element={<Demo />} />
+          <Route path="/privacy" element={<Legal type="privacy" />} />
+          <Route path="/terms" element={<Legal type="terms" />} />
           <Route path="/reset-password" element={<ResetPassword />} />
 
-           <Route
+          <Route
             path="/"
             element={
               <AuthGuard>

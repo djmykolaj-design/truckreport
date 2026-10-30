@@ -4,12 +4,11 @@ import Sidebar from "./Sidebar";
 import BottomNav from "./BottomNav";
 import "../../styles/page.css";
 
+const NO_NAV_PATHS = ["/login", "/setup", "/demo", "/privacy", "/terms"];
+
 export default function MainLayout({ children }) {
   const location = useLocation();
-  const hideNav =
-    location.pathname === "/login" ||
-    location.pathname === "/setup" ||
-    location.pathname === "/demo";
+  const hideNav = NO_NAV_PATHS.includes(location.pathname);
 
   if (hideNav) {
     return <main className="layout-content">{children}</main>;
