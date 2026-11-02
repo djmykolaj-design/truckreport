@@ -1,6 +1,6 @@
 
 import "./TripReport.css";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 
 
@@ -14,6 +14,7 @@ import Card from "../components/ui/Card/Card";
 import PrimaryButton from "../components/ui/Button/PrimaryButton";
 
 import { getTripById, updateTrip } from "../services/tripService";
+import { getMyPlan, can } from "../services/plan";
 import { Route, Fuel, Wallet, FileText } from "lucide-react";
 
 export default function TripReport() {
@@ -25,6 +26,20 @@ export default function TripReport() {
     const [saved, setSaved] = useState(
         trip?.reportSaved || false
     );
+
+        const [plan, setPlan] = useState(null);
+
+    useEffect(() => {
+        let cancelled = false;
+
+        getMyPlan().then((info) => {
+            if (!cancelled) setPlan(info);
+        });
+
+        return () => {
+            cancelled = true;
+        };
+    }, []);
 
     if (!trip) {
         return (
@@ -57,6 +72,26 @@ export default function TripReport() {
 
     const printReport = () => {
         window.print();
+    };
+
+        const exportExcel = async () => {
+        if (!plan) return;
+
+        if (!can(plan.plan, "export")) {
+            const open = window.confirm(
+                "Експорт в Excel доступний на плані Pro. Переглянути тарифи?"
+            );
+            if (open) navigate("/pricing");
+            return;
+        }
+
+        try {
+            const { exportTripExcel } = await import("../utils/exportTripExcel");
+            await exportTripExcel(trip, fuel, finance);
+        } catch (error) {
+            console.error("Excel:", error);
+            alert("Не вдалося створити Excel-файл.");
+        }
     };
 
     const expenses = trip.expenses || [];
@@ -839,6 +874,17 @@ export default function TripReport() {
                     }
                 >
                     PDF
+                </PrimaryButton>
+
+
+
+               <PrimaryButton
+                    variant="secondary"
+                    size="md"
+                    icon=""
+                    onClick={exportExcel}
+                >
+                    Excel
                 </PrimaryButton>
 
 

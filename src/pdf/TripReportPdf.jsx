@@ -75,10 +75,22 @@ export function generateTripPdf(trip, options = { download: true }) {
         pdfDoc.download(fileName);
     }
 
-    // Повертаємо Blob (для Поділитися)
-    return new Promise((resolve) => {
-        pdfDoc.getBlob((blob) => {
-            resolve({ blob, fileName });
-        });
+       // Повертаємо Blob (для Поділитися).
+    // Працює і зі старим pdfmake (колбек), і з новим (проміс).
+    return new Promise((resolve, reject) => {
+        try {
+            const result = pdfDoc.getBlob((blob) => {
+                resolve({ blob, fileName });
+            });
+
+            if (result && typeof result.then === "function") {
+                result.then(
+                    (blob) => resolve({ blob, fileName }),
+                    reject
+                );
+            }
+        } catch (error) {
+            reject(error);
+        }
     });
 }

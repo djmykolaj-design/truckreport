@@ -1,6 +1,10 @@
+import { useEffect, useState } from "react";
+
 import TripModules from "./TripModules";
 import { calculateFuel } from "../utils/fuelCalculator";
+import { calculateFinance } from "../utils/financeCalculator";
 import { generateTripPdf } from "../pdf/TripReportPdf";
+import { getMyPlan, can } from "../services/plan";
 import "./TripDetails.css";
 
 import StatCard from "./ui/StatCard";
@@ -12,6 +16,20 @@ export default function TripDetails({
     cardStyle,
     deleteButton,
 }) {
+    const [plan, setPlan] = useState(null);
+
+    useEffect(() => {
+        let cancelled = false;
+
+        getMyPlan().then((info) => {
+            if (!cancelled) setPlan(info);
+        });
+
+        return () => {
+            cancelled = true;
+        };
+    }, []);
+
     if (!trip) return null;
 
     const totalKm =
@@ -23,6 +41,42 @@ export default function TripDetails({
     const reefFuel =
         fuel.reefMainFuel +
         fuel.reefSeparateFuel;
+
+    const exportExcel = async () => {
+        if (!plan) return;
+
+        if (!can(plan.plan, "export")) {
+            const open = window.confirm(
+                "Експорт в Excel доступний на плані Pro. Переглянути тарифи?"
+            );
+            if (open) navigate("/pricing");
+            return;
+        }
+
+        try {
+            const km = Math.max(totalKm, 0);
+            const totalUsed = Number(fuel.totalFuelUsed) || 0;
+            const separateReef = Number(fuel.reefSeparateFuel) || 0;
+            const engineUsed = Math.max(totalUsed - separateReef, 0);
+
+            const fuelForExcel = {
+                mileage: km,
+                totalUsed,
+                totalAverage: Number(fuel.avgConsumption) || 0,
+                engineUsed,
+                engineAverage: km > 0 ? (engineUsed / km) * 100 : 0,
+                separateReefUsed: separateReef,
+            };
+
+            const finance = calculateFinance(trip);
+
+            const { exportTripExcel } = await import("../utils/exportTripExcel");
+            await exportTripExcel(trip, fuelForExcel, finance);
+        } catch (error) {
+            console.error("Excel:", error);
+            alert("Не вдалося створити Excel-файл.");
+        }
+    };
 
     return (
         <div
@@ -137,7 +191,7 @@ export default function TripDetails({
                 navigate={navigate}
             />
 
-            {trip.status === "completed" && (
+                      {trip.status === "completed" && (
                 <div className="trip-action-grid">
                     <button
                         className="trip-action-btn"
@@ -148,11 +202,20 @@ export default function TripDetails({
 
                     <button
                         className="trip-action-btn"
+                        onClick={exportExcel}
+                    >
+                        Excel
+                    </button>
+
+                    <button
+                        className="trip-action-btn"
+                        style={{ gridColumn: "1 / -1" }}
                         onClick={async () => {
                             try {
                                 const result = await generateTripPdf(trip, { download: false });
 
                                 if (!result || !result.blob) {
+                                    console.warn("Share: generateTripPdf не повернув blob", result);
                                     generateTripPdf(trip);
                                     return;
                                 }
@@ -168,11 +231,14 @@ export default function TripDetails({
                                         files: [file],
                                     });
                                 } else {
+                                    console.warn("Share: цей браузер не вміє ділитися файлами");
                                     generateTripPdf(trip);
                                 }
                             } catch (err) {
                                 console.error("Share error:", err);
-                                generateTripPdf(trip);
+                                if (err?.name !== "AbortError") {
+                                    generateTripPdf(trip);
+                                }
                             }
                         }}
                     >
