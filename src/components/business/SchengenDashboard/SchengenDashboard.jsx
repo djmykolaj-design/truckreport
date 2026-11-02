@@ -1,36 +1,59 @@
 import "./SchengenDashboard.css";
 
+const STATUS_TEXT = {
+  ok: "Безпечно",
+  safe: "Безпечно",
+  warning: "Увага",
+  danger: "Майже ліміт",
+  limit: "Ліміт вичерпано",
+  violation: "Порушення",
+};
+
 export default function SchengenDashboard({
   result,
   color,
   future,
   formatDate,
+  inZone,
 }) {
-  const nextReturn = future.find((f) => f.remaining > result.remaining);
+  const statusText = STATUS_TEXT[result.status] || "Порушення";
 
-  const statusText =
-    result.status === "ok" || result.status === "safe"
-      ? "Безпечно"
-      : result.status === "warning"
-      ? "Увага"
-      : result.status === "danger"
-      ? "Майже ліміт"
-      : "Порушення";
+  const nextReturn = future.find((f) => f.remaining > result.remaining);
+  const firstOver = future.find((f) => f.remaining < 0);
+
+  let thirdTitle = "Наступне";
+  let thirdValue = "—";
+  let thirdSub = null;
+
+  if (inZone) {
+    thirdTitle = "Виїхати до";
+
+    if (result.remaining < 0) {
+      thirdValue = "Перевищено";
+      thirdSub = "ліміт 90 днів";
+    } else if (firstOver) {
+      const last = new Date(firstOver.date);
+      last.setDate(last.getDate() - 1);
+      thirdValue = formatDate(last);
+      thirdSub =
+        firstOver.day - 1 === 0 ? "сьогодні" : `ще ${firstOver.day - 1} дн.`;
+    } else {
+      thirdSub = "понад 120 дн.";
+    }
+  } else if (nextReturn) {
+    thirdValue = formatDate(nextReturn.date);
+    thirdSub = `+${nextReturn.remaining - result.remaining} дн.`;
+  }
 
   return (
     <section className="sg-hero">
       <div className="sg-hero-top">
         <div>
           <div className="sg-hero-label">Шенгенські дні</div>
-          <div className="sg-hero-sub">
-            Використано {result.usedDays} з 90
-          </div>
+          <div className="sg-hero-sub">Використано {result.usedDays} з 90</div>
         </div>
 
-        <div
-          className="sg-badge"
-          style={{ borderColor: color, color }}
-        >
+        <div className="sg-badge" style={{ borderColor: color, color }}>
           {statusText}
         </div>
       </div>
@@ -62,21 +85,17 @@ export default function SchengenDashboard({
 
         <div className="sg-kpi-card">
           <div className="sg-kpi-title">Статус</div>
-          <div className="sg-kpi-value" style={{ color, fontSize: 18 }}>
+          <div className="sg-kpi-value" style={{ color, fontSize: 16 }}>
             {statusText}
           </div>
         </div>
 
         <div className="sg-kpi-card">
-          <div className="sg-kpi-title">Наступне</div>
+          <div className="sg-kpi-title">{thirdTitle}</div>
           <div className="sg-kpi-value" style={{ fontSize: 16 }}>
-            {nextReturn ? formatDate(nextReturn.date) : "—"}
+            {thirdValue}
           </div>
-          {nextReturn && (
-            <div className="sg-kpi-sub">
-              +{nextReturn.remaining - result.remaining} дн
-            </div>
-          )}
+          {thirdSub && <div className="sg-kpi-sub">{thirdSub}</div>}
         </div>
       </div>
     </section>

@@ -1,11 +1,14 @@
 import { supabase } from "../lib/supabase";
 
+const keyOf = (start, end) => `${start}_${end || "open"}`;
+
+// Повертає масив перебувань або null, якщо завантажити не вдалося.
 export async function loadStaysFromCloud() {
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) return [];
+  if (!user) return null;
 
   const { data, error } = await supabase
     .from("stays")
@@ -15,13 +18,12 @@ export async function loadStaysFromCloud() {
 
   if (error) {
     console.error("loadStaysFromCloud:", error);
-    return [];
+    return null;
   }
 
   const map = new Map();
   (data || []).forEach((row) => {
-    const key = `${row.start_date}_${row.end_date || "open"}`;
-    map.set(key, {
+    map.set(keyOf(row.start_date, row.end_date), {
       id: row.id,
       start: row.start_date,
       end: row.end_date || null,
@@ -31,42 +33,68 @@ export async function loadStaysFromCloud() {
   return Array.from(map.values());
 }
 
+// Змінює в хмарі лише різницю: спершу додає нове, потім прибирає застаріле.
 export async function saveStaysToCloud(stays) {
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) return;
+  if (!user) return false;
 
-  const { error: delError } = await supabase
+  const { data: existing, error: readError } = await supabase
     .from("stays")
-    .delete()
+    .select("id, start_date, end_date")
     .eq("user_id", user.id);
 
-  if (delError) {
-    console.error("delete stays:", delError);
-    return;
+  if (readError) {
+    console.error("read stays:", readError);
+    return false;
   }
 
-  if (!stays?.length) return;
-
-  const seen = new Set();
-  const rows = [];
-
-  stays.forEach((s) => {
+  const wanted = new Map();
+  (stays || []).forEach((s) => {
     if (!s?.start) return;
-    const key = `${s.start}_${s.end || "open"}`;
-    if (seen.has(key)) return;
-    seen.add(key);
-    rows.push({
+    wanted.set(keyOf(s.start, s.end), {
       user_id: user.id,
       start_date: s.start,
       end_date: s.end || null,
     });
   });
 
-  if (!rows.length) return;
+  const existingKeys = new Set();
+  const obsoleteIds = [];
 
-  const { error } = await supabase.from("stays").insert(rows);
-  if (error) console.error("saveStaysToCloud:", error);
+  (existing || []).forEach((row) => {
+    const key = keyOf(row.start_date, row.end_date);
+    if (wanted.has(key) && !existingKeys.has(key)) {
+      existingKeys.add(key);
+    } else {
+      obsoleteIds.push(row.id); // зайвий або дублікат
+    }
+  });
+
+  const toInsert = [...wanted.entries()]
+    .filter(([key]) => !existingKeys.has(key))
+    .map(([, row]) => row);
+
+  if (toInsert.length) {
+    const { error } = await supabase.from("stays").insert(toInsert);
+    if (error) {
+      console.error("insert stays:", error);
+      return false; // нічого не видаляємо, якщо вставка не вдалась
+    }
+  }
+
+  if (obsoleteIds.length) {
+    const { error } = await supabase
+      .from("stays")
+      .delete()
+      .in("id", obsoleteIds);
+    if (error) {
+      console.error("delete stays:", error);
+      return false;
+    }
+  }
+
+  return true;
 }

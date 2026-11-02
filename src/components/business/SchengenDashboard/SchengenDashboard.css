@@ -1,16 +1,17 @@
 .sg-hero {
-  background: #111827;
-  border: 1px solid #1f2937;
+  background: var(--surface, #111827);
+  border: 1px solid var(--border, #1f2937);
   border-radius: 18px;
   padding: 18px;
   margin-bottom: 14px;
-  color: #f8fafc;
+  color: var(--text, #f8fafc);
 }
 
 .sg-hero-top {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
+  gap: 10px;
   margin-bottom: 16px;
 }
 
@@ -22,7 +23,7 @@
 .sg-hero-sub {
   margin-top: 4px;
   font-size: 12px;
-  color: #94a3b8;
+  color: var(--text-secondary, #94a3b8);
 }
 
 .sg-badge {
@@ -49,19 +50,19 @@
 .sg-big span {
   font-size: 22px;
   font-weight: 600;
-  color: #64748b;
+  color: var(--text-muted, #64748b);
   margin-left: 4px;
 }
 
 .sg-big-caption {
   margin-top: 8px;
   font-size: 13px;
-  color: #94a3b8;
+  color: var(--text-secondary, #94a3b8);
 }
 
 .sg-bar {
   height: 8px;
-  background: #1e293b;
+  background: var(--surface-light, #1e293b);
   border-radius: 999px;
   overflow: hidden;
   margin-bottom: 14px;
@@ -80,15 +81,16 @@
 }
 
 .sg-kpi-card {
-  background: #0f172a;
+  background: var(--surface-light, #0f172a);
   border-radius: 12px;
   padding: 12px 8px;
   text-align: center;
+  min-width: 0;
 }
 
 .sg-kpi-title {
   font-size: 11px;
-  color: #94a3b8;
+  color: var(--text-secondary, #94a3b8);
   margin-bottom: 6px;
 }
 
@@ -101,7 +103,7 @@
 .sg-kpi-sub {
   margin-top: 4px;
   font-size: 11px;
-  color: #64748b;
+  color: var(--text-muted, #64748b);
 }
 
 @media (max-width: 768px) {

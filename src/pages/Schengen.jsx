@@ -1,5 +1,10 @@
 import { useState, useEffect, useMemo } from "react";
-import { calculateRollingSchengen } from "../utils/schengen";
+import {
+  calculateRollingSchengen,
+  findOverlap,
+  getDaysBetween,
+  todayKey,
+} from "../utils/schengen";
 import "./Schengen.css";
 
 import SchengenDashboard from "../components/business/SchengenDashboard";
@@ -7,15 +12,34 @@ import SchengenForm from "../components/business/SchengenForm";
 import SchengenHistory from "../components/business/SchengenHistory";
 import SchengenFuture from "../components/business/SchengenFuture";
 import SchengenCalendar from "../components/business/SchengenCalendar";
+import SchengenPlanner from "../components/business/SchengenPlanner";
 import {
   loadStaysFromCloud,
   saveStaysToCloud,
 } from "../services/cloudStays";
 
+const STATUS_COLORS = {
+  ok: "#22c55e",
+  safe: "#22c55e",
+  warning: "#eab308",
+  danger: "#f97316",
+  limit: "#ef4444",
+  violation: "#ef4444",
+};
+
+const formatDate = (date) => {
+  if (!date) return "досі в зоні";
+  if (typeof date === "string") {
+    const [y, m, d] = date.slice(0, 10).split("-");
+    return `${d}.${m}.${y}`;
+  }
+  return new Date(date).toLocaleDateString("uk-UA");
+};
 
 export default function Schengen() {
   const [start, setStart] = useState("");
   const [end, setEnd] = useState("");
+  const [formError, setFormError] = useState("");
   const [stays, setStays] = useState([]);
   const [loadingStays, setLoadingStays] = useState(true);
   const [cloudReady, setCloudReady] = useState(false);
@@ -23,6 +47,18 @@ export default function Schengen() {
   useEffect(() => {
     async function init() {
       const cloud = await loadStaysFromCloud();
+
+      if (cloud === null) {
+        // Хмара недоступна: беремо локальну копію й нічого не пишемо в хмару
+        try {
+          setStays(JSON.parse(localStorage.getItem("stays") || "[]"));
+        } catch {
+          setStays([]);
+        }
+        setLoadingStays(false);
+        return; // cloudReady лишається false
+      }
+
       setStays(cloud);
       localStorage.setItem("stays", JSON.stringify(cloud));
       setLoadingStays(false);
@@ -39,61 +75,65 @@ export default function Schengen() {
   }, [stays, cloudReady]);
 
   const addTrip = () => {
-    if (!start) return;
+    setFormError("");
 
-    if (end && new Date(end) < new Date(start)) {
-      alert("Дата виїзду не може бути раніше дати в'їзду.");
+    if (!start) {
+      setFormError("Вкажіть дату в'їзду.");
       return;
     }
 
-    setStays((prev) => [
-      ...prev,
-      {
-        start,
-        end: end || null,
-      },
-    ]);
+    if (end && end < start) {
+      setFormError("Дата виїзду не може бути раніше дати в'їзду.");
+      return;
+    }
 
+    if (start > todayKey()) {
+      setFormError(
+        "В'їзд у майбутньому тут не рахується. Для планування скористайтесь планувальником поїздки."
+      );
+      return;
+    }
+
+    const clash = findOverlap(stays, start, end);
+    if (clash) {
+      setFormError(
+        clash.end
+          ? `Ці дати накладаються на перебування ${formatDate(clash.start)} – ${formatDate(clash.end)}.`
+          : `Є незакрите перебування з ${formatDate(clash.start)}. Спершу вкажіть для нього дату виїзду.`
+      );
+      return;
+    }
+
+    setStays((prev) => [...prev, { start, end: end || null }]);
     setStart("");
     setEnd("");
   };
 
-const deleteTrip = (index) => {
-  if (!window.confirm("Видалити це перебування?")) return;
-  setStays((prev) => prev.filter((_, i) => i !== index));
-};
+  const deleteTrip = (index) => {
+    if (!window.confirm("Видалити це перебування?")) return;
+    setStays((prev) => prev.filter((_, i) => i !== index));
+  };
 
   const closeStay = (index, exitDate) => {
-  if (!exitDate) return;
+    if (!exitDate) return;
 
-  const stay = stays[index];
-  if (!stay) return;
+    const stay = stays[index];
+    if (!stay) return;
 
-  if (exitDate < stay.start) {
-    alert("Дата виїзду не може бути раніше дати в'їзду.");
-    return;
-  }
+    if (exitDate < stay.start) {
+      alert("Дата виїзду не може бути раніше дати в'їзду.");
+      return;
+    }
 
-  setStays((prev) =>
-    prev.map((item, i) =>
-      i === index ? { ...item, end: exitDate } : item
-    )
-  );
-};
+    setStays((prev) =>
+      prev.map((item, i) => (i === index ? { ...item, end: exitDate } : item))
+    );
+  };
 
-  const result = useMemo(
-    () => calculateRollingSchengen(stays),
-    [stays]
-  );
+  const result = useMemo(() => calculateRollingSchengen(stays), [stays]);
 
-  const color =
-    result.status === "violation"
-      ? "#ef4444"
-      : result.status === "danger"
-      ? "#f97316"
-      : result.status === "warning"
-      ? "#eab308"
-      : "#22c55e";
+  const color = STATUS_COLORS[result.status] || "#22c55e";
+  const inZone = stays.some((s) => !s.end);
 
   const future = useMemo(() => {
     const arr = [];
@@ -114,21 +154,12 @@ const deleteTrip = (index) => {
     return arr;
   }, [stays]);
 
-  const formatDate = (date) => {
-    if (!date) return "досі в зоні";
-    return new Date(date).toLocaleDateString("uk-UA");
-  };
-
-  const daysBetween = (startDate, endDate) => {
-    const a = new Date(startDate);
-    const b = endDate ? new Date(endDate) : new Date();
-    return Math.floor((b - a) / (1000 * 60 * 60 * 24)) + 1;
-  };
-
   if (loadingStays) {
     return (
       <div className="schengen-page">
-        <p style={{ color: "#94a3b8" }}>Завантаження Шенгену...</p>
+        <p style={{ color: "var(--text-muted, #94a3b8)" }}>
+          Завантаження Шенгену...
+        </p>
       </div>
     );
   }
@@ -145,7 +176,10 @@ const deleteTrip = (index) => {
         color={color}
         future={future}
         formatDate={formatDate}
+        inZone={inZone}
       />
+
+      <SchengenPlanner stays={stays} />
 
       <SchengenCalendar stays={stays} />
 
@@ -155,6 +189,7 @@ const deleteTrip = (index) => {
         setStart={setStart}
         setEnd={setEnd}
         onAdd={addTrip}
+        error={formError}
       />
 
       <SchengenHistory
@@ -162,7 +197,7 @@ const deleteTrip = (index) => {
         onDelete={deleteTrip}
         onClose={closeStay}
         formatDate={formatDate}
-        daysBetween={daysBetween}
+        daysBetween={getDaysBetween}
       />
 
       <SchengenFuture
