@@ -147,9 +147,10 @@ export function BossDashboardView({ state, navigate }) {
   const totalCost = costByMonth.reduce((s, m) => s + m.value, 0);
 
   const thisMonth = months[months.length - 1].key;
-   const tripsThisMonth = trips.filter(
-  (t) => monthKey(t.startDate || t.endDate) === thisMonth
-).length;
+  const tripsThisMonth = trips.filter(
+    (t) =>
+      monthKey(t.startDate) === thisMonth || monthKey(t.endDate) === thisMonth
+  ).length;
 
   const serviceAlerts = vehicles
     .map((v) => ({ vehicle: v, state: serviceState(v) }))
