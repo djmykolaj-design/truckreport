@@ -14,6 +14,7 @@ import {
   getMyCompany,
   leaveCompany,
 } from "../services/company";
+import { getMyPlan } from "../services/plan";
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -35,12 +36,17 @@ export default function Dashboard() {
   const [joining, setJoining] = useState(false);
   const [leaving, setLeaving] = useState(false);
   const [myCompany, setMyCompany] = useState(null);
+  const [planInfo, setPlanInfo] = useState(null);
 
   useEffect(() => {
     let cancelled = false;
 
     getMyCompany().then((company) => {
       if (!cancelled) setMyCompany(company);
+    });
+
+    getMyPlan().then((info) => {
+      if (!cancelled) setPlanInfo(info);
     });
 
     return () => {
@@ -295,6 +301,23 @@ export default function Dashboard() {
             </button>
           </>
         )}
+      </section>
+
+      <section className="hero-card" style={{ marginTop: 8 }}>
+        <div className="hero-title">Мій план</div>
+
+        <div className="hero-empty" style={{ marginTop: 10 }}>
+          {planInfo ? planInfo.label : "Завантаження…"}
+        </div>
+
+        <button
+          className="hero-btn"
+          style={{ marginTop: 12 }}
+          onClick={() => navigate("/pricing")}
+        >
+          Тарифи
+          <ArrowRight size={18} />
+        </button>
       </section>
     </div>
   );
