@@ -19,6 +19,13 @@ const STATUS = {
 const MONTHS = ["січ", "лют", "бер", "кві", "тра", "чер", "лип", "сер", "вер", "жов", "лис", "гру"];
 const PERIODS = [6, 12];
 
+const CURRENCIES = [
+  { code: "UAH", symbol: "₴" },
+  { code: "PLN", symbol: "zł" },
+  { code: "EUR", symbol: "€" },
+  { code: "USD", symbol: "$" },
+];
+
 function monthKey(dateStr) {
   return String(dateStr || "").slice(0, 7);
 }
@@ -98,6 +105,7 @@ function Bars({ data, cost, unit }) {
 // Тільки показ. Дані приходять ззовні (з бази або з демо).
 export function BossDashboardView({ state, navigate }) {
   const [period, setPeriod] = useState(6);
+  const [currency, setCurrency] = useState("UAH");
 
   if (state.noCompany) {
     return (
@@ -136,15 +144,38 @@ export function BossDashboardView({ state, navigate }) {
       .filter((t) => monthKey(t.endDate || t.startDate) === m.key)
       .reduce((sum, t) => sum + tripKm(t), 0),
   }));
+
+  // Ремонти за період, по кожній валюті окремо
+  const servicesInPeriod = services.filter((s) => monthKeys.has(monthKey(s.service_date)));
+  const costTotals = CURRENCIES.map((c) => ({
+    ...c,
+    sum: servicesInPeriod
+      .filter((s) => (s.currency || "UAH") === c.code)
+      .reduce((sum, s) => sum + Number(s.cost || 0), 0),
+  }));
+  const currenciesWithData = costTotals.filter((c) => c.sum > 0);
+  const activeCurrency = currenciesWithData.some((c) => c.code === currency)
+    ? currency
+    : currenciesWithData[0]?.code || "UAH";
+  const activeSymbol = CURRENCIES.find((c) => c.code === activeCurrency)?.symbol || "";
+
   const costByMonth = months.map((m) => ({
     ...m,
-    value: services
-      .filter((s) => monthKey(s.service_date) === m.key)
+    value: servicesInPeriod
+      .filter(
+        (s) =>
+          monthKey(s.service_date) === m.key &&
+          (s.currency || "UAH") === activeCurrency
+      )
       .reduce((sum, s) => sum + Number(s.cost || 0), 0),
   }));
 
   const totalKm = kmByMonth.reduce((s, m) => s + m.value, 0);
-  const totalCost = costByMonth.reduce((s, m) => s + m.value, 0);
+  const costSummary = currenciesWithData.length
+    ? currenciesWithData
+        .map((c) => `${Math.round(c.sum).toLocaleString("uk-UA")} ${c.symbol}`)
+        .join(" · ")
+    : "0";
 
   const thisMonth = months[months.length - 1].key;
   const tripsThisMonth = trips.filter(
@@ -385,9 +416,33 @@ export function BossDashboardView({ state, navigate }) {
         </section>
         <section className="bd-panel">
           <h2>
-            Ремонти <span>за {period} міс.: {totalCost.toLocaleString("uk-UA")}</span>
+            Ремонти <span>за {period} міс.: {costSummary}</span>
           </h2>
-          <Bars data={costByMonth} cost />
+          {currenciesWithData.length > 1 && (
+            <div style={{ display: "flex", gap: 6, padding: "0 18px 6px" }}>
+              {currenciesWithData.map((c) => (
+                <button
+                  key={c.code}
+                  type="button"
+                  onClick={() => setCurrency(c.code)}
+                  style={{
+                    padding: "4px 10px",
+                    borderRadius: 8,
+                    border: "1px solid var(--border)",
+                    background: activeCurrency === c.code ? "var(--warning)" : "transparent",
+                    color: activeCurrency === c.code ? "#241a00" : "var(--text-secondary)",
+                    fontWeight: 600,
+                    fontSize: 13,
+                    fontFamily: "inherit",
+                    cursor: "pointer",
+                  }}
+                >
+                  {c.symbol}
+                </button>
+              ))}
+            </div>
+          )}
+          <Bars data={costByMonth} cost unit={activeSymbol} />
         </section>
       </div>
     </div>
@@ -428,7 +483,7 @@ export default function BossDashboard() {
             .order("created_at", { ascending: false }),
           supabase
             .from("fleet_services")
-            .select("id, vehicle_id, service_date, cost, status")
+            .select("id, vehicle_id, service_date, cost, currency, status")
             .eq("company_id", companyId)
             .eq("status", "done")
             .gte("service_date", sinceStr),

@@ -12,6 +12,17 @@ const REPAIR_LABELS = {
     in_progress: "У ремонті",
 };
 
+const CURRENCIES = [
+    { code: "UAH", symbol: "₴", label: "₴ гривня" },
+    { code: "PLN", symbol: "zł", label: "zł злотий" },
+    { code: "EUR", symbol: "€", label: "€ євро" },
+    { code: "USD", symbol: "$", label: "$ долар" },
+];
+
+function currencySymbol(code) {
+    return CURRENCIES.find((c) => c.code === (code || "UAH"))?.symbol || "";
+}
+
 function todayIso() {
     const d = new Date();
     d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
@@ -168,6 +179,7 @@ function FinishRepairForm({ vehicle, busy, onSubmit, onCancel }) {
         vehicle.odometer != null ? String(vehicle.odometer) : ""
     );
     const [cost, setCost] = useState("");
+    const [currency, setCurrency] = useState("UAH");
     const [note, setNote] = useState("");
     const [formError, setFormError] = useState("");
 
@@ -186,7 +198,13 @@ function FinishRepairForm({ vehicle, busy, onSubmit, onCancel }) {
         }
 
         setFormError("");
-        onSubmit({ date, odometer: odo, cost: costNum, note: note.trim() });
+        onSubmit({
+            date,
+            odometer: odo,
+            cost: costNum,
+            currency,
+            note: note.trim(),
+        });
     }
 
     return (
@@ -211,17 +229,41 @@ function FinishRepairForm({ vehicle, busy, onSubmit, onCancel }) {
                     onChange={(event) => setOdometer(event.target.value)}
                 />
             </label>
-            <label style={labelStyle}>
-                Вартість (необов'язково)
-                <input
-                    style={inputStyle}
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={cost}
-                    onChange={(event) => setCost(event.target.value)}
-                />
-            </label>
+
+            <div
+                style={{
+                    display: "grid",
+                    gridTemplateColumns: "minmax(0, 1fr) 130px",
+                    gap: 10,
+                }}
+            >
+                <label style={labelStyle}>
+                    Вартість (необов'язково)
+                    <input
+                        style={inputStyle}
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={cost}
+                        onChange={(event) => setCost(event.target.value)}
+                    />
+                </label>
+                <label style={labelStyle}>
+                    Валюта
+                    <select
+                        style={inputStyle}
+                        value={currency}
+                        onChange={(event) => setCurrency(event.target.value)}
+                    >
+                        {CURRENCIES.map((c) => (
+                            <option key={c.code} value={c.code}>
+                                {c.label}
+                            </option>
+                        ))}
+                    </select>
+                </label>
+            </div>
+
             <label style={labelStyle}>
                 Що зроблено (необов'язково)
                 <textarea
@@ -402,7 +444,7 @@ export default function VehicleRepairs({ vehicle, issues, repairs, onChanged }) 
         });
     }
 
-    function finishRepair(service, { date, odometer, cost, note }) {
+    function finishRepair(service, { date, odometer, cost, currency, note }) {
         return run(async () => {
             must(
                 await supabase
@@ -412,6 +454,7 @@ export default function VehicleRepairs({ vehicle, issues, repairs, onChanged }) 
                         service_date: date,
                         odometer,
                         cost,
+                        currency: currency || "UAH",
                         description: note
                             ? `${service.description || ""} — ${note}`
                             : service.description,
@@ -677,7 +720,7 @@ export default function VehicleRepairs({ vehicle, issues, repairs, onChanged }) 
                                 <div style={{ fontWeight: 600 }}>
                                     {fmtDate(item.service_date)} · {fmtKm(item.odometer)}
                                     {item.cost != null
-                                        ? ` · ${Number(item.cost).toLocaleString("uk-UA")}`
+                                        ? ` · ${Number(item.cost).toLocaleString("uk-UA")} ${currencySymbol(item.currency)}`
                                         : ""}
                                 </div>
                                 {item.description && (
