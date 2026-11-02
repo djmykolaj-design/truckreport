@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 
 export default function AuthGuard({ children }) {
+  const location = useLocation();
   const [loading, setLoading] = useState(true);
   const [session, setSession] = useState(null);
 
@@ -41,7 +42,9 @@ export default function AuthGuard({ children }) {
   }
 
   if (!session) {
-    return <Navigate to="/login" replace />;
+    // Нові відвідувачі на головній бачать опис додатка, решта сторінок ведуть на вхід
+    const target = location.pathname === "/" ? "/welcome" : "/login";
+    return <Navigate to={target} replace />;
   }
 
   return children;
