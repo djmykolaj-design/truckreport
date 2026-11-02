@@ -23,6 +23,7 @@ import Fleet from "../pages/Fleet";
 import CompanyOffice from "../pages/CompanyOffice";
 import Demo from "../pages/Demo";
 import Legal from "../pages/Legal";
+import Pricing from "../pages/Pricing";
 
 export default function AppRouter() {
   return (
@@ -58,6 +59,15 @@ export default function AppRouter() {
             element={
               <AuthGuard>
                 <Schengen />
+              </AuthGuard>
+            }
+          />
+
+          <Route
+            path="/pricing"
+            element={
+              <AuthGuard>
+                <Pricing />
               </AuthGuard>
             }
           />

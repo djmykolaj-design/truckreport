@@ -11,6 +11,59 @@ import {
 } from "../services/cloudTrips";
 import { markVehicleInTrip } from "../services/fleetStatus";
 import { getMyProfile } from "../services/profile";
+import { getMyPlan, can, FREE_TRIP_LIMIT } from "../services/plan";
+
+function tripsWord(n) {
+  const mod10 = n % 10;
+  const mod100 = n % 100;
+  if (mod10 === 1 && mod100 !== 11) return "рейс";
+  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return "рейси";
+  return "рейсів";
+}
+
+function HistoryNote({ hidden, onUpgrade }) {
+  if (!hidden) return null;
+
+  return (
+    <div
+      style={{
+        marginTop: 12,
+        padding: 14,
+        borderRadius: 12,
+        border: "1px solid #334155",
+        background: "#111827",
+        color: "#cbd5e1",
+        fontSize: 14,
+        boxSizing: "border-box",
+      }}
+    >
+      <div style={{ fontWeight: 600 }}>
+        Ще {hidden} {tripsWord(hidden)} в історії приховано
+      </div>
+      <div style={{ marginTop: 4, color: "#94a3b8" }}>
+        Безкоштовний план показує {FREE_TRIP_LIMIT} останні рейси. Повна історія
+        доступна на плані Pro. Ваші рейси збережені, нічого не втрачено.
+      </div>
+      <button
+        type="button"
+        onClick={onUpgrade}
+        style={{
+          marginTop: 10,
+          width: "100%",
+          padding: "10px",
+          borderRadius: 10,
+          border: "1px solid #22c55e",
+          background: "transparent",
+          color: "#22c55e",
+          fontWeight: 600,
+          cursor: "pointer",
+        }}
+      >
+        Дивитись тарифи
+      </button>
+    </div>
+  );
+}
 
 export default function TripsV4() {
   const [showForm, setShowForm] = useState(false);
@@ -18,6 +71,7 @@ export default function TripsV4() {
   const [loadingTrips, setLoadingTrips] = useState(true);
   const [cloudReady, setCloudReady] = useState(false);
   const [selectedTrip, setSelectedTrip] = useState(null);
+  const [planInfo, setPlanInfo] = useState(null);
 
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -53,6 +107,18 @@ export default function TripsV4() {
   }, []);
 
   useEffect(() => {
+    let cancelled = false;
+
+    getMyPlan().then((info) => {
+      if (!cancelled) setPlanInfo(info);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
     if (!cloudReady) return;
 
     localStorage.setItem("cabina_trips_v4", JSON.stringify(trips));
@@ -73,8 +139,8 @@ export default function TripsV4() {
       return;
     }
 
-        const me = await getMyProfile();
-        const newTrip = {
+    const me = await getMyProfile();
+    const newTrip = {
       id: Date.now(),
       companyId: me?.company_id || null,
       tripNumber,
@@ -142,7 +208,7 @@ export default function TripsV4() {
     }
   };
 
-   const sortedTrips = [...trips].sort((a, b) => {
+  const sortedTrips = [...trips].sort((a, b) => {
     const aActive = a.status === "active";
     const bActive = b.status === "active";
 
@@ -156,6 +222,16 @@ export default function TripsV4() {
     // 3. Однакова дата: за часом створення, нові зверху
     return (Number(b.id) || 0) - (Number(a.id) || 0);
   });
+
+  // Безкоштовний план: показуємо активні рейси та останні FREE_TRIP_LIMIT.
+  // Поки план не завантажився, нічого не ховаємо.
+  const limited = Boolean(planInfo) && !can(planInfo.plan, "fullTripHistory");
+  const visibleTrips = limited
+    ? sortedTrips.filter(
+        (trip, index) => trip.status === "active" || index < FREE_TRIP_LIMIT
+      )
+    : sortedTrips;
+  const hiddenCount = sortedTrips.length - visibleTrips.length;
 
   const isMobile = window.innerWidth <= 768;
 
@@ -235,9 +311,13 @@ export default function TripsV4() {
 
         <div style={{ marginTop: "16px" }}>
           <TripList
-            trips={sortedTrips}
+            trips={visibleTrips}
             selectedTrip={selectedTrip}
             setSelectedTrip={setSelectedTrip}
+          />
+          <HistoryNote
+            hidden={hiddenCount}
+            onUpgrade={() => navigate("/pricing")}
           />
         </div>
       </div>
@@ -263,9 +343,13 @@ export default function TripsV4() {
         </div>
 
         <TripList
-          trips={sortedTrips}
+          trips={visibleTrips}
           selectedTrip={selectedTrip}
           setSelectedTrip={setSelectedTrip}
+        />
+        <HistoryNote
+          hidden={hiddenCount}
+          onUpgrade={() => navigate("/pricing")}
         />
       </div>
 

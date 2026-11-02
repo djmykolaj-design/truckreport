@@ -9,6 +9,7 @@ import {
   Wrench,
   AlertTriangle,
   Users,
+  CreditCard,
 } from "lucide-react";
 
 import "./Sidebar.css";
@@ -80,6 +81,13 @@ export default function Sidebar() {
               <span>Офіс</span>
             </NavLink>
           </>
+        )}
+
+        {profile && (
+          <NavLink to="/pricing" className={({ isActive }) => `sidebar-link ${isActive ? "active" : ""}`}>
+            <CreditCard size={22} />
+            <span>Тарифи</span>
+          </NavLink>
         )}
       </nav>
 
