@@ -1,0 +1,504 @@
+.lp {
+  --lp-bg: var(--bg, #0a0f1a);
+  --lp-surface: var(--surface, #111827);
+  --lp-surface-2: var(--surface-light, #1a2234);
+  --lp-border: var(--border, #243044);
+  --lp-text: var(--text, #f1f5f9);
+  --lp-muted: var(--text-secondary, #94a3b8);
+  --lp-green: var(--primary, #22c55e);
+
+  min-height: 100vh;
+  background: var(--lp-bg);
+  color: var(--lp-text);
+  font-family: var(--font-body, inherit);
+  line-height: 1.5;
+}
+
+.lp *,
+.lp *::before,
+.lp *::after {
+  box-sizing: border-box;
+}
+
+.lp-wrap {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 0 16px;
+}
+
+/* ── Шапка ── */
+
+.lp-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 0;
+}
+
+.lp-logo {
+  height: 44px;
+  width: auto;
+  border-radius: 6px;
+}
+
+.lp-link {
+  color: var(--lp-text);
+  text-decoration: none;
+  font-weight: 600;
+  padding: 10px 14px;
+  border: 1px solid var(--lp-border);
+  border-radius: 10px;
+}
+
+.lp-link:hover {
+  background: var(--lp-surface-2);
+}
+
+/* ── Перший екран ── */
+
+.lp-hero {
+  display: grid;
+  gap: 36px;
+  padding: 24px 0 56px;
+}
+
+.lp-hero h1 {
+  margin: 0 0 16px;
+  font-family: var(--font-display, inherit);
+  font-size: clamp(30px, 6.2vw, 52px);
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  max-width: 16em;
+}
+
+.lp-lead {
+  margin: 0 0 24px;
+  max-width: 34em;
+  color: var(--lp-muted);
+  font-size: 17px;
+}
+
+.lp-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.lp-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 0 20px;
+  border-radius: 12px;
+  border: 1px solid transparent;
+  font: inherit;
+  font-weight: 700;
+  font-size: 15px;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.lp-btn--primary {
+  background: var(--lp-green);
+  color: #06210f;
+}
+
+.lp-btn--primary:hover {
+  filter: brightness(1.08);
+}
+
+.lp-btn--ghost {
+  background: transparent;
+  color: var(--lp-text);
+  border-color: var(--lp-border);
+}
+
+.lp-btn--ghost:hover {
+  background: var(--lp-surface-2);
+}
+
+.lp-demo-link {
+  display: inline-block;
+  margin-top: 16px;
+  color: var(--lp-muted);
+  font-size: 14px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.lp-demo-link:hover {
+  color: var(--lp-text);
+}
+
+.lp a:focus-visible,
+.lp button:focus-visible {
+  outline: 2px solid var(--lp-green);
+  outline-offset: 2px;
+}
+
+/* ── Макет телефона ── */
+
+.lp-phone {
+  position: relative;
+  width: 100%;
+  max-width: 340px;
+  margin: 0 auto;
+  padding: 18px 14px 14px;
+  display: grid;
+  gap: 12px;
+  border: 1px solid var(--lp-border);
+  border-radius: 30px;
+  background: linear-gradient(180deg, var(--lp-surface-2), var(--lp-surface));
+}
+
+.lp-phone-note {
+  position: absolute;
+  top: -11px;
+  right: 22px;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: var(--lp-bg);
+  border: 1px solid var(--lp-border);
+  color: var(--lp-muted);
+  font-size: 12px;
+}
+
+.lp-mock-card {
+  padding: 14px;
+  border: 1px solid var(--lp-border);
+  border-radius: 16px;
+  background: var(--lp-surface);
+}
+
+.lp-mock-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.lp-mock-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--lp-muted);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.lp-mock-badge {
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--lp-green) 18%, transparent);
+  color: var(--lp-green);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.lp-mock-route {
+  margin: 10px 0 12px;
+  font-family: var(--font-display, inherit);
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.lp-mock-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.lp-mock-stats b {
+  display: block;
+  font-size: 14px;
+}
+
+.lp-mock-stats span {
+  color: var(--lp-muted);
+  font-size: 12px;
+}
+
+.lp-mock-big {
+  font-family: var(--font-display, inherit);
+  font-size: 40px;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--lp-green);
+}
+
+.lp-mock-big small {
+  font-size: 16px;
+  color: var(--lp-muted);
+  font-weight: 500;
+}
+
+.lp-mock-sub {
+  margin: 2px 0 10px;
+  color: var(--lp-muted);
+  font-size: 13px;
+}
+
+.lp-mock-bar {
+  height: 8px;
+  border-radius: 4px;
+  background: var(--lp-border);
+  overflow: hidden;
+}
+
+.lp-mock-bar i {
+  display: block;
+  height: 100%;
+  border-radius: 4px;
+  background: var(--lp-green);
+  animation: lp-fill 1.1s cubic-bezier(0.2, 0.7, 0.2, 1) 0.2s both;
+}
+
+@keyframes lp-fill {
+  from {
+    width: 0 !important;
+  }
+}
+
+.lp-mock-exit {
+  margin-top: 10px;
+  color: var(--lp-muted);
+  font-size: 13px;
+}
+
+/* ── Секції ── */
+
+.lp-section {
+  padding: 56px 0;
+}
+
+.lp-section--alt {
+  background: var(--lp-surface);
+  border-top: 1px solid var(--lp-border);
+  border-bottom: 1px solid var(--lp-border);
+}
+
+.lp-section h2 {
+  margin: 0 0 12px;
+  font-family: var(--font-display, inherit);
+  font-size: clamp(24px, 4vw, 32px);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.lp-section-lead {
+  margin: 0 0 28px;
+  max-width: 36em;
+  color: var(--lp-muted);
+}
+
+.lp-cols {
+  display: grid;
+  gap: 32px;
+  margin-top: 28px;
+}
+
+.lp-col h3 {
+  margin: 0;
+  font-size: 20px;
+}
+
+.lp-col-sub {
+  margin: 4px 0 8px;
+  color: var(--lp-muted);
+}
+
+.lp-row {
+  display: flex;
+  gap: 14px;
+  padding: 16px 0;
+  border-top: 1px solid var(--lp-border);
+}
+
+.lp-row-icon {
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: var(--lp-green);
+}
+
+.lp-row b {
+  display: block;
+  margin-bottom: 2px;
+}
+
+.lp-row p {
+  margin: 0;
+  color: var(--lp-muted);
+  font-size: 15px;
+}
+
+/* ── Тарифи ── */
+
+.lp-plans {
+  display: grid;
+  gap: 14px;
+}
+
+.lp-plan {
+  padding: 18px;
+  border: 1px solid var(--lp-border);
+  border-radius: 14px;
+  background: var(--lp-bg);
+}
+
+.lp-plan--now {
+  border-color: var(--lp-green);
+}
+
+.lp-plan h3 {
+  margin: 0 0 6px;
+  font-size: 17px;
+}
+
+.lp-plan p {
+  margin: 0;
+  color: var(--lp-muted);
+  font-size: 15px;
+}
+
+/* ── Встановлення ── */
+
+.lp-tabs {
+  display: inline-flex;
+  gap: 4px;
+  padding: 4px;
+  border: 1px solid var(--lp-border);
+  border-radius: 12px;
+  background: var(--lp-surface);
+}
+
+.lp-tab {
+  min-height: 40px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--lp-muted);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.lp-tab.is-active {
+  background: var(--lp-green);
+  color: #06210f;
+}
+
+.lp-install-note {
+  margin: 14px 0 6px;
+  color: var(--lp-muted);
+  font-size: 14px;
+}
+
+.lp-steps {
+  margin: 8px 0 24px;
+  padding: 0;
+  list-style: none;
+  counter-reset: lp-step;
+  max-width: 40em;
+}
+
+.lp-steps li {
+  position: relative;
+  padding: 12px 0 12px 44px;
+  border-top: 1px solid var(--lp-border);
+  counter-increment: lp-step;
+}
+
+.lp-steps li::before {
+  content: counter(lp-step);
+  position: absolute;
+  left: 0;
+  top: 11px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px solid var(--lp-green);
+  color: var(--lp-green);
+  font-weight: 700;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ── Завершення ── */
+
+.lp-final {
+  text-align: left;
+}
+
+.lp-footer {
+  padding: 28px 0 40px;
+  color: var(--lp-muted);
+  font-size: 14px;
+}
+
+.lp-footer-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.lp-footer-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+}
+
+.lp-footer-links a {
+  color: var(--lp-muted);
+  text-decoration: none;
+}
+
+.lp-footer-links a:hover {
+  color: var(--lp-text);
+  text-decoration: underline;
+}
+
+/* ── Великий екран ── */
+
+@media (min-width: 900px) {
+  .lp-hero {
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr);
+    align-items: center;
+    gap: 56px;
+    padding: 48px 0 80px;
+  }
+
+  .lp-cols {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 56px;
+  }
+
+  .lp-plans {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .lp-section {
+    padding: 80px 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lp-mock-bar i {
+    animation: none;
+  }
+}
+
+/* Лендинг на всю ширину: прибираємо відступи загального контейнера */
+main.layout-content.layout-content--bare {
+  padding: 0 !important;
+  margin: 0 !important;
+  max-width: none !important;
+  width: 100% !important;
+}

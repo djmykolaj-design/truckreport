@@ -24,12 +24,14 @@ import CompanyOffice from "../pages/CompanyOffice";
 import Demo from "../pages/Demo";
 import Legal from "../pages/Legal";
 import Pricing from "../pages/Pricing";
+import Landing from "../pages/Landing";
 
 export default function AppRouter() {
   return (
     <BrowserRouter>
       <MainLayout>
         <Routes>
+          <Route path="/welcome" element={<Landing />} />
           <Route path="/login" element={<Login />} />
           <Route path="/demo" element={<Demo />} />
           <Route path="/privacy" element={<Legal type="privacy" />} />
