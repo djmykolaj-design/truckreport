@@ -17,6 +17,7 @@ const STATUS = {
 };
 
 const MONTHS = ["січ", "лют", "бер", "кві", "тра", "чер", "лип", "сер", "вер", "жов", "лис", "гру"];
+const PERIODS = [6, 12];
 
 function monthKey(dateStr) {
   return String(dateStr || "").slice(0, 7);
@@ -73,12 +74,18 @@ function serviceState(v) {
   return { overdue, text: parts.join(" • ") };
 }
 
-function Bars({ data, cost }) {
+function Bars({ data, cost, unit }) {
   const max = Math.max(1, ...data.map((d) => d.value));
   return (
-    <div className={`bd-bars ${cost ? "bd-bars--cost" : ""}`}>
+    <div
+      className={`bd-bars ${cost ? "bd-bars--cost" : ""}`}
+      style={{ gridTemplateColumns: `repeat(${data.length}, minmax(0, 1fr))` }}
+    >
       {data.map((d) => (
-        <div key={d.key}>
+        <div
+          key={d.key}
+          title={`${d.label}: ${Math.round(d.value).toLocaleString("uk-UA")} ${unit || ""}`.trim()}
+        >
           <span>{d.value ? Math.round(d.value).toLocaleString("uk-UA") : ""}</span>
           <i style={{ height: Math.max(3, (d.value / max) * 78), opacity: d.value ? 1 : 0.25 }} />
           <small>{d.label}</small>
@@ -90,6 +97,8 @@ function Bars({ data, cost }) {
 
 // Тільки показ. Дані приходять ззовні (з бази або з демо).
 export function BossDashboardView({ state, navigate }) {
+  const [period, setPeriod] = useState(6);
+
   if (state.noCompany) {
     return (
       <div className="bd">
@@ -113,11 +122,18 @@ export function BossDashboardView({ state, navigate }) {
   const activeTrips = trips.filter((t) => t.status === "active");
   const tripByPlate = new Map(activeTrips.filter((t) => t.truck).map((t) => [t.truck, t]));
 
-  const months = lastMonths(6);
+  const months = lastMonths(period);
+  const monthKeys = new Set(months.map((m) => m.key));
+
+  const finishedInPeriod = trips.filter(
+    (t) => t.status !== "active" && monthKeys.has(monthKey(t.endDate || t.startDate))
+  );
+  const withoutMileage = finishedInPeriod.filter((t) => tripKm(t) === 0).length;
+
   const kmByMonth = months.map((m) => ({
     ...m,
-    value: trips
-      .filter((t) => t.status !== "active" && monthKey(t.endDate || t.startDate) === m.key)
+    value: finishedInPeriod
+      .filter((t) => monthKey(t.endDate || t.startDate) === m.key)
       .reduce((sum, t) => sum + tripKm(t), 0),
   }));
   const costByMonth = months.map((m) => ({
@@ -126,8 +142,14 @@ export function BossDashboardView({ state, navigate }) {
       .filter((s) => monthKey(s.service_date) === m.key)
       .reduce((sum, s) => sum + Number(s.cost || 0), 0),
   }));
+
+  const totalKm = kmByMonth.reduce((s, m) => s + m.value, 0);
+  const totalCost = costByMonth.reduce((s, m) => s + m.value, 0);
+
   const thisMonth = months[months.length - 1].key;
-  const tripsThisMonth = trips.filter((t) => monthKey(t.startDate) === thisMonth).length;
+   const tripsThisMonth = trips.filter(
+  (t) => monthKey(t.startDate || t.endDate) === thisMonth
+).length;
 
   const serviceAlerts = vehicles
     .map((v) => ({ vehicle: v, state: serviceState(v) }))
@@ -323,16 +345,46 @@ export function BossDashboardView({ state, navigate }) {
         </div>
       </div>
 
+      <div style={{ display: "flex", alignItems: "center", gap: 8, margin: "4px 0 12px" }}>
+        <span style={{ color: "var(--text-secondary)", fontSize: 14, marginRight: 4 }}>Період:</span>
+        {PERIODS.map((n) => (
+          <button
+            key={n}
+            type="button"
+            onClick={() => setPeriod(n)}
+            style={{
+              padding: "8px 14px",
+              borderRadius: 10,
+              border: "1px solid var(--border)",
+              background: period === n ? "var(--primary)" : "transparent",
+              color: period === n ? "#06210f" : "var(--text-secondary)",
+              fontWeight: 600,
+              fontSize: 14,
+              fontFamily: "inherit",
+              cursor: "pointer",
+            }}
+          >
+            {n} міс.
+          </button>
+        ))}
+      </div>
+
       <div className="bd-charts">
         <section className="bd-panel">
           <h2>
-            Кілометри <span>рейсів цього місяця: {tripsThisMonth}</span>
+            Кілометри <span>{Math.round(totalKm).toLocaleString("uk-UA")} км за {period} міс.</span>
           </h2>
-          <Bars data={kmByMonth} />
+          <Bars data={kmByMonth} unit="км" />
+          <p className="bd-empty" style={{ marginTop: 10 }}>
+            Рейсів цього місяця: {tripsThisMonth}
+            {withoutMileage > 0
+              ? `. У ${withoutMileage} з ${finishedInPeriod.length} завершених рейсів не вказано пробіг, тому вони не враховані в кілометрах.`
+              : ""}
+          </p>
         </section>
         <section className="bd-panel">
           <h2>
-            Ремонти <span>за 6 міс.: {costByMonth.reduce((s, m) => s + m.value, 0).toLocaleString("uk-UA")}</span>
+            Ремонти <span>за {period} міс.: {totalCost.toLocaleString("uk-UA")}</span>
           </h2>
           <Bars data={costByMonth} cost />
         </section>
@@ -358,8 +410,9 @@ export default function BossDashboard() {
         return;
       }
 
+      // Ремонти беремо за 12 місяців, щоб працював перемикач періоду
       const since = new Date();
-      since.setMonth(since.getMonth() - 6);
+      since.setMonth(since.getMonth() - 12);
       const sinceStr = since.toISOString().slice(0, 10);
 
       const [company, vehiclesRes, issuesRes, servicesRes, trips, drivers, docsRes] =

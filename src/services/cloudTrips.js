@@ -1,12 +1,16 @@
 import { supabase } from "../lib/supabase";
 import { getMyProfile } from "./profile";
 
-// Рейс належить фірмі, тільки якщо був створений у цій фірмі
-// і ти досі в ній. Інакше це особистий рейс.
+// Якщо водій зараз у фірмі — рейс належить цій фірмі.
+// Виняток: рейс явно створений в іншій фірмі — тоді він особистий.
+// Якщо водій не в фірмі — рейс особистий.
 function tripCompanyId(trip, profile) {
+  if (!profile?.company_id) return null;
+
   const id = trip?.companyId || null;
-  if (!id || !profile?.company_id) return null;
-  return String(id) === String(profile.company_id) ? profile.company_id : null;
+  if (id && String(id) !== String(profile.company_id)) return null;
+
+  return profile.company_id;
 }
 
 export async function loadTripsFromCloud() {

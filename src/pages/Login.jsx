@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Mail, ChevronUp } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import { getMyProfile } from "../services/profile";
 
 function GoogleIcon() {
   return (
-    <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true">
+    <svg width="20" height="20" viewBox="0 0 48 48" aria-hidden="true">
       <path
         fill="#EA4335"
         d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"
@@ -32,6 +33,7 @@ export default function Login() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showEmail, setShowEmail] = useState(false);
   const [isRegister, setIsRegister] = useState(false);
   const [loading, setLoading] = useState(false);
   const [forgotLoading, setForgotLoading] = useState(false);
@@ -74,6 +76,15 @@ export default function Login() {
       sub.subscription.unsubscribe();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Кнопка Назад із Google повертає сторінку з кешу: знімаємо «Переходимо до Google...»
+  useEffect(() => {
+    const onShow = (e) => {
+      if (e.persisted) setGoogleLoading(false);
+    };
+    window.addEventListener("pageshow", onShow);
+    return () => window.removeEventListener("pageshow", onShow);
   }, []);
 
   const onSubmit = async (e) => {
@@ -181,39 +192,42 @@ export default function Login() {
     }
   };
 
+  const busy = loading || forgotLoading || googleLoading;
+
   const field = {
     width: "100%",
     padding: "14px",
     marginBottom: 12,
     borderRadius: 12,
-    border: "1px solid #30363D",
-    background: "#111827",
-    color: "white",
+    border: "1px solid var(--border)",
+    background: "var(--surface)",
+    color: "var(--text)",
     boxSizing: "border-box",
+    font: "inherit",
   };
 
-  const secondaryButton = {
+  const linkButton = {
     background: "transparent",
     border: "none",
-    color: "#94a3b8",
+    color: "var(--text-secondary)",
     cursor: "pointer",
     padding: "8px 0",
     textAlign: "left",
+    font: "inherit",
   };
 
-  const googleButton = {
-    ...field,
+  const bigButton = {
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
     gap: 10,
-    background: "transparent",
-    fontWeight: 600,
-    cursor: googleLoading ? "wait" : "pointer",
-    marginBottom: 0,
+    width: "100%",
+    padding: "14px",
+    borderRadius: 12,
+    font: "inherit",
+    fontWeight: 700,
+    boxSizing: "border-box",
   };
-
-  const busy = loading || forgotLoading || googleLoading;
 
   return (
     <div
@@ -222,168 +236,213 @@ export default function Login() {
         maxWidth: 420,
         margin: "60px auto",
         padding: 16,
-        color: "white",
+        color: "var(--text)",
       }}
     >
       <h1 style={{ marginBottom: 8 }}>TruckReport</h1>
 
-      <p style={{ color: "#94a3b8", marginBottom: 24 }}>
-        {isRegister ? "Реєстрація" : "Вхід"}
+      <p style={{ color: "var(--text-secondary)", marginBottom: 28 }}>
+        Рейси, витрати й Шенген в одному місці для водіїв та шефів.
       </p>
 
-      <form onSubmit={onSubmit}>
-        <input
-          type="email"
-          placeholder="Email"
-          autoComplete="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          style={field}
-          required
-        />
+      <button
+        type="button"
+        onClick={onGoogle}
+        disabled={busy}
+        style={{
+          ...bigButton,
+          background: "#ffffff",
+          color: "#1f1f1f",
+          border: "none",
+          cursor: googleLoading ? "wait" : "pointer",
+        }}
+      >
+        <GoogleIcon />
+        {googleLoading ? "Переходимо до Google..." : "Продовжити з Google"}
+      </button>
 
-        <input
-          type="password"
-          placeholder="Пароль"
-          autoComplete={isRegister ? "new-password" : "current-password"}
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          style={field}
-          required
-        />
-
-        {!isRegister && (
-          <div style={{ marginTop: -5, marginBottom: 12 }}>
-            <button
-              type="button"
-              onClick={onForgotPassword}
-              disabled={forgotLoading}
-              style={{
-                ...secondaryButton,
-                color: "#22c55e",
-              }}
-            >
-              {forgotLoading ? "Надсилаємо лист..." : "Забули пароль?"}
-            </button>
-          </div>
-        )}
-
-        {error && (
-          <p
-            role="alert"
-            style={{
-              color: "#f87171",
-              fontSize: 14,
-              marginBottom: 12,
-            }}
-          >
-            {error}
-          </p>
-        )}
-
-        {message && (
-          <p
-            role="status"
-            style={{
-              color: "#22c55e",
-              fontSize: 14,
-              marginBottom: 12,
-            }}
-          >
-            {message}
-          </p>
-        )}
-
-        <button
-          type="submit"
-          disabled={busy}
+      {error && (
+        <p
+          role="alert"
           style={{
-            ...field,
-            background: "#22c55e",
-            border: "none",
-            fontWeight: 700,
-            cursor: loading ? "wait" : "pointer",
-            marginBottom: 12,
+            color: "var(--danger)",
+            fontSize: 14,
+            margin: "12px 0 0",
           }}
         >
-          {loading
-            ? "Зачекай..."
-            : isRegister
-              ? "Зареєструватись"
-              : "Увійти"}
-        </button>
-      </form>
+          {error}
+        </p>
+      )}
+
+      {message && (
+        <p
+          role="status"
+          style={{
+            color: "var(--primary)",
+            fontSize: 14,
+            margin: "12px 0 0",
+          }}
+        >
+          {message}
+        </p>
+      )}
 
       <div
         style={{
           display: "flex",
           alignItems: "center",
           gap: 12,
-          margin: "16px 0",
-          color: "#6b7684",
+          margin: "20px 0",
+          color: "var(--text-muted)",
           fontSize: 13,
         }}
       >
-        <div style={{ flex: 1, height: 1, background: "#262d38" }} />
+        <div style={{ flex: 1, height: 1, background: "var(--border)" }} />
         або
-        <div style={{ flex: 1, height: 1, background: "#262d38" }} />
+        <div style={{ flex: 1, height: 1, background: "var(--border)" }} />
       </div>
 
-      <button
-        type="button"
-        onClick={onGoogle}
-        disabled={busy}
-        style={googleButton}
-      >
-        <GoogleIcon />
-              {googleLoading
-          ? "Переходимо до Google..."
-          : isRegister
-            ? "Зареєструватись через Google"
-            : "Увійти через Google"}
-      </button>
-
-      <div style={{ marginTop: 16 }}>
+      {!showEmail ? (
         <button
           type="button"
-          onClick={() => {
-            setIsRegister((v) => !v);
-            setError("");
-            setMessage("");
+          onClick={() => setShowEmail(true)}
+          style={{
+            ...bigButton,
+            background: "transparent",
+            color: "var(--text)",
+            border: "1px solid var(--border)",
+            cursor: "pointer",
+            fontWeight: 600,
           }}
-          style={secondaryButton}
         >
-          {isRegister
-            ? "Вже є акаунт? Увійти"
-            : "Немає акаунта? Реєстрація"}
+          <Mail size={18} />
+          Увійти за email
         </button>
-      </div>
+      ) : (
+        <form onSubmit={onSubmit}>
+          <input
+            type="email"
+            placeholder="Email"
+            autoComplete="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            style={field}
+            required
+          />
 
-      <div style={{ marginTop: 6 }}>
+          <input
+            type="password"
+            placeholder="Пароль"
+            autoComplete={isRegister ? "new-password" : "current-password"}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            style={field}
+            required
+          />
+
+          {!isRegister && (
+            <div style={{ marginTop: -5, marginBottom: 12 }}>
+              <button
+                type="button"
+                onClick={onForgotPassword}
+                disabled={forgotLoading}
+                style={{ ...linkButton, color: "var(--primary)" }}
+              >
+                {forgotLoading ? "Надсилаємо лист..." : "Забули пароль?"}
+              </button>
+            </div>
+          )}
+
+          <button
+            type="submit"
+            disabled={busy}
+            style={{
+              ...bigButton,
+              background: "var(--primary)",
+              color: "#06210f",
+              border: "none",
+              cursor: loading ? "wait" : "pointer",
+              marginBottom: 8,
+            }}
+          >
+            {loading
+              ? "Зачекай..."
+              : isRegister
+                ? "Зареєструватись"
+                : "Увійти"}
+          </button>
+
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              gap: 12,
+            }}
+          >
+            <button
+              type="button"
+              onClick={() => {
+                setIsRegister((v) => !v);
+                setError("");
+                setMessage("");
+              }}
+              style={linkButton}
+            >
+              {isRegister
+                ? "Вже є акаунт? Увійти"
+                : "Немає акаунта? Реєстрація"}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setShowEmail(false);
+                setError("");
+                setMessage("");
+              }}
+              style={{
+                ...linkButton,
+                display: "flex",
+                alignItems: "center",
+                gap: 4,
+              }}
+            >
+              <ChevronUp size={16} />
+              Сховати
+            </button>
+          </div>
+        </form>
+      )}
+
+      <div style={{ marginTop: 20 }}>
         <button
           type="button"
           onClick={() => navigate("/demo")}
-          style={{ ...secondaryButton, color: "#22c55e" }}
+          style={{ ...linkButton, color: "var(--primary)" }}
         >
           Переглянути демо
         </button>
       </div>
-          <div
+
+      <p
         style={{
-          marginTop: 28,
-          display: "flex",
-          flexWrap: "wrap",
-          gap: 16,
+          marginTop: 24,
           fontSize: 13,
+          lineHeight: 1.5,
+          color: "var(--text-muted)",
         }}
       >
-        <a href="/privacy" style={{ color: "#6b7684" }}>
-          Політика конфіденційності
+        Продовжуючи, ви погоджуєтесь з{" "}
+        <a href="/terms" style={{ color: "var(--text-secondary)" }}>
+          Умовами користування
+        </a>{" "}
+        та{" "}
+        <a href="/privacy" style={{ color: "var(--text-secondary)" }}>
+          Політикою конфіденційності
         </a>
-        <a href="/terms" style={{ color: "#6b7684" }}>
-          Умови користування
-        </a>
-      </div>
+        .
+      </p>
     </div>
   );
 }
