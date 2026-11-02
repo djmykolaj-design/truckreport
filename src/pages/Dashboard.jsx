@@ -30,6 +30,10 @@ export default function Dashboard() {
     documentsCount,
     schengen,
     schengenColor,
+    schengenInfo,
+    schengenBusy,
+    enterSchengen,
+    leaveSchengen,
   } = useDashboard();
 
   const [firmCode, setFirmCode] = useState("");
@@ -37,6 +41,7 @@ export default function Dashboard() {
   const [leaving, setLeaving] = useState(false);
   const [myCompany, setMyCompany] = useState(null);
   const [planInfo, setPlanInfo] = useState(null);
+  const [schengenError, setSchengenError] = useState("");
 
   useEffect(() => {
     let cancelled = false;
@@ -107,6 +112,26 @@ export default function Dashboard() {
     } finally {
       setLeaving(false);
     }
+  };
+
+  const todayLabel = new Date().toLocaleDateString("uk-UA");
+
+  const handleEnterSchengen = async () => {
+    if (schengenBusy) return;
+    if (!window.confirm(`Відмітити в'їзд у Шенген сьогодні (${todayLabel})?`)) return;
+
+    setSchengenError("");
+    const result = await enterSchengen();
+    if (!result.ok && result.error) setSchengenError(result.error);
+  };
+
+  const handleLeaveSchengen = async () => {
+    if (schengenBusy) return;
+    if (!window.confirm(`Відмітити виїзд із Шенгену сьогодні (${todayLabel})?`)) return;
+
+    setSchengenError("");
+    const result = await leaveSchengen();
+    if (!result.ok && result.error) setSchengenError(result.error);
   };
 
   return (
@@ -246,6 +271,64 @@ export default function Dashboard() {
             }}
           />
         </div>
+      </section>
+
+      <section className="hero-card" style={{ marginTop: 8 }}>
+        <div className="hero-title">Шенген: швидка відмітка</div>
+
+        <div className="hero-empty" style={{ marginTop: 10 }}>
+          {schengenInfo.inZone
+            ? `Ви в Шенгені з ${schengenInfo.since} · ${schengenInfo.dayInZone}-й день`
+            : "Ви поза Шенгеном"}
+        </div>
+
+        {schengenInfo.inZone && schengenInfo.exitBy && (
+          <div
+            style={{
+              marginTop: 6,
+              fontSize: 14,
+              color: schengenInfo.exitInDays <= 5 ? "#ef4444" : "#94a3b8",
+            }}
+          >
+            Виїхати до {schengenInfo.exitBy}
+            {schengenInfo.exitInDays === 0
+              ? " (сьогодні останній день)"
+              : ` (ще ${schengenInfo.exitInDays} дн.)`}
+          </div>
+        )}
+
+        {schengenInfo.inZone && !schengenInfo.exitBy && (
+          <div style={{ marginTop: 6, fontSize: 14, color: "#ef4444" }}>
+            Ліміт 90 днів перевищено. Виїжджайте якнайшвидше.
+          </div>
+        )}
+
+        {schengenError && (
+          <div role="alert" style={{ marginTop: 8, fontSize: 13, color: "#ef4444" }}>
+            {schengenError}
+          </div>
+        )}
+
+        {schengenInfo.inZone ? (
+          <button
+            className="hero-btn"
+            style={{ marginTop: 12, background: "#ef4444" }}
+            disabled={schengenBusy}
+            onClick={handleLeaveSchengen}
+          >
+            {schengenBusy ? "Зберігаю…" : "Виїхав із Шенгену"}
+          </button>
+        ) : (
+          <button
+            className="hero-btn"
+            style={{ marginTop: 12 }}
+            disabled={schengenBusy}
+            onClick={handleEnterSchengen}
+          >
+            {schengenBusy ? "Зберігаю…" : "Я в'їхав у Шенген"}
+            <ArrowRight size={18} />
+          </button>
+        )}
       </section>
 
       <section className="hero-card" style={{ marginTop: 8 }}>
