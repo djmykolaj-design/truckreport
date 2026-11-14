@@ -248,3 +248,14 @@
     font-size: 36px;
   }
 }
+
+/* Приглушений зелений для кнопок */
+.hero-btn {
+  background: #1f9d55;
+  color: #eafff2;
+  box-shadow: none;
+}
+
+.hero-btn:hover:not(:disabled) {
+  background: #1b8a4b;
+}

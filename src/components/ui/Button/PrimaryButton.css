@@ -14,14 +14,14 @@
 
     transition: var(--transition);
 
-    background: var(--primary);
-    color: white;
+    background: #1f9d55;
+    color: #eafff2;
 
-    box-shadow: var(--shadow);
+    box-shadow: none;
 }
 
 .tr-btn:hover {
-    transform: translateY(-2px);
+    transform: translateY(-1px);
 }
 
 .tr-btn:active {
@@ -36,21 +36,21 @@
 /* ---------- Variants ---------- */
 
 .tr-btn-primary {
-    background: var(--primary);
-    color: white;
+    background: #1f9d55;
+    color: #eafff2;
 }
 
 .tr-btn-primary:hover {
-    background: var(--primary-hover);
+    background: #1b8a4b;
 }
 
 .tr-btn-danger {
-    background: #ef4444;
-    color: white;
+    background: #c0392b;
+    color: #fff5f4;
 }
 
 .tr-btn-danger:hover {
-    background: #dc2626;
+    background: #a93226;
 }
 
 .tr-btn-secondary {
@@ -60,7 +60,7 @@
 }
 
 .tr-btn-secondary:hover {
-    border-color: var(--primary);
+    border-color: #1f9d55;
 }
 
 .tr-btn-ghost {
@@ -107,7 +107,7 @@
     height: 18px;
 
     border: 2px solid rgba(255,255,255,.35);
-    border-top: 2px solid white;
+    border-top: 2px solid #eafff2;
 
     border-radius: 50%;
 

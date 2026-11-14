@@ -312,7 +312,7 @@ export default function Dashboard() {
         {schengenInfo.inZone ? (
           <button
             className="hero-btn"
-            style={{ marginTop: 12, background: "#ef4444" }}
+            style={{ marginTop: 12, background: "#c0392b" }}
             disabled={schengenBusy}
             onClick={handleLeaveSchengen}
           >
@@ -344,7 +344,7 @@ export default function Dashboard() {
               className="hero-btn"
               style={{
                 marginTop: 12,
-                background: "#ef4444",
+                background: "#c0392b",
               }}
               disabled={leaving || joining}
               onClick={handleLeave}
