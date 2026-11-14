@@ -5,6 +5,7 @@
   padding: 18px;
   margin-bottom: 14px;
   color: var(--text, #f8fafc);
+  overflow: hidden;
 }
 
 .sg-hero-top {
@@ -76,16 +77,17 @@
 
 .sg-kpi {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 8px;
 }
 
 .sg-kpi-card {
   background: var(--surface-light, #0f172a);
   border-radius: 12px;
-  padding: 12px 8px;
+  padding: 12px 6px;
   text-align: center;
   min-width: 0;
+  overflow: hidden;
 }
 
 .sg-kpi-title {
@@ -95,9 +97,11 @@
 }
 
 .sg-kpi-value {
-  font-size: 20px;
+  font-size: clamp(14px, 4.4vw, 20px);
   font-weight: 800;
   line-height: 1.15;
+  letter-spacing: -0.3px;
+  white-space: nowrap;
 }
 
 .sg-kpi-sub {
@@ -109,9 +113,5 @@
 @media (max-width: 768px) {
   .sg-big {
     font-size: 48px;
-  }
-
-  .sg-kpi-value {
-    font-size: 17px;
   }
 }

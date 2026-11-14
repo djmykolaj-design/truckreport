@@ -9,6 +9,7 @@ import {
   LogOut,
   AlertTriangle,
   Users,
+  Crown,
 } from "lucide-react";
 import "./BottomNav.css";
 import { supabase } from "../../lib/supabase";
@@ -29,6 +30,7 @@ export default function BottomNav() {
 
   const boss = isBoss(profile);
   const driver = profile && !boss;
+  const inCompany = Boolean(profile?.company_id);
 
   const itemClass = ({ isActive }) =>
     `bottom-nav-item ${isActive ? "active" : ""}`;
@@ -52,10 +54,17 @@ export default function BottomNav() {
             <span>Шенген</span>
           </NavLink>
 
-          <NavLink to="/report-breakdown" className={itemClass}>
-            <AlertTriangle size={22} />
-            <span>Поломка</span>
-          </NavLink>
+          {inCompany ? (
+            <NavLink to="/report-breakdown" className={itemClass}>
+              <AlertTriangle size={22} />
+              <span>Поломка</span>
+            </NavLink>
+          ) : (
+            <NavLink to="/pricing" className={itemClass}>
+              <Crown size={22} />
+              <span>Тарифи</span>
+            </NavLink>
+          )}
         </>
       )}
 
@@ -78,16 +87,10 @@ export default function BottomNav() {
         </>
       )}
 
-      <button
+            <button
         type="button"
         className="bottom-nav-item"
         onClick={handleLogout}
-        style={{
-          background: "transparent",
-          border: "none",
-          cursor: "pointer",
-          color: "inherit",
-        }}
       >
         <LogOut size={22} />
         <span>Вийти</span>
