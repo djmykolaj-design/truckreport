@@ -4,16 +4,69 @@ import { getMyProfile } from "./profile";
 // Скільки днів рейс лежить у кошику, перш ніж його можна прибрати назавжди
 export const TRASH_DAYS = 30;
 
-// Якщо водій зараз у фірмі — рейс належить цій фірмі.
-// Виняток: рейс явно створений в іншій фірмі — тоді він особистий.
-// Якщо водій не в фірмі — рейс особистий.
-function tripCompanyId(trip, profile) {
+// Номер без пробілів, у верхньому регістрі; кирилична й латинська літери
+// однакового вигляду (напр. «ВО» і «BO») вважаються однаковими.
+const PLATE_LOOKALIKES = {
+  А: "A", В: "B", Е: "E", К: "K", М: "M", Н: "H",
+  О: "O", Р: "P", С: "C", Т: "T", Х: "X", І: "I",
+};
+
+function plateKey(value) {
+  return String(value || "")
+    .trim()
+    .replace(/\s+/g, "")
+    .toUpperCase()
+    .split("")
+    .map((ch) => PLATE_LOOKALIKES[ch] || ch)
+    .join("");
+}
+
+// Номери автопарку фірми (кеш на хвилину, щоб не питати базу при кожному збереженні)
+let fleetCache = { companyId: null, at: 0, plates: null };
+
+async function loadCompanyPlates(companyId) {
+  const fresh =
+    fleetCache.companyId === companyId && Date.now() - fleetCache.at < 60000;
+
+  if (fresh) return fleetCache.plates;
+
+  const { data, error } = await supabase
+    .from("fleet_vehicles")
+    .select("plate_number")
+    .eq("company_id", companyId);
+
+  if (error) {
+    console.error("loadCompanyPlates:", error);
+    return null;
+  }
+
+  const plates = new Set(
+    (data || []).map((v) => plateKey(v.plate_number)).filter(Boolean)
+  );
+
+  fleetCache = { companyId, at: Date.now(), plates };
+  return plates;
+}
+
+// Рейс належить фірмі, лише якщо його тягач або причіп є в автопарку цієї фірми.
+// Інакше рейс особистий (company_id = null).
+// Якщо автопарк прочитати не вдалося (plates = null), статус рейсу не змінюємо.
+function tripCompanyId(trip, profile, plates) {
   if (!profile?.company_id) return null;
 
   const id = trip?.companyId || null;
   if (id && String(id) !== String(profile.company_id)) return null;
 
-  return profile.company_id;
+  if (!plates) {
+    return id && String(id) === String(profile.company_id)
+      ? profile.company_id
+      : null;
+  }
+
+  const inFleet =
+    plates.has(plateKey(trip?.truck)) || plates.has(plateKey(trip?.trailer));
+
+  return inFleet ? profile.company_id : null;
 }
 
 export async function loadTripsFromCloud() {
@@ -50,11 +103,14 @@ export async function saveTripToCloud(trip) {
   if (!user || !trip?.id) return;
 
   const profile = await getMyProfile();
+  const plates = profile?.company_id
+    ? await loadCompanyPlates(profile.company_id)
+    : null;
 
   const { error } = await supabase.from("trips").upsert({
     id: trip.id,
     user_id: user.id,
-    company_id: tripCompanyId(trip, profile),
+    company_id: tripCompanyId(trip, profile, plates),
     data: trip,
     status: trip.status || "active",
     updated_at: new Date().toISOString(),
@@ -73,11 +129,14 @@ export async function saveAllTripsToCloud(trips) {
   if (!user) return;
 
   const profile = await getMyProfile();
+  const plates = profile?.company_id
+    ? await loadCompanyPlates(profile.company_id)
+    : null;
 
   const rows = trips.map((trip) => ({
     id: trip.id,
     user_id: user.id,
-    company_id: tripCompanyId(trip, profile),
+    company_id: tripCompanyId(trip, profile, plates),
     data: trip,
     status: trip.status || "active",
     updated_at: new Date().toISOString(),
