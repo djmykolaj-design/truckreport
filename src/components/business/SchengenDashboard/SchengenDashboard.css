@@ -115,3 +115,8 @@
     font-size: 48px;
   }
 }
+/* Третя плитка містить дату, тому шрифт у ній менший */
+.sg-kpi .sg-kpi-card:nth-child(3) .sg-kpi-value {
+  font-size: clamp(11px, 2.7vw, 16px) !important;
+  letter-spacing: -0.4px !important;
+}
