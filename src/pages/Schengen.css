@@ -4,6 +4,7 @@
   margin: 0;
   padding: 0 0 24px;
   color: #f8fafc;
+  overflow-x: hidden;
 }
 
 /* ================= HEADER ================= */
@@ -33,6 +34,8 @@
   border-radius: 18px;
   padding: 16px;
   margin-bottom: 12px;
+  box-sizing: border-box;
+  max-width: 100%;
 }
 
 .schengen-card h2 {
@@ -45,12 +48,19 @@
 
 .schengen-form {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 10px;
+}
+
+/* елементи сітки можуть стискатися, інакше поле дати розпирає картку */
+.schengen-form > * {
+  min-width: 0;
 }
 
 .schengen-form input {
   width: 100%;
+  min-width: 0;
+  max-width: 100%;
   padding: 12px;
   border-radius: 12px;
   border: 1px solid #334155;
@@ -58,6 +68,18 @@
   color: white;
   font-size: 14px;
   box-sizing: border-box;
+}
+
+/* Поля дати на iPhone/Safari: власна мінімальна ширина та висота */
+.schengen-card input[type="date"],
+.schengen-form input[type="date"] {
+  display: block;
+  min-width: 0;
+  max-width: 100%;
+  min-height: 46px;
+  -webkit-appearance: none;
+  appearance: none;
+  text-align: left;
 }
 
 .schengen-form button {
@@ -183,7 +205,7 @@
   }
 
   .schengen-form {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .stay-row,

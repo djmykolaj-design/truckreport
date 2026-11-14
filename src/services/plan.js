@@ -15,24 +15,28 @@ const FEATURES = {
     fullTripHistory: false,
     export: false,
     analytics: false,
+    schengenPlanner: false,
     cloudBackup: true,
   },
   pro: {
     fullTripHistory: true,
     export: true,
     analytics: true,
+    schengenPlanner: true,
     cloudBackup: true,
   },
   business: {
     fullTripHistory: true,
     export: true,
     analytics: true,
+    schengenPlanner: true,
     cloudBackup: true,
   },
   owner: {
     fullTripHistory: true,
     export: true,
     analytics: true,
+    schengenPlanner: true,
     cloudBackup: true,
   },
 };

@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   calculateRollingSchengen,
   findOverlap,
@@ -17,6 +18,7 @@ import {
   loadStaysFromCloud,
   saveStaysToCloud,
 } from "../services/cloudStays";
+import { getMyPlan, can } from "../services/plan";
 
 const STATUS_COLORS = {
   ok: "#22c55e",
@@ -36,6 +38,45 @@ const formatDate = (date) => {
   return new Date(date).toLocaleDateString("uk-UA");
 };
 
+// Картка для безкоштовного плану замість планувальника
+function PlannerLocked({ onUpgrade }) {
+  return (
+    <div
+      style={{
+        padding: 16,
+        borderRadius: 14,
+        border: "1px solid #334155",
+        background: "#111827",
+        color: "#cbd5e1",
+        boxSizing: "border-box",
+      }}
+    >
+      <div style={{ fontWeight: 600, fontSize: 16 }}>Планувальник поїздки</div>
+      <div style={{ marginTop: 6, color: "#94a3b8", fontSize: 14, lineHeight: 1.45 }}>
+        Покаже, коли найкраще виїхати в Шенген, скільки днів ви зможете там
+        пробути і коли дні повернуться. Доступний на планах Pro і Business.
+      </div>
+      <button
+        type="button"
+        onClick={onUpgrade}
+        style={{
+          marginTop: 12,
+          width: "100%",
+          padding: "10px",
+          borderRadius: 10,
+          border: "1px solid #22c55e",
+          background: "transparent",
+          color: "#22c55e",
+          fontWeight: 600,
+          cursor: "pointer",
+        }}
+      >
+        Дивитись тарифи
+      </button>
+    </div>
+  );
+}
+
 export default function Schengen() {
   const [start, setStart] = useState("");
   const [end, setEnd] = useState("");
@@ -43,6 +84,9 @@ export default function Schengen() {
   const [stays, setStays] = useState([]);
   const [loadingStays, setLoadingStays] = useState(true);
   const [cloudReady, setCloudReady] = useState(false);
+  const [planInfo, setPlanInfo] = useState(null);
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     async function init() {
@@ -66,6 +110,18 @@ export default function Schengen() {
     }
 
     init();
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    getMyPlan().then((info) => {
+      if (!cancelled) setPlanInfo(info);
+    });
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   useEffect(() => {
@@ -164,6 +220,8 @@ export default function Schengen() {
     );
   }
 
+  const plannerAllowed = planInfo && can(planInfo.plan, "schengenPlanner");
+
   return (
     <div className="schengen-page">
       <div className="schengen-header">
@@ -171,15 +229,19 @@ export default function Schengen() {
         <p>Контроль 90/180</p>
       </div>
 
-      <SchengenDashboard
+          <SchengenDashboard
         result={result}
         color={color}
         future={future}
         formatDate={formatDate}
         inZone={inZone}
+        stays={stays}
       />
 
-      <SchengenPlanner stays={stays} />
+      {planInfo && plannerAllowed && <SchengenPlanner stays={stays} />}
+      {planInfo && !plannerAllowed && (
+        <PlannerLocked onUpgrade={() => navigate("/pricing")} />
+      )}
 
       <SchengenCalendar stays={stays} />
 
