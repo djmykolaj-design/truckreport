@@ -9,6 +9,7 @@ export async function loadFleetTrips() {
     .from("trips")
     .select("id, user_id, company_id, data, status, updated_at")
     .eq("company_id", profile.company_id)
+    .is("deleted_at", null)
     .order("updated_at", { ascending: false });
 
   if (error) {

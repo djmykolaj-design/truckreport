@@ -3,13 +3,18 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import TripList from "../components/TripList";
 import TripForm from "../components/TripForm";
 import TripDetails from "../components/TripDetails";
+import TripTrash from "../components/TripTrash";
 import useTripForm from "../hooks/useTripForm";
 import {
   loadTripsFromCloud,
   saveAllTripsToCloud,
   deleteTripFromCloud,
+  TRASH_DAYS,
 } from "../services/cloudTrips";
-import { markVehicleInTrip } from "../services/fleetStatus";
+import {
+  markVehicleInTrip,
+  markVehicleAvailable,
+} from "../services/fleetStatus";
 import { getMyProfile } from "../services/profile";
 import { getMyPlan, can, FREE_TRIP_LIMIT } from "../services/plan";
 
@@ -19,6 +24,23 @@ function tripsWord(n) {
   if (mod10 === 1 && mod100 !== 11) return "рейс";
   if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return "рейси";
   return "рейсів";
+}
+
+// Порівняння номерів: без пробілів, верхній регістр, кирилична й латинська
+// літери однакового вигляду (напр. «ВО» і «BO») вважаються однаковими.
+const PLATE_LOOKALIKES = {
+  А: "A", В: "B", Е: "E", К: "K", М: "M", Н: "H",
+  О: "O", Р: "P", С: "C", Т: "T", Х: "X", І: "I",
+};
+
+function plateKey(value) {
+  return String(value || "")
+    .trim()
+    .replace(/\s+/g, "")
+    .toUpperCase()
+    .split("")
+    .map((ch) => PLATE_LOOKALIKES[ch] || ch)
+    .join("");
 }
 
 function HistoryNote({ hidden, onUpgrade }) {
@@ -67,6 +89,7 @@ function HistoryNote({ hidden, onUpgrade }) {
 
 export default function TripsV4() {
   const [showForm, setShowForm] = useState(false);
+  const [showTrash, setShowTrash] = useState(false);
   const [trips, setTrips] = useState([]);
   const [loadingTrips, setLoadingTrips] = useState(true);
   const [cloudReady, setCloudReady] = useState(false);
@@ -197,15 +220,77 @@ export default function TripsV4() {
     setShowForm(false);
   };
 
-  const deleteTrip = (id) => {
-    if (!window.confirm("Видалити рейс?")) return;
+  // Рейс не стирається, а переходить у «Кошик» на TRASH_DAYS днів.
+  // Якщо рейс був активним, тягач і причіп знову стають вільними
+  // (крім випадку, коли їх уже використовує інший активний рейс).
+  const deleteTrip = async (id) => {
+    const trip = trips.find((t) => t.id === id);
+    const label = trip?.tripNumber ? ` №${trip.tripNumber}` : "";
 
-    setTrips((prev) => prev.filter((trip) => trip.id !== id));
-    deleteTripFromCloud(id);
+    const confirmed = window.confirm(
+      `Видалити рейс${label}?\n\nВін потрапить у «Кошик», де його можна відновити протягом ${TRASH_DAYS} днів.`
+    );
+    if (!confirmed) return;
+
+    const ok = await deleteTripFromCloud(id);
+
+    if (!ok) {
+      alert("Не вдалося видалити рейс. Перевірте з'єднання й спробуйте ще раз.");
+      return;
+    }
+
+    setTrips((prev) => prev.filter((t) => t.id !== id));
 
     if (selectedTrip?.id === id) {
       setSelectedTrip(null);
     }
+
+    if (trip?.status === "active") {
+      const usedByOther = (plate) =>
+        trips.some(
+          (t) =>
+            t.id !== id &&
+            t.status === "active" &&
+            (plateKey(t.truck) === plateKey(plate) ||
+              plateKey(t.trailer) === plateKey(plate))
+        );
+
+      try {
+        if (trip.truck && !usedByOther(trip.truck)) {
+          await markVehicleAvailable(trip.truck);
+        }
+        if (trip.trailer && !usedByOther(trip.trailer)) {
+          await markVehicleAvailable(trip.trailer);
+        }
+      } catch (error) {
+        console.error("Не вдалося звільнити тягач або причіп:", error);
+      }
+    }
+  };
+
+  // Повернення рейсу з кошика назад у список
+  const restoreTrip = async (restored) => {
+    const { deletedAt, ...clean } = restored;
+    void deletedAt;
+
+    setTrips((prev) =>
+      prev.some((t) => t.id === clean.id) ? prev : [clean, ...prev]
+    );
+
+    // Відновлений активний рейс знову займає тягач і причіп
+    if (clean.status === "active") {
+      try {
+        if (clean.truck) await markVehicleInTrip(clean.truck);
+        if (clean.trailer) await markVehicleInTrip(clean.trailer);
+      } catch (error) {
+        console.error("Не вдалося позначити тягач або причіп:", error);
+      }
+    }
+  };
+
+  const openForm = () => {
+    setShowTrash(false);
+    setShowForm(true);
   };
 
   const sortedTrips = [...trips].sort((a, b) => {
@@ -275,6 +360,18 @@ export default function TripsV4() {
       );
     }
 
+    if (showTrash) {
+      return (
+        <div style={{ padding: "12px", paddingBottom: "90px" }}>
+          <button onClick={() => setShowTrash(false)} style={backButton}>
+            ← До списку рейсів
+          </button>
+
+          <TripTrash onRestore={restoreTrip} cardStyle={cardStyle} />
+        </div>
+      );
+    }
+
     if (selectedTrip) {
       return (
         <div style={{ padding: "12px", paddingBottom: "90px" }}>
@@ -304,8 +401,11 @@ export default function TripsV4() {
       <div style={{ padding: "12px", paddingBottom: "90px" }}>
         <div style={cardStyle}>
           <h2 style={{ margin: "0 0 16px" }}>Рейси</h2>
-          <button onClick={() => setShowForm(true)} style={greenButton}>
+          <button onClick={openForm} style={greenButton}>
             Новий рейс
+          </button>
+          <button onClick={() => setShowTrash(true)} style={trashButton}>
+            Кошик
           </button>
         </div>
 
@@ -337,15 +437,27 @@ export default function TripsV4() {
       <div style={{ width: "360px" }}>
         <div style={cardStyle}>
           <h2>РЕЙСИ</h2>
-          <button onClick={() => setShowForm(true)} style={greenButton}>
+          <button onClick={openForm} style={greenButton}>
             Новий рейс
+          </button>
+          <button
+            onClick={() => {
+              setShowForm(false);
+              setShowTrash((v) => !v);
+            }}
+            style={trashButton}
+          >
+            Кошик
           </button>
         </div>
 
         <TripList
           trips={visibleTrips}
           selectedTrip={selectedTrip}
-          setSelectedTrip={setSelectedTrip}
+          setSelectedTrip={(trip) => {
+            setShowTrash(false);
+            setSelectedTrip(trip);
+          }}
         />
         <HistoryNote
           hidden={hiddenCount}
@@ -377,7 +489,11 @@ export default function TripsV4() {
           />
         )}
 
-        {!showForm && selectedTrip && (
+        {!showForm && showTrash && (
+          <TripTrash onRestore={restoreTrip} cardStyle={cardStyle} />
+        )}
+
+        {!showForm && !showTrash && selectedTrip && (
           <TripDetails
             key={selectedTrip.id}
             trip={selectedTrip}
@@ -420,6 +536,19 @@ const greenButton = {
   color: "white",
   cursor: "pointer",
   fontWeight: "bold",
+  fontSize: "15px",
+};
+
+const trashButton = {
+  marginTop: "10px",
+  width: "100%",
+  padding: "12px",
+  borderRadius: "12px",
+  border: "1px solid #334155",
+  background: "transparent",
+  color: "#cbd5e1",
+  cursor: "pointer",
+  fontWeight: "500",
   fontSize: "15px",
 };
 
