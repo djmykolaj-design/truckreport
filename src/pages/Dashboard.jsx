@@ -149,7 +149,7 @@ export default function Dashboard() {
     if (leaving || joining) return;
 
     const confirmed = window.confirm(
-      `Від'єднатися від фірми «${myCompany?.name}»?\n\nТвій профіль перейде в особистий режим. Інші учасники фірми не повинні бути від'єднані.`
+    `Від'єднатися від фірми «${myCompany?.name}»?\n\nТвій профіль перейде в особистий режим. Рейси фірми більше не будуть їй видимі.`
     );
 
     if (!confirmed) return;
@@ -409,8 +409,8 @@ export default function Dashboard() {
         ) : joinRequest ? (
           <>
             <div className="hero-empty" style={{ marginTop: 10 }}>
-              Заявку надіслано у фірму «{joinRequest.company_name}».
-              Чекайте підтвердження шефа.
+             Заявку надіслано у фірму «{joinRequest.company_name}».
+              Чекайте підтвердження керівника.
             </div>
 
             <button
