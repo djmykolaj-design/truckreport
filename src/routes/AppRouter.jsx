@@ -27,6 +27,7 @@ import Demo from "../pages/Demo";
 import Legal from "../pages/Legal";
 import Pricing from "../pages/Pricing";
 import Landing from "../pages/Landing";
+import AdminRequests from "../pages/AdminRequests";
 
 export default function AppRouter() {
   return (
@@ -187,6 +188,14 @@ export default function AppRouter() {
                     <ReportBreakdown />
                   </RequireRole>
                 </RequireCompany>
+              </AuthGuard>
+            }
+          />
+           <Route
+            path="/admin/requests"
+            element={
+              <AuthGuard>
+                <AdminRequests />
               </AuthGuard>
             }
           />

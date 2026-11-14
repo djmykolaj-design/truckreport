@@ -7,6 +7,7 @@ import {
   AlertTriangle,
   Users,
   CreditCard,
+  Inbox,
 } from "lucide-react";
 import { hasCompany } from "./profile";
 
@@ -19,8 +20,17 @@ const TEAM = { to: "/office", label: "Команда", icon: Users };
 const OFFICE = { to: "/company", label: "Офіс", icon: Briefcase };
 const PRICING = { to: "/pricing", label: "Тарифи", icon: CreditCard };
 
+// Лише для власника сервісу. Це тільки показ пункту:
+// дані захищені в базі (функція is_owner) і перевіряються на самій сторінці.
+const REQUESTS = {
+  to: "/admin/requests",
+  label: "Заявки",
+  icon: Inbox,
+  mobile: false,
+};
+
 // mobile: false = пункт є лише в бічній панелі на комп'ютері
-export function getNavItems(profile) {
+function buildNavItems(profile) {
   if (!profile) return [HOME];
 
   switch (profile.role) {
@@ -60,4 +70,14 @@ export function getNavItems(profile) {
       }
       return [HOME, TRIPS, SCHENGEN, PRICING];
   }
+}
+
+export function getNavItems(profile) {
+  const items = buildNavItems(profile);
+
+  if (profile?.plan === "owner") {
+    return [...items, REQUESTS];
+  }
+
+  return items;
 }
