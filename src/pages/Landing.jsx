@@ -8,7 +8,6 @@ import {
   Users,
   BarChart3,
   AlertTriangle,
-  FileText,
   Download,
 } from "lucide-react";
 import logo from "../assets/truckreport-logo.png";
@@ -97,6 +96,59 @@ const BOSS_ITEMS = [
     icon: Users,
     title: "Водії й рейси",
     text: "Хто зараз у дорозі, рейси всіх водіїв фірми, шенген кожного водія, документи з датами закінчення.",
+  },
+];
+
+const PLANS = [
+  {
+    name: "Безкоштовний",
+    price: "0 грн",
+    period: "без терміну й без картки",
+    now: true,
+    features: [
+      "Активний рейс, заправки й витрати",
+      "Лічильник Шенгену 90/180",
+      "Відмітка в'їзду й виїзду",
+    ],
+  },
+  {
+    name: "Pro для водія",
+    price: "150 грн",
+    period: "на місяць",
+    features: [
+      "Планувальник поїздки в Шенген",
+      "Уся історія рейсів",
+      "Експорт і аналітика",
+    ],
+  },
+  {
+    name: "Business для фірми",
+    price: "від 170 грн",
+    period: "за авто на місяць",
+    features: [
+      "250 грн за авто до 20 машин, 210 грн до 50, 170 грн до 100",
+      "Причепи не рахуються",
+      "Перший місяць безкоштовно",
+    ],
+  },
+];
+
+const FAQ = [
+  {
+    q: "Чи платити зараз?",
+    a: "Ні. Безкоштовний план працює без терміну й без картки. Оплату платних планів ми ще не підключили: на сторінці тарифів можна залишити заявку, і ми напишемо, коли вони запрацюють.",
+  },
+  {
+    q: "Чи замінює лічильник Шенгену офіційний облік?",
+    a: "Ні. Це допоміжний інструмент, який рахує дні за правилом 90/180 за датами, що ви внесли. Остаточне рішення завжди за прикордонною службою, тому звіряйте дати зі штампами в паспорті.",
+  },
+  {
+    q: "Чи треба ставити додаток із магазину?",
+    a: "Ні. Truckreport працює в браузері й встановлюється на телефон прямо зі сторінки, а оновлюється сам. Покрокова інструкція для Android, iPhone та Windows вище.",
+  },
+  {
+    q: "Хто бачить мої дані?",
+    a: "Ви й ваша фірма. Рейси водія бачить лише сам водій та шеф фірми, до якої він приєднаний. Водій без фірми працює сам, і його дані ніхто більше не бачить.",
   },
 ];
 
@@ -281,34 +333,42 @@ export default function Landing() {
         </div>
       </section>
 
-      <section className="lp-section lp-section--alt">
+      <section className="lp-section lp-section--alt" id="pricing">
         <div className="lp-wrap">
           <h2>Скільки це коштує</h2>
           <p className="lp-section-lead">
-            Починайте безкоштовно. Платні плани з'являться найближчим часом, а
-            те, що ви вже ведете, нікуди не зникне.
+            Починайте безкоштовно. Те, що ви вже ведете, нікуди не зникне, коли
+            з'являться платні плани. Ціни в гривнях, без конвертації за курсом.
           </p>
 
           <div className="lp-plans">
-            <div className="lp-plan lp-plan--now">
-              <h3>Безкоштовний</h3>
-              <p>
-                Активний рейс, шенген і 3 останні рейси в історії. Без картки й
-                без терміну.
-              </p>
-            </div>
-            <div className="lp-plan">
-              <h3>Pro для водія</h3>
-              <p>Уся історія рейсів, експорт і аналітика. Скоро.</p>
-            </div>
-            <div className="lp-plan">
-              <h3>Business для фірми</h3>
-              <p>
-                Ціна за машину зменшується, чим більший автопарк. Причепи не
-                рахуються. Скоро.
-              </p>
-            </div>
+            {PLANS.map((plan) => (
+              <div
+                key={plan.name}
+                className={`lp-plan ${plan.now ? "lp-plan--now" : ""}`}
+              >
+                <h3>{plan.name}</h3>
+                <div className="lp-plan-price">
+                  {plan.price}
+                  <small>{plan.period}</small>
+                </div>
+                <ul className="lp-plan-list">
+                  {plan.features.map((feature) => (
+                    <li key={feature}>{feature}</li>
+                  ))}
+                </ul>
+              </div>
+            ))}
           </div>
+
+          <p className="lp-plans-note">
+            Оплату платних планів ще не підключено. Залишити заявку можна на
+            сторінці тарифів після входу.
+          </p>
+
+          <Link to="/pricing" className="lp-btn lp-btn--ghost">
+            Дивитись тарифи
+          </Link>
         </div>
       </section>
 
@@ -356,7 +416,22 @@ export default function Landing() {
         </div>
       </section>
 
-      <section className="lp-section lp-section--alt">
+      <section className="lp-section lp-section--alt" id="faq">
+        <div className="lp-wrap">
+          <h2>Поширені питання</h2>
+
+          <div className="lp-faq">
+            {FAQ.map((item) => (
+              <details className="lp-faq-item" key={item.q}>
+                <summary>{item.q}</summary>
+                <p>{item.a}</p>
+              </details>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="lp-section">
         <div className="lp-wrap lp-final">
           <h2>Спробуйте на наступному рейсі</h2>
           <p className="lp-section-lead">

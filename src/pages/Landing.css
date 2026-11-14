@@ -5,7 +5,7 @@
   --lp-border: var(--border, #243044);
   --lp-text: var(--text, #f1f5f9);
   --lp-muted: var(--text-secondary, #94a3b8);
-  --lp-green: var(--primary, #22c55e);
+  --lp-green: #1f9d55;
 
   min-height: 100vh;
   background: var(--lp-bg);
@@ -501,4 +501,100 @@ main.layout-content.layout-content--bare {
   margin: 0 !important;
   max-width: none !important;
   width: 100% !important;
+}
+
+/* ── Ціни: ціна й список можливостей ── */
+
+.lp-plan-price {
+  margin: 10px 0 14px;
+  font-family: var(--font-display, inherit);
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.lp-plan-price small {
+  display: block;
+  margin-top: 4px;
+  font-family: var(--font-body, inherit);
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--lp-muted);
+}
+
+.lp-plan-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 8px;
+}
+
+.lp-plan-list li {
+  position: relative;
+  padding-left: 18px;
+  font-size: 14px;
+  line-height: 1.4;
+  color: var(--lp-text);
+}
+
+.lp-plan-list li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 8px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--lp-green);
+}
+
+.lp-plans-note {
+  margin: 20px 0 16px;
+  font-size: 14px;
+  color: var(--lp-muted);
+}
+
+/* ── Питання й відповіді ── */
+
+.lp-faq {
+  display: grid;
+  gap: 10px;
+  max-width: 760px;
+}
+
+.lp-faq-item {
+  border: 1px solid var(--lp-border);
+  border-radius: 12px;
+  background: var(--lp-bg);
+  padding: 0 16px;
+}
+
+.lp-faq-item summary {
+  cursor: pointer;
+  padding: 14px 0;
+  font-weight: 600;
+  list-style: none;
+}
+
+.lp-faq-item summary::-webkit-details-marker {
+  display: none;
+}
+
+.lp-faq-item summary::after {
+  content: "+";
+  float: right;
+  color: var(--lp-muted);
+}
+
+.lp-faq-item[open] summary::after {
+  content: "−";
+}
+
+.lp-faq-item p {
+  margin: 0;
+  padding: 0 0 16px;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--lp-muted);
 }
