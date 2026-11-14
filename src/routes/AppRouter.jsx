@@ -14,6 +14,7 @@ import TripReport from "../pages/TripReport";
 import ReportBreakdown from "../pages/ReportBreakdown";
 
 import AuthGuard from "../components/AuthGuard";
+import RequireCompany from "../components/RequireCompany";
 import Login from "../pages/Login";
 import ResetPassword from "../pages/ResetPassword";
 import Office from "../pages/Office";
@@ -168,7 +169,9 @@ export default function AppRouter() {
             path="/report-breakdown"
             element={
               <AuthGuard>
-                <ReportBreakdown />
+                <RequireCompany>
+                  <ReportBreakdown />
+                </RequireCompany>
               </AuthGuard>
             }
           />

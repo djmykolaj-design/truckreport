@@ -32,6 +32,10 @@ export default function Sidebar() {
 
   const boss = isBoss(profile);
   const driver = profile && !boss;
+  const inCompany = Boolean(profile?.company_id);
+
+  const linkClass = ({ isActive }) =>
+    `sidebar-link ${isActive ? "active" : ""}`;
 
   return (
     <aside className="sidebar">
@@ -40,43 +44,45 @@ export default function Sidebar() {
       </div>
 
       <nav className="sidebar-menu">
-        <NavLink to="/" end className={({ isActive }) => `sidebar-link ${isActive ? "active" : ""}`}>
+        <NavLink to="/" end className={linkClass}>
           <LayoutDashboard size={22} />
           <span>Головна</span>
         </NavLink>
 
         {driver && (
           <>
-            <NavLink to="/trips" className={({ isActive }) => `sidebar-link ${isActive ? "active" : ""}`}>
+            <NavLink to="/trips" className={linkClass}>
               <Truck size={22} />
               <span>Рейси</span>
             </NavLink>
 
-            <NavLink to="/schengen" className={({ isActive }) => `sidebar-link ${isActive ? "active" : ""}`}>
+            <NavLink to="/schengen" className={linkClass}>
               <Globe2 size={22} />
               <span>Шенген</span>
             </NavLink>
 
-            <NavLink to="/report-breakdown" className={({ isActive }) => `sidebar-link ${isActive ? "active" : ""}`}>
-              <AlertTriangle size={22} />
-              <span>Поломка</span>
-            </NavLink>
+            {inCompany && (
+              <NavLink to="/report-breakdown" className={linkClass}>
+                <AlertTriangle size={22} />
+                <span>Поломка</span>
+              </NavLink>
+            )}
           </>
         )}
 
         {boss && (
           <>
-            <NavLink to="/fleet" className={({ isActive }) => `sidebar-link ${isActive ? "active" : ""}`}>
+            <NavLink to="/fleet" className={linkClass}>
               <Wrench size={22} />
               <span>Автопарк</span>
             </NavLink>
 
-            <NavLink to="/office" className={({ isActive }) => `sidebar-link ${isActive ? "active" : ""}`}>
+            <NavLink to="/office" className={linkClass}>
               <Users size={22} />
               <span>Водії</span>
             </NavLink>
 
-            <NavLink to="/company" className={({ isActive }) => `sidebar-link ${isActive ? "active" : ""}`}>
+            <NavLink to="/company" className={linkClass}>
               <Briefcase size={22} />
               <span>Офіс</span>
             </NavLink>
@@ -84,7 +90,7 @@ export default function Sidebar() {
         )}
 
         {profile && (
-          <NavLink to="/pricing" className={({ isActive }) => `sidebar-link ${isActive ? "active" : ""}`}>
+          <NavLink to="/pricing" className={linkClass}>
             <CreditCard size={22} />
             <span>Тарифи</span>
           </NavLink>
@@ -92,6 +98,7 @@ export default function Sidebar() {
       </nav>
 
       <button
+        type="button"
         onClick={handleLogout}
         className="sidebar-link"
         style={{
