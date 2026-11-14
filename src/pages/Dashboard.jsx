@@ -17,6 +17,7 @@ import {
   leaveCompany,
 } from "../services/company";
 import { getMyPlan } from "../services/plan";
+import { getMyProfile } from "../services/profile";
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -44,6 +45,7 @@ export default function Dashboard() {
   const [myCompany, setMyCompany] = useState(null);
   const [joinRequest, setJoinRequest] = useState(null);
   const [planInfo, setPlanInfo] = useState(null);
+  const [isOwnerPlan, setIsOwnerPlan] = useState(false);
   const [schengenError, setSchengenError] = useState("");
 
   const refreshFirm = useCallback(async () => {
@@ -63,6 +65,10 @@ export default function Dashboard() {
 
     getMyPlan().then((info) => {
       if (!cancelled) setPlanInfo(info);
+    });
+
+    getMyProfile().then((profile) => {
+      if (!cancelled) setIsOwnerPlan(profile?.plan === "owner");
     });
 
     return () => {
@@ -149,7 +155,7 @@ export default function Dashboard() {
     if (leaving || joining) return;
 
     const confirmed = window.confirm(
-    `Від'єднатися від фірми «${myCompany?.name}»?\n\nТвій профіль перейде в особистий режим. Рейси фірми більше не будуть їй видимі.`
+      `Від'єднатися від фірми «${myCompany?.name}»?\n\nТвій профіль перейде в особистий режим. Рейси фірми більше не будуть їй видимі.`
     );
 
     if (!confirmed) return;
@@ -409,7 +415,7 @@ export default function Dashboard() {
         ) : joinRequest ? (
           <>
             <div className="hero-empty" style={{ marginTop: 10 }}>
-             Заявку надіслано у фірму «{joinRequest.company_name}».
+              Заявку надіслано у фірму «{joinRequest.company_name}».
               Чекайте підтвердження керівника.
             </div>
 
@@ -471,6 +477,17 @@ export default function Dashboard() {
           Тарифи
           <ArrowRight size={18} />
         </button>
+
+        {isOwnerPlan && (
+          <button
+            className="hero-btn"
+            style={{ marginTop: 8, background: "#475569" }}
+            onClick={() => navigate("/admin/requests")}
+          >
+            Заявки на тарифи
+            <ArrowRight size={18} />
+          </button>
+        )}
       </section>
     </div>
   );
