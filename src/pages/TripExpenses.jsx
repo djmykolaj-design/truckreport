@@ -10,6 +10,39 @@ import "./TripExpenses.css";
 import { useParams, useNavigate } from "react-router-dom";
 import { saveTripToCloud } from "../services/cloudTrips";
 
+// "14.11.2026, 17:45:00" -> timestamp (запасний варіант: стандартний розбір)
+const parseOperationDate = (value) => {
+  if (!value) return 0;
+
+  const match = String(value).match(
+    /^(\d{1,2})\.(\d{1,2})\.(\d{4})(?:,?\s+(\d{1,2}):(\d{2})(?::(\d{2}))?)?/
+  );
+
+  if (match) {
+    const [, d, m, y, hh = 0, mm = 0, ss = 0] = match;
+    return new Date(
+      Number(y),
+      Number(m) - 1,
+      Number(d),
+      Number(hh),
+      Number(mm),
+      Number(ss)
+    ).getTime();
+  }
+
+  const t = new Date(value).getTime();
+  return Number.isNaN(t) ? 0 : t;
+};
+
+const recordsWord = (n) => {
+  const mod10 = n % 10;
+  const mod100 = n % 100;
+
+  if (mod10 === 1 && mod100 !== 11) return "запис";
+  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return "записи";
+  return "записів";
+};
+
 export default function TripExpenses() {
   const navigate = useNavigate();
   const { tripId } = useParams();
@@ -182,7 +215,9 @@ export default function TripExpenses() {
     ...expenses.map((e) => ({ ...e, type: "expense" })),
     ...exchanges.map((e) => ({ ...e, type: "exchange" })),
     ...fundsReceived.map((e) => ({ ...e, type: "received" })),
-  ].sort((a, b) => new Date(b.date) - new Date(a.date));
+  ].sort(
+    (a, b) => parseOperationDate(b.date) - parseOperationDate(a.date)
+  );
 
   const currencies = [
     { icon: "", currency: "EUR", data: finance.EUR },
@@ -194,19 +229,9 @@ export default function TripExpenses() {
   return (
     <div className="trip-expenses">
       <button
+        type="button"
+        className="trip-expenses-back"
         onClick={() => navigate(`/trips?trip=${tripId}`)}
-        style={{
-          width: "100%",
-          padding: "12px",
-          marginBottom: "16px",
-          borderRadius: "12px",
-          border: "1px solid #334155",
-          background: "#1e293b",
-          color: "#e2e8f0",
-          cursor: "pointer",
-          fontWeight: 500,
-          fontSize: "15px",
-        }}
       >
         ← До рейсу
       </button>
@@ -243,7 +268,7 @@ export default function TripExpenses() {
         </Select>
 
         <Input
-          placeholder="Коментар"
+          placeholder="Коментар (необов'язково)"
           value={comment}
           onChange={(e) => setComment(e.target.value)}
         />
@@ -293,7 +318,10 @@ export default function TripExpenses() {
         </PrimaryButton>
       </Card>
 
-      <Card title="Видані кошти" subtitle="Баланс по валютах">
+      <Card
+        title="Баланс по валютах"
+        subtitle="Видано, обміняно та витрачено"
+      >
         <div className="currency-grid">
           {currencies.map((item) => (
             <CurrencyCard
@@ -332,7 +360,10 @@ export default function TripExpenses() {
         </div>
       </Card>
 
-      <Card title="Всі операції" subtitle={`${allOperations.length} записів`}>
+      <Card
+        title="Всі операції"
+        subtitle={`${allOperations.length} ${recordsWord(allOperations.length)}`}
+      >
         {allOperations.length === 0 && <p>Операцій ще немає</p>}
 
         {allOperations.map((item) => {

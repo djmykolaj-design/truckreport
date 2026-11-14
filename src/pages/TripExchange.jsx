@@ -10,6 +10,22 @@ import ExchangeCard from "../components/business/ExchangeCard";
 import { useParams, useNavigate } from "react-router-dom";
 import { saveTripToCloud } from "../services/cloudTrips";
 
+const recordsWord = (n) => {
+  const mod10 = n % 10;
+  const mod100 = n % 100;
+
+  if (mod10 === 1 && mod100 !== 11) return "запис";
+  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return "записи";
+  return "записів";
+};
+
+const CURRENCY_OPTIONS = [
+  { value: "EUR", label: "Євро" },
+  { value: "USD", label: "Долари США" },
+  { value: "PLN", label: "Злотий" },
+  { value: "UAH", label: "Гривня" },
+];
+
 export default function TripExchange() {
   const { tripId } = useParams();
   const navigate = useNavigate();
@@ -20,16 +36,16 @@ export default function TripExchange() {
 
   const trip = trips.find((t) => t.id === Number(tripId));
 
-  if (!trip) {
-    return <div style={{ color: "white" }}>Рейс не знайдено</div>;
-  }
-
   const [fromCurrency, setFromCurrency] = useState("EUR");
   const [fromAmount, setFromAmount] = useState("");
   const [toCurrency, setToCurrency] = useState("PLN");
   const [toAmount, setToAmount] = useState("");
   const [rate, setRate] = useState("");
-  const [exchanges, setExchanges] = useState(trip.exchanges || []);
+  const [exchanges, setExchanges] = useState(trip?.exchanges || []);
+
+  if (!trip) {
+    return <div style={{ color: "white" }}>Рейс не знайдено</div>;
+  }
 
   const isCompleted = trip.status === "completed";
 
@@ -66,6 +82,11 @@ export default function TripExchange() {
   };
 
   const saveExchange = () => {
+    if (isCompleted) {
+      alert("Рейс уже завершено");
+      return;
+    }
+
     if (!fromAmount || !toAmount) {
       alert("Вкажи суму і курс або суму отримано");
       return;
@@ -83,7 +104,7 @@ export default function TripExchange() {
       toCurrency,
       toAmount,
       rate: rate || null,
-      date: new Date().toLocaleString(),
+      date: new Date().toLocaleString("uk-UA"),
     };
 
     const updatedExchanges = [newExchange, ...exchanges];
@@ -106,19 +127,9 @@ export default function TripExchange() {
   return (
     <div style={{ color: "white", maxWidth: "1000px" }}>
       <button
+        type="button"
+        className="trip-expenses-back"
         onClick={() => navigate(`/trips?trip=${tripId}`)}
-        style={{
-          width: "100%",
-          padding: "12px",
-          marginBottom: "16px",
-          borderRadius: "12px",
-          border: "1px solid #334155",
-          background: "#1e293b",
-          color: "#e2e8f0",
-          cursor: "pointer",
-          fontWeight: 500,
-          fontSize: "15px",
-        }}
       >
         ← До рейсу
       </button>
@@ -129,19 +140,22 @@ export default function TripExchange() {
         title="Новий обмін"
         subtitle="Сума × курс = отримано"
       >
+        <div className="exchange-label">Віддаю</div>
+
         <Select
           value={fromCurrency}
           onChange={(e) => setFromCurrency(e.target.value)}
         >
-          <option value="EUR">Євро</option>
-          <option value="USD">Долари США</option>
-          <option value="PLN">Злотий</option>
-          <option value="UAH">Гривня</option>
+          {CURRENCY_OPTIONS.map((c) => (
+            <option key={c.value} value={c.value}>
+              {c.label}
+            </option>
+          ))}
         </Select>
 
         <Input
           type="number"
-          placeholder="Віддаю"
+          placeholder="Сума"
           value={fromAmount}
           onChange={(e) => {
             setFromAmount(e.target.value);
@@ -149,9 +163,11 @@ export default function TripExchange() {
           }}
         />
 
+        <div className="exchange-label">Курс</div>
+
         <Input
           type="number"
-          placeholder="Курс (скільки отримаю за 1)"
+          placeholder="Скільки отримаю за 1"
           value={rate}
           onChange={(e) => {
             setRate(e.target.value);
@@ -159,19 +175,22 @@ export default function TripExchange() {
           }}
         />
 
+        <div className="exchange-label">Отримую</div>
+
         <Select
           value={toCurrency}
           onChange={(e) => setToCurrency(e.target.value)}
         >
-          <option value="EUR">Євро</option>
-          <option value="USD">Долари США</option>
-          <option value="PLN">Злотий</option>
-          <option value="UAH">Гривня</option>
+          {CURRENCY_OPTIONS.map((c) => (
+            <option key={c.value} value={c.value}>
+              {c.label}
+            </option>
+          ))}
         </Select>
 
         <Input
           type="number"
-          placeholder="Отримано (рахується само)"
+          placeholder="Сума (рахується сама)"
           value={toAmount}
           onChange={(e) => setToAmount(e.target.value)}
         />
@@ -181,7 +200,10 @@ export default function TripExchange() {
         </PrimaryButton>
       </Card>
 
-      <Card title="Всі обміни" subtitle={`${exchanges.length} записів`}>
+      <Card
+        title="Всі обміни"
+        subtitle={`${exchanges.length} ${recordsWord(exchanges.length)}`}
+      >
         {exchanges.length === 0 && <p>Обмінів ще немає</p>}
         {exchanges.map((exchange) => (
           <ExchangeCard
