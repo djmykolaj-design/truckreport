@@ -44,7 +44,7 @@ export async function loadCompanyAccounts() {
   return data || [];
 }
 
-// Список водіїв фірми, який веде шеф
+// Список водіїв фірми, який веде керівник
 export async function loadCompanyDrivers() {
   const profile = await getMyProfile();
   if (!profile?.company_id || profile.role !== "boss") return [];

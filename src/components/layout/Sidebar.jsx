@@ -1,21 +1,12 @@
 import { useEffect, useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
-import {
-  LayoutDashboard,
-  Truck,
-  Globe2,
-  Briefcase,
-  LogOut,
-  Wrench,
-  AlertTriangle,
-  Users,
-  CreditCard,
-} from "lucide-react";
+import { LogOut } from "lucide-react";
 
 import "./Sidebar.css";
 import logo from "../../assets/truckreport-logo.png";
 import { supabase } from "../../lib/supabase";
-import { getMyProfile, isBoss } from "../../services/profile";
+import { getMyProfile } from "../../services/profile";
+import { getNavItems } from "../../services/navigation";
 
 export default function Sidebar() {
   const navigate = useNavigate();
@@ -30,9 +21,7 @@ export default function Sidebar() {
     navigate("/login");
   };
 
-  const boss = isBoss(profile);
-  const driver = profile && !boss;
-  const inCompany = Boolean(profile?.company_id);
+  const items = getNavItems(profile);
 
   const linkClass = ({ isActive }) =>
     `sidebar-link ${isActive ? "active" : ""}`;
@@ -44,57 +33,12 @@ export default function Sidebar() {
       </div>
 
       <nav className="sidebar-menu">
-        <NavLink to="/" end className={linkClass}>
-          <LayoutDashboard size={22} />
-          <span>Головна</span>
-        </NavLink>
-
-        {driver && (
-          <>
-            <NavLink to="/trips" className={linkClass}>
-              <Truck size={22} />
-              <span>Рейси</span>
-            </NavLink>
-
-            <NavLink to="/schengen" className={linkClass}>
-              <Globe2 size={22} />
-              <span>Шенген</span>
-            </NavLink>
-
-            {inCompany && (
-              <NavLink to="/report-breakdown" className={linkClass}>
-                <AlertTriangle size={22} />
-                <span>Поломка</span>
-              </NavLink>
-            )}
-          </>
-        )}
-
-        {boss && (
-          <>
-            <NavLink to="/fleet" className={linkClass}>
-              <Wrench size={22} />
-              <span>Автопарк</span>
-            </NavLink>
-
-            <NavLink to="/office" className={linkClass}>
-              <Users size={22} />
-              <span>Водії</span>
-            </NavLink>
-
-            <NavLink to="/company" className={linkClass}>
-              <Briefcase size={22} />
-              <span>Офіс</span>
-            </NavLink>
-          </>
-        )}
-
-        {profile && (
-          <NavLink to="/pricing" className={linkClass}>
-            <CreditCard size={22} />
-            <span>Тарифи</span>
+        {items.map(({ to, label, icon: Icon, end }) => (
+          <NavLink key={to} to={to} end={end} className={linkClass}>
+            <Icon size={22} />
+            <span>{label}</span>
           </NavLink>
-        )}
+        ))}
       </nav>
 
       <button

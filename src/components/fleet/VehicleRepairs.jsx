@@ -287,7 +287,15 @@ function FinishRepairForm({ vehicle, busy, onSubmit, onCancel }) {
     );
 }
 
-export default function VehicleRepairs({ vehicle, issues, repairs, onChanged }) {
+export default function VehicleRepairs({
+    vehicle,
+    issues,
+    repairs,
+    onChanged,
+    showCosts = false, // суми ремонтів в історії
+       canEdit = false, // кнопки: ремонт, завершення, закриття поломок
+    canRepair = false, // лише «Поставити на ремонт» біля поломки (для логіста)
+}) {
     const [dialog, setDialog] = useState(null);
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState("");
@@ -588,7 +596,7 @@ export default function VehicleRepairs({ vehicle, issues, repairs, onChanged }) 
                                 {ISSUE_LABELS[issue.status] || issue.status}
                             </div>
 
-                            {issue.status !== "in_repair" && (
+                                                     {(canEdit || canRepair) && issue.status !== "in_repair" && (
                                 <div
                                     style={{
                                         display: "flex",
@@ -605,7 +613,7 @@ export default function VehicleRepairs({ vehicle, issues, repairs, onChanged }) 
                                     >
                                         Поставити на ремонт
                                     </button>
-                                    {issue.status === "new" && (
+                                    {canEdit && issue.status === "new" && (
                                         <button
                                             type="button"
                                             disabled={busy}
@@ -615,14 +623,16 @@ export default function VehicleRepairs({ vehicle, issues, repairs, onChanged }) 
                                             Переглянуто
                                         </button>
                                     )}
-                                    <button
-                                        type="button"
-                                        disabled={busy}
-                                        style={btn()}
-                                        onClick={() => closeIssue(issue)}
-                                    >
-                                        Закрити без ремонту
-                                    </button>
+                                    {canEdit && (
+                                        <button
+                                            type="button"
+                                            disabled={busy}
+                                            style={btn()}
+                                            onClick={() => closeIssue(issue)}
+                                        >
+                                            Закрити без ремонту
+                                        </button>
+                                    )}
                                 </div>
                             )}
                         </div>
@@ -640,56 +650,60 @@ export default function VehicleRepairs({ vehicle, issues, repairs, onChanged }) 
                                 {fmtDate(service.service_date)} ·{" "}
                                 {REPAIR_LABELS[service.status] || service.status}
                             </div>
-                            <div
-                                style={{
-                                    display: "flex",
-                                    gap: 6,
-                                    flexWrap: "wrap",
-                                    marginTop: 8,
-                                }}
-                            >
-                                {service.status === "planned" && (
+                            {canEdit && (
+                                <div
+                                    style={{
+                                        display: "flex",
+                                        gap: 6,
+                                        flexWrap: "wrap",
+                                        marginTop: 8,
+                                    }}
+                                >
+                                    {service.status === "planned" && (
+                                        <button
+                                            type="button"
+                                            disabled={busy}
+                                            style={btn("warn")}
+                                            onClick={() => startRepair(service)}
+                                        >
+                                            Розпочати ремонт
+                                        </button>
+                                    )}
                                     <button
                                         type="button"
                                         disabled={busy}
-                                        style={btn("warn")}
-                                        onClick={() => startRepair(service)}
+                                        style={btn("ok")}
+                                        onClick={() => setDialog({ mode: "finish", service })}
                                     >
-                                        Розпочати ремонт
+                                        Завершити ремонт
                                     </button>
-                                )}
-                                <button
-                                    type="button"
-                                    disabled={busy}
-                                    style={btn("ok")}
-                                    onClick={() => setDialog({ mode: "finish", service })}
-                                >
-                                    Завершити ремонт
-                                </button>
-                                <button
-                                    type="button"
-                                    disabled={busy}
-                                    style={btn()}
-                                    onClick={() => cancelRepair(service)}
-                                >
-                                    Скасувати
-                                </button>
-                            </div>
+                                    <button
+                                        type="button"
+                                        disabled={busy}
+                                        style={btn()}
+                                        onClick={() => cancelRepair(service)}
+                                    >
+                                        Скасувати
+                                    </button>
+                                </div>
+                            )}
                         </div>
                     ))}
                 </div>
             )}
 
-            <div>
-                <button
-                    type="button"
-                    disabled={busy}
-                    style={btn("warn")}
-                    onClick={() => setDialog({ mode: "create", issue: null })}
-                >
-                    Запланувати ремонт
-                </button>
-            </div>
+            {canEdit && (
+                <div>
+                    <button
+                        type="button"
+                        disabled={busy}
+                        style={btn("warn")}
+                        onClick={() => setDialog({ mode: "create", issue: null })}
+                    >
+                        Запланувати ремонт
+                    </button>
+                </div>
+            )}
 
             <details open={historyOpen} onToggle={onHistoryToggle}>
                 <summary
@@ -719,7 +733,7 @@ export default function VehicleRepairs({ vehicle, issues, repairs, onChanged }) 
                             <div key={item.id} style={rowBox}>
                                 <div style={{ fontWeight: 600 }}>
                                     {fmtDate(item.service_date)} · {fmtKm(item.odometer)}
-                                    {item.cost != null
+                                    {showCosts && item.cost != null
                                         ? ` · ${Number(item.cost).toLocaleString("uk-UA")} ${currencySymbol(item.currency)}`
                                         : ""}
                                 </div>

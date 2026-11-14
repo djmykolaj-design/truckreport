@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { getMyProfile, isBoss } from "../services/profile";
+import { getMyProfile, roleCan } from "../services/profile";
 import { getMyCompany, leaveCompany } from "../services/company";
 import {
   loadFleetTrips,
@@ -12,6 +12,7 @@ import {
 } from "../services/office";
 import { calculateRollingSchengen } from "../utils/schengen";
 import { Plate } from "../components/boss/Plate";
+import TeamPanel from "../components/boss/TeamPanel";
 
 function normName(value) {
   return String(value || "").replace(/\./g, "").replace(/\s+/g, " ").trim().toLowerCase();
@@ -87,7 +88,7 @@ export default function Office() {
       const me = await getMyProfile();
       setProfile(me);
       setCompany(await getMyCompany());
-      if (isBoss(me)) await loadAll();
+      if (roleCan(me, "drivers.view")) await loadAll();
       setLoading(false);
     }
 
@@ -96,7 +97,8 @@ export default function Office() {
 
   if (loading) return <p style={{ color: "var(--text-secondary)" }}>Завантаження…</p>;
 
-  if (!isBoss(profile)) {
+  // Цю вкладку бачать керівник, заступник і логіст. Решта бачать лише картку фірми.
+  if (!roleCan(profile, "drivers.view")) {
     const leave = async () => {
       if (!window.confirm("Від'єднатися від фірми? Рейси фірми більше не будуть їй видимі.")) {
         return;
@@ -137,6 +139,9 @@ export default function Office() {
       </div>
     );
   }
+
+  const canManageDrivers = roleCan(profile, "drivers.manage");
+  const canManageTeam = roleCan(profile, "team.manage");
 
   const selected = drivers.find((d) => d.id === selectedId) || null;
 
@@ -188,10 +193,14 @@ export default function Office() {
 
   return (
     <div style={{ color: "var(--text)", maxWidth: 900 }}>
-      <h1 style={{ margin: "0 0 4px", fontSize: 30, fontWeight: 600 }}>Водії</h1>
+            <h1 style={{ margin: "0 0 4px", fontSize: 30, fontWeight: 600 }}>
+        {canManageTeam ? "Команда" : "Водії"}
+      </h1>
       <p style={{ color: "var(--text-secondary)", margin: "0 0 18px" }}>
         {company?.name || "Фірма"} • водіїв {drivers.length} • рейсів {visibleTrips.length}
       </p>
+
+      {canManageTeam && <TeamPanel profile={profile} onChanged={loadAll} />}
 
       <details open={drivers.length === 0} style={panel}>
         <summary style={{ cursor: "pointer", fontWeight: 600 }}>
@@ -199,8 +208,9 @@ export default function Office() {
         </summary>
 
         <p style={{ color: "var(--text-secondary)", fontSize: 13, margin: "10px 0" }}>
-          Саме цей список водії бачать при створенні рейсу. Щоб бачити Шенген водія,
-          прив'яжіть його акаунт (він має вступити у фірму за кодом із розділу «Офіс»).
+          {canManageDrivers
+            ? "Саме цей список водії бачать при створенні рейсу. Щоб бачити Шенген водія, прив'яжіть його акаунт (водій спершу подає заявку за кодом фірми, ви підтверджуєте її вище)."
+            : "Список водіїв фірми. Редагує його керівник або заступник."}
         </p>
 
         {drivers.map((d) => (
@@ -217,59 +227,69 @@ export default function Office() {
           >
             <div style={{ fontWeight: 600, minWidth: 140 }}>{d.full_name}</div>
 
-            <select
-              value={d.user_id || ""}
-              onChange={(e) => linkDriver(d, e.target.value)}
-              style={{ ...inputStyle, flex: 1, minWidth: 180 }}
-            >
-              <option value="">— без акаунта —</option>
-              {accounts
-                .filter((a) => a.id === d.user_id || freeAccounts.some((f) => f.id === a.id))
-                .map((a) => (
-                  <option key={a.id} value={a.id}>
-                    {accountLabel(a.id)}
-                  </option>
-                ))}
-            </select>
+            {canManageDrivers ? (
+              <>
+                <select
+                  value={d.user_id || ""}
+                  onChange={(e) => linkDriver(d, e.target.value)}
+                  style={{ ...inputStyle, flex: 1, minWidth: 180 }}
+                >
+                  <option value="">— без акаунта —</option>
+                  {accounts
+                    .filter((a) => a.id === d.user_id || freeAccounts.some((f) => f.id === a.id))
+                    .map((a) => (
+                      <option key={a.id} value={a.id}>
+                        {accountLabel(a.id)}
+                      </option>
+                    ))}
+                </select>
 
-            <button type="button" onClick={() => removeDriver(d)} style={smallBtn}>
-              Видалити
-            </button>
+                <button type="button" onClick={() => removeDriver(d)} style={smallBtn}>
+                  Видалити
+                </button>
+              </>
+            ) : (
+              <span style={{ color: "var(--text-secondary)", fontSize: 14 }}>
+                {d.user_id ? accountLabel(d.user_id) || "акаунт прив'язано" : "без акаунта"}
+              </span>
+            )}
           </div>
         ))}
 
-        <div
-          style={{
-            display: "flex",
-            flexWrap: "wrap",
-            gap: 8,
-            marginTop: 12,
-            paddingTop: 12,
-            borderTop: "1px solid var(--border)",
-          }}
-        >
-          <input
-            value={newName}
-            onChange={(e) => setNewName(e.target.value)}
-            placeholder="Ім'я водія, напр. Шумило М"
-            style={{ ...inputStyle, flex: 1, minWidth: 180 }}
-          />
-          <select
-            value={newUser}
-            onChange={(e) => setNewUser(e.target.value)}
-            style={{ ...inputStyle, flex: 1, minWidth: 180 }}
+        {canManageDrivers && (
+          <div
+            style={{
+              display: "flex",
+              flexWrap: "wrap",
+              gap: 8,
+              marginTop: 12,
+              paddingTop: 12,
+              borderTop: "1px solid var(--border)",
+            }}
           >
-            <option value="">Акаунт (необов'язково)</option>
-            {freeAccounts.map((a) => (
-              <option key={a.id} value={a.id}>
-                {accountLabel(a.id)}
-              </option>
-            ))}
-          </select>
-          <button type="button" onClick={addDriver} style={okBtn}>
-            Додати
-          </button>
-        </div>
+            <input
+              value={newName}
+              onChange={(e) => setNewName(e.target.value)}
+              placeholder="Ім'я водія, напр. Шумило М"
+              style={{ ...inputStyle, flex: 1, minWidth: 180 }}
+            />
+            <select
+              value={newUser}
+              onChange={(e) => setNewUser(e.target.value)}
+              style={{ ...inputStyle, flex: 1, minWidth: 180 }}
+            >
+              <option value="">Акаунт (необов'язково)</option>
+              {freeAccounts.map((a) => (
+                <option key={a.id} value={a.id}>
+                  {accountLabel(a.id)}
+                </option>
+              ))}
+            </select>
+            <button type="button" onClick={addDriver} style={okBtn}>
+              Додати
+            </button>
+          </div>
+        )}
       </details>
 
       {drivers.length > 0 && (
@@ -354,7 +374,7 @@ export default function Office() {
         >
           {selectedSchengen
             ? `Шенген: ${selectedSchengen.remaining} днів`
-            : "Шенген з'явиться, коли ви прив'яжете акаунт водія"}
+            : "Шенген з'явиться, коли акаунт водія буде прив'язано"}
         </p>
       )}
 

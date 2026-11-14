@@ -1,6 +1,7 @@
 import { Plate } from "../components/boss/Plate";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "../lib/supabase";
+import { getMyProfile, roleCan } from "../services/profile";
 import VehicleRepairs from "../components/fleet/VehicleRepairs";
 
 const VEHICLE_TYPES = [
@@ -151,6 +152,7 @@ function serviceBadge(vehicle) {
 }
 
 export default function Fleet() {
+    const [profile, setProfile] = useState(undefined);
     const [vehicles, setVehicles] = useState([]);
     const [form, setForm] = useState(emptyForm);
     const [editingId, setEditingId] = useState(null);
@@ -162,6 +164,11 @@ export default function Fleet() {
     const [notice, setNotice] = useState("");
     const [issues, setIssues] = useState([]);
     const [repairs, setRepairs] = useState([]);
+
+    // Права поточної ролі (це лише інтерфейс, справжній захист — у базі)
+    const canManage = roleCan(profile, "fleet.manage"); // додавати / редагувати машини
+    const canService = roleCan(profile, "fleet.service"); // статуси, ТО, суми ремонтів
+    const canRepairStatus = roleCan(profile, "fleet.repairStatus"); // поставити на ремонт
 
     async function loadVehicles() {
         setError("");
@@ -202,6 +209,7 @@ export default function Fleet() {
     }
 
     useEffect(() => {
+        getMyProfile().then(setProfile);
         loadVehicles();
     }, []);
 
@@ -267,6 +275,8 @@ export default function Fleet() {
 
     async function saveVehicle(event) {
         event.preventDefault();
+        if (!canManage) return;
+
         setSaving(true);
         setError("");
         setNotice("");
@@ -422,6 +432,56 @@ export default function Fleet() {
         await loadVehicles();
     }
 
+    // Для логіста: машина стає «На ремонті» і з'являється запис ремонту (без суми).
+    // Суму та подробиці потім вносить механік.
+    async function putOnRepair(vehicle) {
+        setError("");
+        setNotice("");
+
+        const reason = window.prompt(
+            "Що сталося? Коротко опиши причину ремонту",
+            ""
+        );
+
+        if (reason === null) return;
+
+        if (!reason.trim()) {
+            setError("Опиши причину ремонту, щоб механік зрозумів, що робити.");
+            return;
+        }
+
+        const { error: serviceError } = await supabase
+            .from("fleet_services")
+            .insert({
+                vehicle_id: vehicle.id,
+                service_date: new Date().toISOString().slice(0, 10),
+                odometer: Number(vehicle.odometer || 0),
+                description: reason.trim(),
+                status: "in_progress",
+            });
+
+        if (serviceError) {
+            console.error(serviceError);
+            setError("Не вдалося створити запис ремонту.");
+            return;
+        }
+
+        const { error: updateError } = await supabase
+            .from("fleet_vehicles")
+            .update({ status: "repair" })
+            .eq("id", vehicle.id);
+
+        if (updateError) {
+            console.error(updateError);
+            setError("Запис ремонту створено, але статус машини змінити не вдалося.");
+            await loadVehicles();
+            return;
+        }
+
+        setNotice("Машину поставлено на ремонт. Механік побачить це в автопарку.");
+        await loadVehicles();
+    }
+
     async function completeService(vehicle) {
         setError("");
         setNotice("");
@@ -484,45 +544,6 @@ export default function Fleet() {
         setNotice("ТО зафіксовано. Поломку перенесено в історію.");
         await loadVehicles();
     }
-async function planRepair(vehicle) {
-    setError("");
-    setNotice("");
-
-    const dateStr = window.prompt(
-        "Запланувати ремонт на (дд.мм.рррр)",
-        ""
-    );
-
-    if (!dateStr || !dateStr.trim()) return;
-
-    const match = dateStr.trim().match(/^(\d{2})\.(\d{2})\.(\d{4})$/);
-    if (!match) {
-        setError("Невірний формат. Пиши дд.мм.рррр (наприклад 22.10.2026)");
-        return;
-    }
-
-    const [, dd, mm, yyyy] = match;
-    const isoDate = `${yyyy}-${mm}-${dd}`;
-
-    const test = new Date(isoDate);
-    if (isNaN(test.getTime())) {
-        setError("Такої дати не існує.");
-        return;
-    }
-
-    const { error: updateError } = await supabase
-        .from("fleet_vehicles")
-        .update({ next_service_date: isoDate })
-        .eq("id", vehicle.id);
-
-    if (updateError) {
-        setError("Не вдалося запланувати ремонт.");
-        return;
-    }
-
-    setNotice(`Ремонт заплановано на ${dateStr.trim()}. Статус не змінено — машина може їхати.`);
-    await loadVehicles();
-}
 
     const typeCounts = useMemo(() => {
         const counts = { all: vehicles.length };
@@ -560,6 +581,10 @@ async function planRepair(vehicle) {
         );
     }
 
+    if (profile === undefined) {
+        return <p style={{ color: "var(--text-secondary)" }}>Завантаження…</p>;
+    }
+
     return (
         <main
             style={{
@@ -571,7 +596,11 @@ async function planRepair(vehicle) {
         >
             <h1 style={{ margin: "0 0 8px", fontSize: 28 }}>Автопарк</h1>
             <p style={{ color: "var(--text-secondary)", marginTop: 0 }}>
-                Облік транспорту, фільтр за типом, контроль ТО та поломок.
+                {canManage
+                    ? "Облік транспорту, фільтр за типом, контроль ТО та поломок."
+                    : canService
+                        ? "Стан транспорту, ТО, поломки та ремонти."
+                        : "Стан транспорту. Якщо машина зламалась, поставте її на ремонт."}
             </p>
 
             {error && (
@@ -604,235 +633,237 @@ async function planRepair(vehicle) {
                 </div>
             )}
 
-            <section
-                style={{
-                    background: "var(--surface)",
-                    border: "1px solid var(--border)",
-                    borderRadius: 14,
-                    padding: 18,
-                    marginTop: 20,
-                }}
-            >
-                <h2 style={{ marginTop: 0, fontSize: 19 }}>
-                    {editingId ? "Редагувати транспорт" : "Додати транспорт"}
-                </h2>
-
-                <form
-                    onSubmit={saveVehicle}
+            {canManage && (
+                <section
                     style={{
-                        display: "grid",
-                        gridTemplateColumns: "repeat(auto-fit, minmax(210px, 1fr))",
-                        gap: 14,
+                        background: "var(--surface)",
+                        border: "1px solid var(--border)",
+                        borderRadius: 14,
+                        padding: 18,
+                        marginTop: 20,
                     }}
                 >
-                    <label style={styles.label}>
-                        Назва *
-                        <input
-                            style={styles.input}
-                            name="name"
-                            value={form.name}
-                            onChange={updateField}
-                            placeholder="Наприклад, MAN TGX"
-                            required
-                        />
-                    </label>
+                    <h2 style={{ marginTop: 0, fontSize: 19 }}>
+                        {editingId ? "Редагувати транспорт" : "Додати транспорт"}
+                    </h2>
 
-                    <label style={styles.label}>
-                        Номерний знак *
-                        <input
-                            style={styles.input}
-                            name="plate_number"
-                            value={form.plate_number}
-                            onChange={updateField}
-                            placeholder="BC1234AB"
-                            required
-                        />
-                    </label>
-
-                    <label style={styles.label}>
-                        Тип транспорту
-                        <select
-                            style={styles.input}
-                            name="vehicle_type"
-                            value={form.vehicle_type}
-                            onChange={updateField}
-                        >
-                            {VEHICLE_TYPES.map((item) => (
-                                <option key={item.value} value={item.value}>
-                                    {item.label}
-                                </option>
-                            ))}
-                        </select>
-                    </label>
-
-                    <label style={styles.label}>
-                        Марка
-                        <input
-                            style={styles.input}
-                            name="brand"
-                            value={form.brand}
-                            onChange={updateField}
-                            placeholder="MAN, Mercedes-Benz..."
-                        />
-                    </label>
-
-                    <label style={styles.label}>
-                        Модель
-                        <input
-                            style={styles.input}
-                            name="model"
-                            value={form.model}
-                            onChange={updateField}
-                            placeholder="TGX, Sprinter..."
-                        />
-                    </label>
-
-                    <label style={styles.label}>
-                        Рік випуску
-                        <input
-                            style={styles.input}
-                            type="number"
-                            name="manufacture_year"
-                            value={form.manufacture_year}
-                            onChange={updateField}
-                            min="1900"
-                            max={new Date().getFullYear() + 1}
-                        />
-                    </label>
-
-                    <label style={styles.label}>
-                        VIN
-                        <input
-                            style={styles.input}
-                            name="vin"
-                            value={form.vin}
-                            onChange={updateField}
-                            placeholder="Ідентифікаційний номер"
-                        />
-                    </label>
-
-                    <label style={styles.label}>
-                        Пробіг зараз, км
-                        <input
-                            style={styles.input}
-                            type="number"
-                            name="odometer"
-                            value={form.odometer}
-                            onChange={updateField}
-                            min="0"
-                            step="1"
-                        />
-                    </label>
-
-                    <label style={styles.label}>
-                        Статус
-                        <select
-                            style={styles.input}
-                            name="status"
-                            value={form.status}
-                            onChange={updateField}
-                        >
-                            {VEHICLE_STATUSES.map((item) => (
-                                <option key={item.value} value={item.value}>
-                                    {item.label}
-                                </option>
-                            ))}
-                        </select>
-                    </label>
-
-                    <label style={styles.label}>
-                        Останнє ТО (дата)
-                        <input
-                            style={styles.input}
-                            type="date"
-                            name="last_service_date"
-                            value={form.last_service_date}
-                            onChange={updateField}
-                        />
-                    </label>
-
-                    <label style={styles.label}>
-                        Пробіг на останньому ТО, км
-                        <input
-                            style={styles.input}
-                            type="number"
-                            name="last_service_odometer"
-                            value={form.last_service_odometer}
-                            onChange={updateField}
-                            min="0"
-                            step="1"
-                            placeholder="Напр. 300000"
-                        />
-                    </label>
-
-                    <label style={styles.label}>
-                        Наступне ТО (дата)
-                        <input
-                            style={styles.input}
-                            type="date"
-                            name="next_service_date"
-                            value={form.next_service_date}
-                            onChange={updateField}
-                        />
-                    </label>
-
-                    <label style={styles.label}>
-                        Наступне ТО (пробіг, км)
-                        <input
-                            style={styles.input}
-                            type="number"
-                            name="next_service_odometer"
-                            value={form.next_service_odometer}
-                            onChange={updateField}
-                            min="0"
-                            step="1"
-                            placeholder="Рахується автоматично"
-                        />
-                    </label>
-
-                    <label style={{ ...styles.label, gridColumn: "1 / -1" }}>
-                        Примітки
-                        <textarea
-                            style={{ ...styles.input, minHeight: 80, resize: "vertical" }}
-                            name="notes"
-                            value={form.notes}
-                            onChange={updateField}
-                            placeholder="Додаткова інформація"
-                        />
-                    </label>
-
-                    <div
+                    <form
+                        onSubmit={saveVehicle}
                         style={{
-                            display: "flex",
-                            gap: 10,
-                            flexWrap: "wrap",
-                            gridColumn: "1 / -1",
+                            display: "grid",
+                            gridTemplateColumns: "repeat(auto-fit, minmax(210px, 1fr))",
+                            gap: 14,
                         }}
                     >
-                        <button style={styles.button} type="submit" disabled={saving}>
-                            {saving
-                                ? "Збереження..."
-                                : editingId
-                                    ? "Зберегти зміни"
-                                    : "Додати транспорт"}
-                        </button>
+                        <label style={styles.label}>
+                            Назва *
+                            <input
+                                style={styles.input}
+                                name="name"
+                                value={form.name}
+                                onChange={updateField}
+                                placeholder="Наприклад, MAN TGX"
+                                required
+                            />
+                        </label>
 
-                        {editingId && (
-                            <button
-                                type="button"
-                                onClick={resetForm}
-                                style={{
-                                    ...styles.button,
-                                    background: "var(--surface-light)",
-                                    color: "var(--text)",
-                                }}
+                        <label style={styles.label}>
+                            Номерний знак *
+                            <input
+                                style={styles.input}
+                                name="plate_number"
+                                value={form.plate_number}
+                                onChange={updateField}
+                                placeholder="BC1234AB"
+                                required
+                            />
+                        </label>
+
+                        <label style={styles.label}>
+                            Тип транспорту
+                            <select
+                                style={styles.input}
+                                name="vehicle_type"
+                                value={form.vehicle_type}
+                                onChange={updateField}
                             >
-                                Скасувати
+                                {VEHICLE_TYPES.map((item) => (
+                                    <option key={item.value} value={item.value}>
+                                        {item.label}
+                                    </option>
+                                ))}
+                            </select>
+                        </label>
+
+                        <label style={styles.label}>
+                            Марка
+                            <input
+                                style={styles.input}
+                                name="brand"
+                                value={form.brand}
+                                onChange={updateField}
+                                placeholder="MAN, Mercedes-Benz..."
+                            />
+                        </label>
+
+                        <label style={styles.label}>
+                            Модель
+                            <input
+                                style={styles.input}
+                                name="model"
+                                value={form.model}
+                                onChange={updateField}
+                                placeholder="TGX, Sprinter..."
+                            />
+                        </label>
+
+                        <label style={styles.label}>
+                            Рік випуску
+                            <input
+                                style={styles.input}
+                                type="number"
+                                name="manufacture_year"
+                                value={form.manufacture_year}
+                                onChange={updateField}
+                                min="1900"
+                                max={new Date().getFullYear() + 1}
+                            />
+                        </label>
+
+                        <label style={styles.label}>
+                            VIN
+                            <input
+                                style={styles.input}
+                                name="vin"
+                                value={form.vin}
+                                onChange={updateField}
+                                placeholder="Ідентифікаційний номер"
+                            />
+                        </label>
+
+                        <label style={styles.label}>
+                            Пробіг зараз, км
+                            <input
+                                style={styles.input}
+                                type="number"
+                                name="odometer"
+                                value={form.odometer}
+                                onChange={updateField}
+                                min="0"
+                                step="1"
+                            />
+                        </label>
+
+                        <label style={styles.label}>
+                            Статус
+                            <select
+                                style={styles.input}
+                                name="status"
+                                value={form.status}
+                                onChange={updateField}
+                            >
+                                {VEHICLE_STATUSES.map((item) => (
+                                    <option key={item.value} value={item.value}>
+                                        {item.label}
+                                    </option>
+                                ))}
+                            </select>
+                        </label>
+
+                        <label style={styles.label}>
+                            Останнє ТО (дата)
+                            <input
+                                style={styles.input}
+                                type="date"
+                                name="last_service_date"
+                                value={form.last_service_date}
+                                onChange={updateField}
+                            />
+                        </label>
+
+                        <label style={styles.label}>
+                            Пробіг на останньому ТО, км
+                            <input
+                                style={styles.input}
+                                type="number"
+                                name="last_service_odometer"
+                                value={form.last_service_odometer}
+                                onChange={updateField}
+                                min="0"
+                                step="1"
+                                placeholder="Напр. 300000"
+                            />
+                        </label>
+
+                        <label style={styles.label}>
+                            Наступне ТО (дата)
+                            <input
+                                style={styles.input}
+                                type="date"
+                                name="next_service_date"
+                                value={form.next_service_date}
+                                onChange={updateField}
+                            />
+                        </label>
+
+                        <label style={styles.label}>
+                            Наступне ТО (пробіг, км)
+                            <input
+                                style={styles.input}
+                                type="number"
+                                name="next_service_odometer"
+                                value={form.next_service_odometer}
+                                onChange={updateField}
+                                min="0"
+                                step="1"
+                                placeholder="Рахується автоматично"
+                            />
+                        </label>
+
+                        <label style={{ ...styles.label, gridColumn: "1 / -1" }}>
+                            Примітки
+                            <textarea
+                                style={{ ...styles.input, minHeight: 80, resize: "vertical" }}
+                                name="notes"
+                                value={form.notes}
+                                onChange={updateField}
+                                placeholder="Додаткова інформація"
+                            />
+                        </label>
+
+                        <div
+                            style={{
+                                display: "flex",
+                                gap: 10,
+                                flexWrap: "wrap",
+                                gridColumn: "1 / -1",
+                            }}
+                        >
+                            <button style={styles.button} type="submit" disabled={saving}>
+                                {saving
+                                    ? "Збереження..."
+                                    : editingId
+                                        ? "Зберегти зміни"
+                                        : "Додати транспорт"}
                             </button>
-                        )}
-                    </div>
-                </form>
-            </section>
+
+                            {editingId && (
+                                <button
+                                    type="button"
+                                    onClick={resetForm}
+                                    style={{
+                                        ...styles.button,
+                                        background: "var(--surface-light)",
+                                        color: "var(--text)",
+                                    }}
+                                >
+                                    Скасувати
+                                </button>
+                            )}
+                        </div>
+                    </form>
+                </section>
+            )}
 
             <section style={{ marginTop: 28 }}>
                 <div
@@ -945,6 +976,9 @@ async function planRepair(vehicle) {
                                 cardBg = "color-mix(in srgb, var(--warning) 8%, var(--surface))";
                             }
 
+                            const hasActions =
+                                canService || canManage || (canRepairStatus && vehicle.status !== "repair");
+
                             return (
                                 <article
                                     key={vehicle.id}
@@ -1042,6 +1076,9 @@ async function planRepair(vehicle) {
                                                     (item) => item.vehicle_id === vehicle.id
                                                 )}
                                                 onChanged={loadVehicles}
+                                                showCosts={canService}
+                                                canEdit={canService}
+                                                canRepair={canService || canRepairStatus}
                                             />
 
                                             {vehicle.notes && (
@@ -1074,57 +1111,80 @@ async function planRepair(vehicle) {
                                             )}
                                         </div>
 
-                                        <div
-                                            style={{
-                                                display: "flex",
-                                                flexDirection: "column",
-                                                gap: 8,
-                                                minWidth: 170,
-                                            }}
-                                        >
-                                            <label style={styles.label}>
-                                                Статус
-                                                <select
-                                                    style={styles.input}
-                                                    value={vehicle.status}
-                                                    onChange={(event) =>
-                                                        changeStatus(vehicle, event.target.value)
-                                                    }
-                                                >
-                                                    {VEHICLE_STATUSES.map((item) => (
-                                                        <option key={item.value} value={item.value}>
-                                                            {item.label}
-                                                        </option>
-                                                    ))}
-                                                </select>
-                                            </label>
-
-                                            {vehicle.status !== "maintenance" && (
-                                                <button
-                                                    type="button"
-                                                    className="fl-btn fl-btn--warn"
-                                                    onClick={() => putOnService(vehicle)}
-                                                >
-                                                    Поставити на ТО
-                                                </button>
-                                            )}
-
-                                            <button
-                                                type="button"
-                                                className="fl-btn fl-btn--ok"
-                                                onClick={() => completeService(vehicle)}
+                                        {hasActions && (
+                                            <div
+                                                style={{
+                                                    display: "flex",
+                                                    flexDirection: "column",
+                                                    gap: 8,
+                                                    minWidth: 170,
+                                                }}
                                             >
-                                                Зафіксувати ТО
-                                            </button>
+                                                {canService && (
+                                                    <label style={styles.label}>
+                                                        Статус
+                                                        <select
+                                                            style={styles.input}
+                                                            value={vehicle.status}
+                                                            onChange={(event) =>
+                                                                changeStatus(vehicle, event.target.value)
+                                                            }
+                                                        >
+                                                            {VEHICLE_STATUSES.map((item) => (
+                                                                <option key={item.value} value={item.value}>
+                                                                    {item.label}
+                                                                </option>
+                                                            ))}
+                                                        </select>
+                                                    </label>
+                                                )}
 
-                                            <button
-                                                type="button"
-                                                className="fl-btn"
-                                                onClick={() => editVehicle(vehicle)}
-                                            >
-                                                Редагувати
-                                            </button>
-                                        </div>
+                                                {canService && vehicle.status !== "maintenance" && (
+                                                    <button
+                                                        type="button"
+                                                        className="fl-btn fl-btn--warn"
+                                                        onClick={() => putOnService(vehicle)}
+                                                    >
+                                                        Поставити на ТО
+                                                    </button>
+                                                )}
+
+                                                    {canRepairStatus &&
+                                                    !canService &&
+                                                    vehicle.status !== "repair" &&
+                                                    !issues.some(
+                                                        (item) => item.vehicle_id === vehicle.id
+                                                    ) && (
+                                                        <button
+                                                            type="button"
+                                                            className="fl-btn fl-btn--warn"
+                                                            onClick={() => putOnRepair(vehicle)}
+                                                        >
+                                                            Поставити на ремонт
+                                                        </button>
+                                                    )}
+
+                                                {canService && (
+                                                    <button
+                                                        type="button"
+                                                        className="fl-btn fl-btn--ok"
+                                                        onClick={() => completeService(vehicle)}
+                                                    >
+                                                        Зафіксувати ТО
+                                                    </button>
+                                                )}
+
+                                                {canManage && (
+                                                    <button
+                                                        type="button"
+                                                        className="fl-btn"
+                                                        onClick={() => editVehicle(vehicle)}
+                                                    >
+                                                        Редагувати
+                                                    </button>
+                                                )}
+                                            </div>
+                                        )}
                                     </div>
                                 </article>
                             );

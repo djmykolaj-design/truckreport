@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import "./Dashboard.css";
 import useDashboard from "../hooks/useDashboard";
 import { useNavigate } from "react-router-dom";
@@ -10,7 +10,9 @@ import {
   ArrowRight,
 } from "lucide-react";
 import {
-  joinCompany,
+  requestJoinCompany,
+  getMyJoinRequest,
+  cancelJoinRequest,
   getMyCompany,
   leaveCompany,
 } from "../services/company";
@@ -40,15 +42,24 @@ export default function Dashboard() {
   const [joining, setJoining] = useState(false);
   const [leaving, setLeaving] = useState(false);
   const [myCompany, setMyCompany] = useState(null);
+  const [joinRequest, setJoinRequest] = useState(null);
   const [planInfo, setPlanInfo] = useState(null);
   const [schengenError, setSchengenError] = useState("");
+
+  const refreshFirm = useCallback(async () => {
+    const [company, request] = await Promise.all([
+      getMyCompany(),
+      getMyJoinRequest(),
+    ]);
+    setMyCompany(company);
+    setJoinRequest(request);
+    return { company, request };
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
 
-    getMyCompany().then((company) => {
-      if (!cancelled) setMyCompany(company);
-    });
+    refreshFirm();
 
     getMyPlan().then((info) => {
       if (!cancelled) setPlanInfo(info);
@@ -57,7 +68,27 @@ export default function Dashboard() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [refreshFirm]);
+
+  // Поки заявка очікує: перевіряємо, чи її підтвердили
+  useEffect(() => {
+    if (!joinRequest) return undefined;
+
+    const check = async () => {
+      if (document.visibilityState === "hidden") return;
+      const { company } = await refreshFirm();
+      // Роль змінилась: перезавантажуємо, щоб меню оновилось
+      if (company) window.location.reload();
+    };
+
+    document.addEventListener("visibilitychange", check);
+    const timer = setInterval(check, 30000);
+
+    return () => {
+      document.removeEventListener("visibilitychange", check);
+      clearInterval(timer);
+    };
+  }, [joinRequest, refreshFirm]);
 
   const formatExpense = () => {
     if (!activeTripStats) return "0";
@@ -79,13 +110,36 @@ export default function Dashboard() {
     setJoining(true);
 
     try {
-      const company = await joinCompany(firmCode);
+      const result = await requestJoinCompany(firmCode);
 
-      if (company) {
-        setMyCompany(company);
-        setFirmCode("");
-        alert(`Ти в фірмі «${company.name}»`);
+      if (!result) return;
+
+      setFirmCode("");
+
+      if (result.status === "member") {
+        // Ви вже в цій фірмі
+        await refreshFirm();
+        return;
       }
+
+      setJoinRequest({
+        company_id: result.company_id,
+        company_name: result.company_name,
+      });
+    } finally {
+      setJoining(false);
+    }
+  };
+
+  const handleCancelRequest = async () => {
+    if (joining || leaving) return;
+    if (!window.confirm("Скасувати заявку на вступ у фірму?")) return;
+
+    setJoining(true);
+
+    try {
+      const ok = await cancelJoinRequest();
+      if (ok) setJoinRequest(null);
     } finally {
       setJoining(false);
     }
@@ -352,6 +406,22 @@ export default function Dashboard() {
               {leaving ? "Від'єдную…" : "Від'єднатися від фірми"}
             </button>
           </>
+        ) : joinRequest ? (
+          <>
+            <div className="hero-empty" style={{ marginTop: 10 }}>
+              Заявку надіслано у фірму «{joinRequest.company_name}».
+              Чекайте підтвердження шефа.
+            </div>
+
+            <button
+              className="hero-btn"
+              style={{ marginTop: 12, background: "#475569" }}
+              disabled={joining}
+              onClick={handleCancelRequest}
+            >
+              {joining ? "Скасовую…" : "Скасувати заявку"}
+            </button>
+          </>
         ) : (
           <>
             <div className="hero-empty" style={{ marginTop: 10 }}>
@@ -380,7 +450,7 @@ export default function Dashboard() {
               disabled={joining || leaving || !firmCode.trim()}
               onClick={handleJoin}
             >
-              {joining ? "Приєдную…" : "Приєднатись до фірми"}
+              {joining ? "Надсилаю…" : "Надіслати заявку"}
             </button>
           </>
         )}

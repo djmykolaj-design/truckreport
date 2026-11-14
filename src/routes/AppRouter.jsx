@@ -15,6 +15,7 @@ import ReportBreakdown from "../pages/ReportBreakdown";
 
 import AuthGuard from "../components/AuthGuard";
 import RequireCompany from "../components/RequireCompany";
+import RequireRole from "../components/RequireRole";
 import Login from "../pages/Login";
 import ResetPassword from "../pages/ResetPassword";
 import Office from "../pages/Office";
@@ -52,7 +53,9 @@ export default function AppRouter() {
             path="/trips"
             element={
               <AuthGuard>
-                <TripsV4 />
+                <RequireRole perm="trips.own">
+                  <TripsV4 />
+                </RequireRole>
               </AuthGuard>
             }
           />
@@ -61,7 +64,9 @@ export default function AppRouter() {
             path="/schengen"
             element={
               <AuthGuard>
-                <Schengen />
+                <RequireRole perm="trips.own">
+                  <Schengen />
+                </RequireRole>
               </AuthGuard>
             }
           />
@@ -133,7 +138,9 @@ export default function AppRouter() {
             path="/office"
             element={
               <AuthGuard>
-                <Office />
+                <RequireRole office>
+                  <Office />
+                </RequireRole>
               </AuthGuard>
             }
           />
@@ -142,7 +149,9 @@ export default function AppRouter() {
             path="/company"
             element={
               <AuthGuard>
-                <CompanyOffice />
+                <RequireRole office>
+                  <CompanyOffice />
+                </RequireRole>
               </AuthGuard>
             }
           />
@@ -151,7 +160,9 @@ export default function AppRouter() {
             path="/office/:tripId"
             element={
               <AuthGuard>
-                <OfficeTrip />
+                <RequireRole office>
+                  <OfficeTrip />
+                </RequireRole>
               </AuthGuard>
             }
           />
@@ -160,7 +171,9 @@ export default function AppRouter() {
             path="/fleet"
             element={
               <AuthGuard>
-                <Fleet />
+                <RequireRole perm="fleet.view">
+                  <Fleet />
+                </RequireRole>
               </AuthGuard>
             }
           />
@@ -170,7 +183,9 @@ export default function AppRouter() {
             element={
               <AuthGuard>
                 <RequireCompany>
-                  <ReportBreakdown />
+                  <RequireRole any={["breakdown.report", "breakdown.view"]}>
+                    <ReportBreakdown />
+                  </RequireRole>
                 </RequireCompany>
               </AuthGuard>
             }

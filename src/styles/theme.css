@@ -190,7 +190,7 @@ textarea:focus {
   outline: none;
 }
 
-/* Усі сторінки шефа вирівнюємо по лівому краю */
+/* Усі сторінки керівника вирівнюємо по лівому краю */
 .main-content > div,
 main > div {
   margin-left: 0;

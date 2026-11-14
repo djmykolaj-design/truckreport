@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
-import { getMyProfile } from "../services/profile";
+import { getMyProfile, roleCan, isOfficeRole } from "../services/profile";
 import { getMyCompany, leaveCompany } from "../services/company";
 import { loadFleetTrips } from "../services/office";
 import { calculateFinance } from "../utils/financeCalculator";
@@ -68,6 +68,12 @@ function daysLeft(dateStr) {
   return Math.ceil((new Date(dateStr).getTime() - Date.now()) / 86400000);
 }
 
+function fmtDate(dateStr) {
+  if (!dateStr) return "";
+  const [y, m, d] = String(dateStr).slice(0, 10).split("-");
+  return `${d}.${m}.${y}`;
+}
+
 function fmtMoney(map) {
   const parts = CURRENCIES.filter((c) => Math.abs(map?.[c] || 0) > 0.004).map(
     (c) => `${Math.round(map[c]).toLocaleString("uk-UA")} ${SYMBOL[c]}`
@@ -99,7 +105,7 @@ function tripFuel(trip) {
 
 /* ───────────── Фірма ───────────── */
 
-function FirmTab({ company, drivers, vehicles }) {
+function FirmTab({ company, drivers, vehicles, canInvite, canLeave }) {
   const navigate = useNavigate();
 
   const copyCode = async () => {
@@ -119,6 +125,11 @@ function FirmTab({ company, drivers, vehicles }) {
     window.location.reload();
   };
 
+    const logout = async () => {
+    await supabase.auth.signOut();
+    navigate("/login");
+  };
+
   return (
     <>
       <div style={card}>
@@ -131,28 +142,40 @@ function FirmTab({ company, drivers, vehicles }) {
         </div>
       </div>
 
-      <div style={card}>
-        <div style={{ color: "var(--text-secondary)", fontSize: 13 }}>Код фірми для водіїв</div>
-        <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 6 }}>
-          <div style={{ fontWeight: 800, fontSize: 20, letterSpacing: 1 }}>
-            {company?.invite_code || "—"}
+      {canInvite && (
+        <div style={card}>
+          <div style={{ color: "var(--text-secondary)", fontSize: 13 }}>Код фірми для працівників</div>
+          <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 6 }}>
+            <div style={{ fontWeight: 800, fontSize: 20, letterSpacing: 1 }}>
+              {company?.invite_code || "—"}
+            </div>
+            <button type="button" onClick={copyCode} style={btnOk}>
+              Копіювати
+            </button>
           </div>
-          <button type="button" onClick={copyCode} style={btnOk}>
-            Копіювати
-          </button>
+          <p style={{ color: "var(--text-secondary)", fontSize: 12, marginBottom: 0 }}>
+            Людина вводить цей код у застосунку й подає заявку на вступ. Підтвердіть
+            її у розділі «Водії»: там же обираєте роль (водій, логіст, механік,
+            заступник).
+          </p>
         </div>
-        <p style={{ color: "var(--text-secondary)", fontSize: 12, marginBottom: 0 }}>
-          Водій вводить цей код у застосунку, щоб вступити у фірму. Після цього
-          прив'яжіть його акаунт у розділі «Водії».
-        </p>
-      </div>
+      )}
 
-      <button
+      {canLeave && (
+        <button
+          type="button"
+          onClick={leave}
+          style={{ ...btnDanger, padding: "12px 16px", borderRadius: 12 }}
+        >
+          Від'єднатися від фірми
+        </button>
+      )}
+            <button
         type="button"
-        onClick={leave}
-        style={{ ...btnDanger, padding: "12px 16px", borderRadius: 12 }}
+        onClick={logout}
+        style={{ ...btn, display: "block", padding: "12px 16px", borderRadius: 12, marginTop: 10 }}
       >
-        Від'єднатися від фірми
+        Вийти з акаунта
       </button>
     </>
   );
@@ -160,7 +183,7 @@ function FirmTab({ company, drivers, vehicles }) {
 
 /* ───────────── Документи ───────────── */
 
-function DocsTab({ companyId, drivers, vehicles }) {
+function DocsTab({ companyId, drivers, vehicles, canManage, canSeeDriverDocs }) {
   const [docs, setDocs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [form, setForm] = useState({ type: DOC_TYPES[0], target: "company", expires: "", note: "" });
@@ -267,56 +290,58 @@ function DocsTab({ companyId, drivers, vehicles }) {
 
   return (
     <>
-      <div style={card}>
-        <h2 style={{ fontSize: 17, margin: "0 0 10px" }}>Додати документ</h2>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-          <select
-            value={form.type}
-            onChange={(e) => setForm({ ...form, type: e.target.value })}
-            style={{ ...inputStyle, flex: 1, minWidth: 180 }}
-          >
-            {DOC_TYPES.map((t) => (
-              <option key={t} value={t}>{t}</option>
-            ))}
-          </select>
-
-          <select
-            value={form.target}
-            onChange={(e) => setForm({ ...form, target: e.target.value })}
-            style={{ ...inputStyle, flex: 1, minWidth: 180 }}
-          >
-            <option value="company">Фірма</option>
-            <optgroup label="Машини">
-              {vehicles.map((v) => (
-                <option key={v.id} value={`v:${v.id}`}>
-                  {[v.name, v.plate_number].filter(Boolean).join(" — ")}
-                </option>
+      {canManage && (
+        <div style={card}>
+          <h2 style={{ fontSize: 17, margin: "0 0 10px" }}>Додати документ</h2>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+            <select
+              value={form.type}
+              onChange={(e) => setForm({ ...form, type: e.target.value })}
+              style={{ ...inputStyle, flex: 1, minWidth: 180 }}
+            >
+              {DOC_TYPES.map((t) => (
+                <option key={t} value={t}>{t}</option>
               ))}
-            </optgroup>
-            <optgroup label="Водії">
-              {drivers.map((d) => (
-                <option key={d.id} value={`d:${d.id}`}>{d.full_name}</option>
-              ))}
-            </optgroup>
-          </select>
+            </select>
 
-          <input
-            type="date"
-            value={form.expires}
-            onChange={(e) => setForm({ ...form, expires: e.target.value })}
-            style={inputStyle}
-          />
-          <input
-            value={form.note}
-            onChange={(e) => setForm({ ...form, note: e.target.value })}
-            placeholder="Примітка (номер полісу тощо)"
-            style={{ ...inputStyle, flex: 2, minWidth: 200 }}
-          />
-          <button type="button" onClick={add} style={btnOk}>
-            Додати
-          </button>
+            <select
+              value={form.target}
+              onChange={(e) => setForm({ ...form, target: e.target.value })}
+              style={{ ...inputStyle, flex: 1, minWidth: 180 }}
+            >
+              <option value="company">Фірма</option>
+              <optgroup label="Машини">
+                {vehicles.map((v) => (
+                  <option key={v.id} value={`v:${v.id}`}>
+                    {[v.name, v.plate_number].filter(Boolean).join(" — ")}
+                  </option>
+                ))}
+              </optgroup>
+              <optgroup label="Водії">
+                {drivers.map((d) => (
+                  <option key={d.id} value={`d:${d.id}`}>{d.full_name}</option>
+                ))}
+              </optgroup>
+            </select>
+
+            <input
+              type="date"
+              value={form.expires}
+              onChange={(e) => setForm({ ...form, expires: e.target.value })}
+              style={inputStyle}
+            />
+            <input
+              value={form.note}
+              onChange={(e) => setForm({ ...form, note: e.target.value })}
+              placeholder="Примітка (номер полісу тощо)"
+              style={{ ...inputStyle, flex: 2, minWidth: 200 }}
+            />
+            <button type="button" onClick={add} style={btnOk}>
+              Додати
+            </button>
+          </div>
         </div>
-      </div>
+      )}
 
       <div style={card}>
         <h2 style={{ fontSize: 17, margin: "0 0 10px" }}>Документи і терміни</h2>
@@ -325,7 +350,11 @@ function DocsTab({ companyId, drivers, vehicles }) {
           <input
             value={filter.q}
             onChange={(e) => setFilter({ ...filter, q: e.target.value })}
-            placeholder="Пошук: назва, примітка, машина, водій"
+            placeholder={
+              canSeeDriverDocs
+                ? "Пошук: назва, примітка, машина, водій"
+                : "Пошук: назва, примітка, машина"
+            }
             style={{ ...inputStyle, flex: 2, minWidth: 220 }}
           />
 
@@ -334,8 +363,10 @@ function DocsTab({ companyId, drivers, vehicles }) {
             onChange={(e) => setFilter({ ...filter, target: e.target.value })}
             style={{ ...inputStyle, flex: 1, minWidth: 170 }}
           >
-            <option value="all">Усі (машини, водії, фірма)</option>
-            <option value="company">Тільки фірма</option>
+            <option value="all">
+              {canSeeDriverDocs ? "Усі (машини, водії, фірма)" : "Усі машини"}
+            </option>
+            {canSeeDriverDocs && <option value="company">Тільки фірма</option>}
             <optgroup label="Машини">
               {vehicles.map((v) => (
                 <option key={v.id} value={`v:${v.id}`}>
@@ -343,11 +374,13 @@ function DocsTab({ companyId, drivers, vehicles }) {
                 </option>
               ))}
             </optgroup>
-            <optgroup label="Водії">
-              {drivers.map((d) => (
-                <option key={d.id} value={`d:${d.id}`}>{d.full_name}</option>
-              ))}
-            </optgroup>
+            {canSeeDriverDocs && (
+              <optgroup label="Водії">
+                {drivers.map((d) => (
+                  <option key={d.id} value={`d:${d.id}`}>{d.full_name}</option>
+                ))}
+              </optgroup>
+            )}
           </select>
 
           <select
@@ -405,16 +438,25 @@ function DocsTab({ companyId, drivers, vehicles }) {
                 </div>
               </div>
               <div style={{ color, fontWeight: 700, fontSize: 13, minWidth: 110 }}>{text}</div>
-              <input
-                type="date"
-                defaultValue={d.expires_on || ""}
-                onBlur={(e) => e.target.value !== d.expires_on && changeDate(d, e.target.value)}
-                style={inputStyle}
-                title="Змінити дату (після продовження)"
-              />
-              <button type="button" onClick={() => remove(d)} style={{ ...btn, background: "var(--surface-light)" }}>
-                Видалити
-              </button>
+
+              {canManage ? (
+                <>
+                  <input
+                    type="date"
+                    defaultValue={d.expires_on || ""}
+                    onBlur={(e) => e.target.value !== d.expires_on && changeDate(d, e.target.value)}
+                    style={inputStyle}
+                    title="Змінити дату (після продовження)"
+                  />
+                  <button type="button" onClick={() => remove(d)} style={{ ...btn, background: "var(--surface-light)" }}>
+                    Видалити
+                  </button>
+                </>
+              ) : (
+                <div style={{ color: "var(--text-secondary)", fontSize: 13 }}>
+                  до {fmtDate(d.expires_on) || "—"}
+                </div>
+              )}
             </div>
           );
         })}
@@ -809,14 +851,17 @@ export default function CompanyOffice() {
   useEffect(() => {
     async function load() {
       const me = await getMyProfile();
-      if (me?.role !== "boss" || !me.company_id) {
+      if (!isOfficeRole(me) || !me.company_id) {
         setData({ loading: false, denied: true });
         return;
       }
 
+      // Фінанси бачать лише керівник і заступник: іншим ці дані не вантажимо
+      const canFinance = roleCan(me, "finance.view");
+
       const [company, trips, driversRes, vehiclesRes, servicesRes] = await Promise.all([
         getMyCompany(),
-        loadFleetTrips(),
+        canFinance ? loadFleetTrips() : Promise.resolve([]),
         supabase
           .from("company_drivers")
           .select("id, full_name, user_id")
@@ -827,15 +872,18 @@ export default function CompanyOffice() {
           .select("id, name, plate_number, vehicle_type, odometer")
           .eq("company_id", me.company_id)
           .order("name"),
-        supabase
-          .from("fleet_services")
-          .select("vehicle_id, service_date, cost")
-          .eq("company_id", me.company_id)
-          .eq("status", "done"),
+        canFinance
+          ? supabase
+              .from("fleet_services")
+              .select("vehicle_id, service_date, cost")
+              .eq("company_id", me.company_id)
+              .eq("status", "done")
+          : Promise.resolve({ data: [] }),
       ]);
 
       setData({
         loading: false,
+        me,
         companyId: me.company_id,
         company,
         trips,
@@ -849,13 +897,19 @@ export default function CompanyOffice() {
   }, []);
 
   if (data.loading) return <p style={{ color: "var(--text-secondary)" }}>Завантаження…</p>;
-  if (data.denied) return <p style={{ color: "var(--text-secondary)" }}>Ця сторінка доступна шефу фірми.</p>;
+  if (data.denied) {
+    return (
+      <p style={{ color: "var(--text-secondary)" }}>
+        Ця сторінка доступна працівникам фірми.
+      </p>
+    );
+  }
 
-  const tabs = [
-    ["firm", "Фірма"],
-    ["docs", "Документи"],
-    ["finance", "Фінанси"],
-  ];
+  const me = data.me;
+
+  const tabs = [["firm", "Фірма"]];
+  if (roleCan(me, "documents.view")) tabs.push(["docs", "Документи"]);
+  if (roleCan(me, "finance.view")) tabs.push(["finance", "Фінанси"]);
 
   return (
     <div style={{ color: "var(--text)", maxWidth: 900 }}>
@@ -882,10 +936,22 @@ export default function CompanyOffice() {
       </div>
 
       {tab === "firm" && (
-        <FirmTab company={data.company} drivers={data.drivers} vehicles={data.vehicles} />
+        <FirmTab
+          company={data.company}
+          drivers={data.drivers}
+          vehicles={data.vehicles}
+          canInvite={roleCan(me, "team.manage")}
+          canLeave={me.role !== "boss"}
+        />
       )}
       {tab === "docs" && (
-        <DocsTab companyId={data.companyId} drivers={data.drivers} vehicles={data.vehicles} />
+        <DocsTab
+          companyId={data.companyId}
+          drivers={data.drivers}
+          vehicles={data.vehicles}
+          canManage={roleCan(me, "documents.manage")}
+          canSeeDriverDocs={roleCan(me, "documents.drivers")}
+        />
       )}
       {tab === "finance" && (
         <FinanceTab

@@ -3,23 +3,26 @@ import { useNavigate } from "react-router-dom";
 import { Building2, KeyRound, Truck, ChevronRight } from "lucide-react";
 import {
   createCompany,
-  joinCompany,
+  requestJoinCompany,
+  getMyJoinRequest,
+  cancelJoinRequest,
   becomeSolo,
 } from "../services/company";
+import { getMyProfile } from "../services/profile";
 import { supabase } from "../lib/supabase";
 
 const OPTIONS = [
   {
     key: "create",
     icon: Building2,
-    title: "Я шеф",
+    title: "Я керівник",
     sub: "Створити фірму й додати водіїв",
   },
   {
     key: "join",
     icon: KeyRound,
-    title: "Я водій фірми",
-    sub: "Приєднатись за кодом від шефа",
+    title: "Я працівник фірми",
+    sub: "Приєднатись за кодом від керівника",
   },
   {
     key: "solo",
@@ -29,21 +32,59 @@ const OPTIONS = [
   },
 ];
 
+// Ім'я вважаємо прийнятним, якщо це щонайменше два слова («Прізвище Ім'я»)
+function isFullName(value) {
+  const parts = String(value || "").trim().split(/\s+/).filter(Boolean);
+  return parts.length >= 2 && parts.every((p) => p.length >= 2);
+}
+
+// my_join_request може повернути об'єкт або масив із одним елементом
+function normalizeRequest(value) {
+  const req = Array.isArray(value) ? value[0] : value;
+  if (!req) return null;
+  if (req.status && req.status !== "pending") return null;
+  return req;
+}
+
 export default function SetupCompany() {
   const navigate = useNavigate();
   const [mode, setMode] = useState("choose");
   const [name, setName] = useState("");
   const [code, setCode] = useState("");
+  const [fullName, setFullName] = useState("");
+  const [pending, setPending] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // Без сесії на цій сторінці нічого не працює: чекаємо до 3 с, потім на вхід
+  // Без сесії на цій сторінці нічого не працює: чекаємо до 3 с, потім на вхід.
+  // Заодно: підставляємо ім'я з профілю й перевіряємо, чи нема вже поданої заявки.
   useEffect(() => {
     let cancelled = false;
     (async () => {
       for (let i = 0; i < 6; i++) {
         const { data } = await supabase.auth.getSession();
-        if (data?.session) return;
+        const session = data?.session;
+
+        if (session) {
+          const profile = await getMyProfile();
+
+          if (cancelled) return;
+
+          if (profile?.company_id) {
+            navigate("/", { replace: true });
+            return;
+          }
+
+          if (isFullName(profile?.full_name)) setFullName(profile.full_name);
+
+          const request = normalizeRequest(await getMyJoinRequest());
+          if (!cancelled && request) {
+            setPending(request);
+            setMode("pending");
+          }
+          return;
+        }
+
         if (cancelled) return;
         await new Promise((r) => setTimeout(r, 500));
       }
@@ -54,11 +95,74 @@ export default function SetupCompany() {
     };
   }, [navigate]);
 
+  // Поки заявка очікує: кожні 4 секунди перевіряємо, чи її підтвердили
+  useEffect(() => {
+    if (mode !== "pending") return undefined;
+
+    let stopped = false;
+
+    const check = async () => {
+      const profile = await getMyProfile();
+      if (stopped) return;
+
+      if (profile?.company_id) {
+        navigate("/", { replace: true });
+        return;
+      }
+
+      const request = normalizeRequest(await getMyJoinRequest());
+      if (stopped) return;
+
+      if (!request) {
+        setPending(null);
+        setMode("choose");
+        setError("Заявку не підтверджено. Перевірте код або зверніться до керівника.");
+      }
+    };
+
+    const timer = setInterval(check, 4000);
+    return () => {
+      stopped = true;
+      clearInterval(timer);
+    };
+  }, [mode, navigate]);
+
   const goHome = () => navigate("/", { replace: true });
 
   const back = () => {
     setMode("choose");
     setError("");
+  };
+
+  // Записує прізвище та ім'я в профіль. Повертає true, якщо все гаразд.
+  const saveFullName = async () => {
+    const value = fullName.trim().replace(/\s+/g, " ");
+
+    if (!isFullName(value)) {
+      setError("Вкажіть прізвище та ім'я, наприклад: Петренко Іван");
+      return false;
+    }
+
+    const { data } = await supabase.auth.getSession();
+    const userId = data?.session?.user?.id;
+
+    if (!userId) {
+      setError("Сесія закінчилась. Увійдіть ще раз.");
+      return false;
+    }
+
+    const { error: saveError } = await supabase
+      .from("profiles")
+      .update({ full_name: value })
+      .eq("id", userId);
+
+    if (saveError) {
+      console.error(saveError);
+      setError("Не вдалося зберегти ім'я. Спробуйте ще раз.");
+      return false;
+    }
+
+    return true;
   };
 
   const onCreate = async (e) => {
@@ -72,6 +176,8 @@ export default function SetupCompany() {
 
     setLoading(true);
     try {
+      if (!(await saveFullName())) return;
+
       const company = await createCompany(name);
       if (company) goHome();
       else setError("Не вдалося створити фірму. Спробуй ще раз.");
@@ -82,6 +188,7 @@ export default function SetupCompany() {
     }
   };
 
+  // Подає заявку. Доки керівник не підтвердить, людина нічого в фірмі не бачить.
   const onJoin = async (e) => {
     e?.preventDefault();
     setError("");
@@ -93,13 +200,35 @@ export default function SetupCompany() {
 
     setLoading(true);
     try {
-      const company = await joinCompany(code);
-      if (company) goHome();
-      else setError("Не вдалося приєднатись. Перевір код і спробуй ще раз.");
+      if (!(await saveFullName())) return;
+
+      const result = await requestJoinCompany(code.trim());
+      if (!result) return;
+
+      if (result.status === "member") {
+        goHome();
+        return;
+      }
+
+      setPending(result);
+      setMode("pending");
     } catch (err) {
-      setError(err.message || "Не вдалося приєднатись");
+      setError(err.message || "Не вдалося надіслати заявку");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const onCancelRequest = async () => {
+    setLoading(true);
+    const ok = await cancelJoinRequest();
+    setLoading(false);
+
+    if (ok) {
+      setPending(null);
+      setCode("");
+      setMode("choose");
+      setError("");
     }
   };
 
@@ -159,6 +288,21 @@ export default function SetupCompany() {
     cursor: "pointer",
   };
 
+  const hint = {
+    margin: "-4px 0 12px",
+    color: "var(--text-secondary)",
+    fontSize: 13,
+  };
+
+  const title =
+    mode === "choose"
+      ? "Як ви користуватиметесь TruckReport?"
+      : mode === "create"
+        ? "Створення фірми"
+        : mode === "pending"
+          ? "Заявку надіслано"
+          : "Приєднання до фірми";
+
   return (
     <div
       style={{
@@ -168,18 +312,17 @@ export default function SetupCompany() {
         color: "var(--text)",
       }}
     >
-      <h1 style={{ marginBottom: 8 }}>
-        {mode === "choose"
-          ? "Як ви користуватиметесь TruckReport?"
-          : mode === "create"
-            ? "Створення фірми"
-            : "Приєднання до фірми"}
-      </h1>
+      <h1 style={{ marginBottom: 8 }}>{title}</h1>
 
       <p style={{ color: "var(--text-secondary)", marginBottom: 24 }}>
         {mode === "choose" && "Оберіть, як вам зручніше. Це можна змінити пізніше."}
-        {mode === "create" && "Ви станете шефом і зможете додавати водіїв."}
-        {mode === "join" && "Код фірми дає шеф. Попросіть його надіслати вам код."}
+        {mode === "create" && "Ви станете керівником і зможете додавати водіїв."}
+        {mode === "join" &&
+          "Код фірми дає керівник. Після заявки він підтвердить вас і призначить роль."}
+        {mode === "pending" &&
+          `Чекаємо, поки керівник${
+            pending?.company_name ? ` фірми «${pending.company_name}»` : ""
+          } підтвердить заявку. Ця сторінка оновиться сама.`}
       </p>
 
       {error && (
@@ -197,7 +340,7 @@ export default function SetupCompany() {
 
       {mode === "choose" && (
         <div style={{ display: "grid", gap: 12 }}>
-          {OPTIONS.map(({ key, icon: Icon, title, sub }) => (
+          {OPTIONS.map(({ key, icon: Icon, title: optionTitle, sub }) => (
             <button
               key={key}
               type="button"
@@ -235,7 +378,7 @@ export default function SetupCompany() {
               </span>
 
               <span style={{ flex: 1, minWidth: 0 }}>
-                <b style={{ display: "block", fontSize: 16 }}>{title}</b>
+                <b style={{ display: "block", fontSize: 16 }}>{optionTitle}</b>
                 <small style={{ color: "var(--text-secondary)", fontSize: 13 }}>
                   {sub}
                 </small>
@@ -250,10 +393,17 @@ export default function SetupCompany() {
       {mode === "create" && (
         <form onSubmit={onCreate}>
           <input
+            value={fullName}
+            onChange={(e) => setFullName(e.target.value)}
+            placeholder="Ваше прізвище та ім'я"
+            autoComplete="name"
+            autoFocus
+            style={input}
+          />
+          <input
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="Назва фірми"
-            autoFocus
             style={input}
           />
           <button type="submit" style={primary} disabled={loading}>
@@ -268,19 +418,40 @@ export default function SetupCompany() {
       {mode === "join" && (
         <form onSubmit={onJoin}>
           <input
-            value={code}
-            onChange={(e) => setCode(e.target.value)}
-            placeholder="Код фірми"
+            value={fullName}
+            onChange={(e) => setFullName(e.target.value)}
+            placeholder="Ваше прізвище та ім'я"
+            autoComplete="name"
             autoFocus
             style={input}
           />
+          <p style={hint}>Керівник побачить його в заявці й зрозуміє, хто ви.</p>
+          <input
+            value={code}
+            onChange={(e) => setCode(e.target.value)}
+            placeholder="Код фірми"
+            style={input}
+          />
           <button type="submit" style={primary} disabled={loading}>
-            {loading ? "Зачекай..." : "Приєднатись"}
+            {loading ? "Зачекай..." : "Надіслати заявку"}
           </button>
           <button type="button" style={secondary} onClick={back}>
             Назад
           </button>
         </form>
+      )}
+
+      {mode === "pending" && (
+        <div>
+          <button
+            type="button"
+            style={secondary}
+            onClick={onCancelRequest}
+            disabled={loading}
+          >
+            {loading ? "Зачекай..." : "Скасувати заявку"}
+          </button>
+        </div>
       )}
     </div>
   );
