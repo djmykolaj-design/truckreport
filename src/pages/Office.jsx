@@ -5,9 +5,7 @@ import { getMyCompany, leaveCompany } from "../services/company";
 import {
   loadFleetTrips,
   loadCompanyDrivers,
-  loadCompanyAccounts,
   addCompanyDriver,
-  updateCompanyDriver,
   deleteCompanyDriver,
 } from "../services/office";
 import { calculateRollingSchengen } from "../utils/schengen";
@@ -58,18 +56,15 @@ export default function Office() {
   const [company, setCompany] = useState(null);
   const [trips, setTrips] = useState([]);
   const [drivers, setDrivers] = useState([]);
-  const [accounts, setAccounts] = useState([]);
   const [selectedId, setSelectedId] = useState("");
   const [onlyActive, setOnlyActive] = useState(false);
   const [loading, setLoading] = useState(true);
   const [newName, setNewName] = useState("");
-  const [newUser, setNewUser] = useState("");
 
   async function loadAll() {
-    const [list, people, accs] = await Promise.all([
+    const [list, people] = await Promise.all([
       loadFleetTrips(),
       loadCompanyDrivers(),
-      loadCompanyAccounts(),
     ]);
 
     list.sort((a, b) => {
@@ -80,7 +75,6 @@ export default function Office() {
 
     setTrips(list);
     setDrivers(people);
-    setAccounts(accs);
   }
 
   useEffect(() => {
@@ -159,22 +153,13 @@ export default function Office() {
   const selectedSchengen =
     selected && selected.user_id ? calculateRollingSchengen(selected.stays || []) : null;
 
-  const accountLabel = (id) => {
-    const a = accounts.find((x) => x.id === id);
-    if (!a) return "";
-    return (a.full_name || "акаунт") + (a.id === profile.id ? " (ви)" : "");
-  };
-
-  const freeAccounts = accounts.filter((a) => !drivers.some((d) => d.user_id === a.id));
-
   const addDriver = async () => {
     if (!newName.trim()) {
       alert("Введіть ім'я водія");
       return;
     }
-    if (await addCompanyDriver(newName, newUser)) {
+    if (await addCompanyDriver(newName, "")) {
       setNewName("");
-      setNewUser("");
       await loadAll();
     }
   };
@@ -187,13 +172,9 @@ export default function Office() {
     }
   };
 
-  const linkDriver = async (d, userId) => {
-    if (await updateCompanyDriver(d.id, { user_id: userId || null })) await loadAll();
-  };
-
   return (
     <div style={{ color: "var(--text)", maxWidth: 900 }}>
-            <h1 style={{ margin: "0 0 4px", fontSize: 30, fontWeight: 600 }}>
+      <h1 style={{ margin: "0 0 4px", fontSize: 30, fontWeight: 600 }}>
         {canManageTeam ? "Команда" : "Водії"}
       </h1>
       <p style={{ color: "var(--text-secondary)", margin: "0 0 18px" }}>
@@ -209,7 +190,7 @@ export default function Office() {
 
         <p style={{ color: "var(--text-secondary)", fontSize: 13, margin: "10px 0" }}>
           {canManageDrivers
-            ? "Саме цей список водії бачать при створенні рейсу. Щоб бачити Шенген водія, прив'яжіть його акаунт (водій спершу подає заявку за кодом фірми, ви підтверджуєте її вище)."
+            ? "Саме цей список водії бачать при створенні рейсу. Водії з роллю «Водій» додаються сюди самі після підтвердження заявки. Вручну додавайте лише тих, хто ще не має акаунта."
             : "Список водіїв фірми. Редагує його керівник або заступник."}
         </p>
 
@@ -225,33 +206,22 @@ export default function Office() {
               borderTop: "1px solid var(--border)",
             }}
           >
-            <div style={{ fontWeight: 600, minWidth: 140 }}>{d.full_name}</div>
+            <div style={{ fontWeight: 600, flex: 1, minWidth: 140 }}>{d.full_name}</div>
 
-            {canManageDrivers ? (
-              <>
-                <select
-                  value={d.user_id || ""}
-                  onChange={(e) => linkDriver(d, e.target.value)}
-                  style={{ ...inputStyle, flex: 1, minWidth: 180 }}
-                >
-                  <option value="">— без акаунта —</option>
-                  {accounts
-                    .filter((a) => a.id === d.user_id || freeAccounts.some((f) => f.id === a.id))
-                    .map((a) => (
-                      <option key={a.id} value={a.id}>
-                        {accountLabel(a.id)}
-                      </option>
-                    ))}
-                </select>
+            <span
+              style={{
+                fontSize: 13,
+                fontWeight: 600,
+                color: d.user_id ? "var(--primary)" : "var(--text-secondary)",
+              }}
+            >
+              {d.user_id ? "акаунт прив'язано" : "без акаунта"}
+            </span>
 
-                <button type="button" onClick={() => removeDriver(d)} style={smallBtn}>
-                  Видалити
-                </button>
-              </>
-            ) : (
-              <span style={{ color: "var(--text-secondary)", fontSize: 14 }}>
-                {d.user_id ? accountLabel(d.user_id) || "акаунт прив'язано" : "без акаунта"}
-              </span>
+            {canManageDrivers && (
+              <button type="button" onClick={() => removeDriver(d)} style={smallBtn}>
+                Видалити
+              </button>
             )}
           </div>
         ))}
@@ -273,18 +243,6 @@ export default function Office() {
               placeholder="Ім'я водія, напр. Шумило М"
               style={{ ...inputStyle, flex: 1, minWidth: 180 }}
             />
-            <select
-              value={newUser}
-              onChange={(e) => setNewUser(e.target.value)}
-              style={{ ...inputStyle, flex: 1, minWidth: 180 }}
-            >
-              <option value="">Акаунт (необов'язково)</option>
-              {freeAccounts.map((a) => (
-                <option key={a.id} value={a.id}>
-                  {accountLabel(a.id)}
-                </option>
-              ))}
-            </select>
             <button type="button" onClick={addDriver} style={okBtn}>
               Додати
             </button>
