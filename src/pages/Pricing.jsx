@@ -1,13 +1,20 @@
 import { useEffect, useState } from "react";
 import { Check } from "lucide-react";
 import { getMyPlan } from "../services/plan";
+import {
+  getMyInterests,
+  saveInterest,
+  removeInterest,
+} from "../services/planInterest";
 
 // Ціни й склад планів: змінюйте тут, коли визначитесь остаточно.
-// Business рахується прогресивно: кожен діапазон за своєю ціною.
+// Business рахується прогресивно: кожен діапазон за своєю ціною (грн за машину на місяць).
+const PRO_PRICE = 150;
+
 const BUSINESS_TIERS = [
-  { upTo: 20, price: 6 },
-  { upTo: 50, price: 5 },
-  { upTo: 100, price: 4 },
+  { upTo: 20, price: 250 },
+  { upTo: 50, price: 210 },
+  { upTo: 100, price: 170 },
 ];
 const BUSINESS_MAX = BUSINESS_TIERS[BUSINESS_TIERS.length - 1].upTo;
 
@@ -30,11 +37,15 @@ function tierLabel(index) {
   return `${from}–${BUSINESS_TIERS[index].upTo} машин`;
 }
 
+function money(value) {
+  return Math.round(value).toLocaleString("uk-UA");
+}
+
 const PLANS = [
   {
     id: "free",
     name: "Безкоштовний",
-    price: "0",
+    price: "0 грн",
     period: "назавжди",
     note: "Щоб спробувати і вести поточний рейс",
     features: [
@@ -47,8 +58,8 @@ const PLANS = [
   {
     id: "pro",
     name: "Pro",
-    price: "4 $",
-    period: "на місяць, або 30 $ на рік",
+    price: `${PRO_PRICE} грн`,
+    period: "на місяць",
     note: "Для водія, який веде облік постійно",
     highlight: true,
     features: [
@@ -61,7 +72,7 @@ const PLANS = [
   {
     id: "business",
     name: "Business",
-    price: `від ${BUSINESS_TIERS[0].price} $`,
+    price: `від ${BUSINESS_TIERS[BUSINESS_TIERS.length - 1].price} грн`,
     period: "за машину на місяць",
     note: "Для фірми з автопарком: чим більший парк, тим дешевша машина",
     features: [
@@ -69,12 +80,12 @@ const PLANS = [
       "ТО, ремонти, поломки, документи",
       "Витрати за валютами, графіки за 6 і 12 місяців",
       "Pro для всіх водіїв фірми",
+      "Працівники фірми (логіст, механік, заступник шефа) безкоштовно, скоро",
     ],
   },
 ];
 
-function BusinessCalculator() {
-  const [value, setValue] = useState("10");
+function BusinessCalculator({ value, setValue }) {
   const vehicles = Math.max(0, Math.floor(Number(value) || 0));
   const overLimit = vehicles > BUSINESS_MAX;
   const monthly = businessMonthly(Math.min(vehicles, BUSINESS_MAX));
@@ -98,7 +109,7 @@ function BusinessCalculator() {
             style={{ display: "flex", justifyContent: "space-between" }}
           >
             <span style={{ color: "var(--text-secondary)" }}>{tierLabel(index)}</span>
-            <b>{tier.price} $ за машину</b>
+            <b>{tier.price} грн за машину</b>
           </div>
         ))}
         <div style={{ display: "flex", justifyContent: "space-between" }}>
@@ -110,7 +121,7 @@ function BusinessCalculator() {
       </div>
 
       <label style={{ display: "grid", gap: 6, color: "var(--text-secondary)" }}>
-        Скільки у вас машин
+        Скільки у вас машин (причепи не рахуються)
         <input
           type="number"
           min="0"
@@ -138,9 +149,9 @@ function BusinessCalculator() {
         )}
         {vehicles > 0 && !overLimit && (
           <>
-            Разом: <b>{monthly} $ на місяць</b>
+            Разом: <b>{money(monthly)} грн на місяць</b>
             <div style={{ color: "var(--text-secondary)", marginTop: 2 }}>
-              у середньому {average.toFixed(2)} $ за машину
+              у середньому {money(average)} грн за машину
             </div>
           </>
         )}
@@ -156,11 +167,17 @@ function BusinessCalculator() {
 
 export default function Pricing() {
   const [current, setCurrent] = useState(null);
+  const [interests, setInterests] = useState({});
+  const [busyPlan, setBusyPlan] = useState(null);
+  const [vehiclesValue, setVehiclesValue] = useState("10");
 
   useEffect(() => {
     let cancelled = false;
     getMyPlan().then((p) => {
       if (!cancelled) setCurrent(p);
+    });
+    getMyInterests().then((list) => {
+      if (!cancelled) setInterests(list);
     });
     return () => {
       cancelled = true;
@@ -169,12 +186,47 @@ export default function Pricing() {
 
   const currentId = current?.plan || "free";
 
+  const want = async (planId) => {
+    const vehicles =
+      planId === "business"
+        ? Math.max(0, Math.floor(Number(vehiclesValue) || 0)) || null
+        : null;
+
+    setBusyPlan(planId);
+    const ok = await saveInterest(planId, vehicles);
+    setBusyPlan(null);
+
+    if (!ok) {
+      alert("Не вдалося зберегти. Спробуйте ще раз.");
+      return;
+    }
+
+    setInterests((prev) => ({ ...prev, [planId]: { plan: planId, vehicles } }));
+  };
+
+  const unwant = async (planId) => {
+    setBusyPlan(planId);
+    const ok = await removeInterest(planId);
+    setBusyPlan(null);
+
+    if (!ok) {
+      alert("Не вдалося скасувати. Спробуйте ще раз.");
+      return;
+    }
+
+    setInterests((prev) => {
+      const next = { ...prev };
+      delete next[planId];
+      return next;
+    });
+  };
+
   return (
     <main style={{ color: "var(--text)", maxWidth: 1000, paddingBottom: 32 }}>
       <h1 style={{ margin: "0 0 8px", fontSize: 28 }}>Тарифи</h1>
       <p style={{ color: "var(--text-secondary)", marginTop: 0, maxWidth: 560 }}>
         Почніть безкоштовно. Платний план потрібен, коли хочете повну історію,
-        аналітику й експорт або ведете автопарк.
+        аналітику й експорт або ведете автопарк. Ціни вказані в гривнях.
       </p>
 
       {current && (
@@ -207,6 +259,8 @@ export default function Pricing() {
       >
         {PLANS.map((plan) => {
           const isCurrent = currentId === plan.id;
+          const interest = interests[plan.id];
+          const busy = busyPlan === plan.id;
 
           return (
             <section
@@ -247,7 +301,12 @@ export default function Pricing() {
                 {plan.period}
               </div>
 
-              {plan.id === "business" && <BusinessCalculator />}
+              {plan.id === "business" && (
+                <BusinessCalculator
+                  value={vehiclesValue}
+                  setValue={setVehiclesValue}
+                />
+              )}
 
               <ul
                 style={{
@@ -273,43 +332,103 @@ export default function Pricing() {
                 ))}
               </ul>
 
-              {plan.id === "free" ? (
-                <div
-                  style={{
-                    padding: "10px 12px",
-                    textAlign: "center",
-                    borderRadius: 10,
-                    border: "1px solid var(--border)",
-                    color: "var(--text-secondary)",
-                    fontSize: 14,
-                    fontWeight: 600,
-                  }}
-                >
+              {plan.id === "free" && (
+                <div style={staticBox}>
                   {isCurrent ? "Ваш план" : "Завжди доступний"}
                 </div>
-              ) : (
+              )}
+
+              {plan.id !== "free" && isCurrent && (
+                <div style={staticBox}>Ваш план</div>
+              )}
+
+              {plan.id !== "free" && !isCurrent && !interest && (
                 <button
                   type="button"
-                  disabled
-                  style={{
-                    padding: "10px 12px",
-                    borderRadius: 10,
-                    border: "1px solid var(--border)",
-                    background: "transparent",
-                    color: "var(--text-secondary)",
-                    fontSize: 14,
-                    fontWeight: 600,
-                    fontFamily: "inherit",
-                    cursor: "not-allowed",
-                  }}
+                  disabled={busy}
+                  onClick={() => want(plan.id)}
+                  style={wantButton}
                 >
-                  {isCurrent ? "Ваш план" : "Оплата скоро"}
+                  {plan.id === "pro" ? "Хочу Pro" : "Хочу Business"}
                 </button>
+              )}
+
+              {plan.id !== "free" && !isCurrent && interest && (
+                <div style={{ display: "grid", gap: 8 }}>
+                  <div style={{ ...staticBox, color: "var(--primary)" }}>
+                    ✓ Записано
+                    {plan.id === "business" && interest.vehicles
+                      ? ` на ${interest.vehicles} машин`
+                      : ""}
+                  </div>
+                  <div
+                    style={{
+                      color: "var(--text-secondary)",
+                      fontSize: 13,
+                      textAlign: "center",
+                    }}
+                  >
+                    Оплату ще налаштовуємо. Напишемо, коли відкриємо.
+                  </div>
+                  <button
+                    type="button"
+                    disabled={busy}
+                    onClick={() => unwant(plan.id)}
+                    style={linkButton}
+                  >
+                    Скасувати
+                  </button>
+                </div>
               )}
             </section>
           );
         })}
       </div>
+
+      <p
+        style={{
+          color: "var(--text-secondary)",
+          fontSize: 13,
+          marginTop: 18,
+          maxWidth: 640,
+        }}
+      >
+        Business: перший місяць безкоштовно, рахунок виставляється після місяця
+        користування. Оплата в гривнях, без конвертації за курсом.
+      </p>
     </main>
   );
 }
+
+const staticBox = {
+  padding: "10px 12px",
+  textAlign: "center",
+  borderRadius: 10,
+  border: "1px solid var(--border)",
+  color: "var(--text-secondary)",
+  fontSize: 14,
+  fontWeight: 600,
+};
+
+const wantButton = {
+  padding: "10px 12px",
+  borderRadius: 10,
+  border: "1px solid var(--primary)",
+  background: "transparent",
+  color: "var(--primary)",
+  fontSize: 14,
+  fontWeight: 600,
+  fontFamily: "inherit",
+  cursor: "pointer",
+};
+
+const linkButton = {
+  padding: 4,
+  border: "none",
+  background: "transparent",
+  color: "var(--text-secondary)",
+  fontSize: 13,
+  fontFamily: "inherit",
+  textDecoration: "underline",
+  cursor: "pointer",
+};
