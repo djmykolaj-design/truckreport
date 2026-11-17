@@ -1,6 +1,5 @@
 import { Plate } from "../components/boss/Plate";
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import { getMyProfile, roleCan } from "../services/profile";
 import VehicleRepairs from "../components/fleet/VehicleRepairs";
@@ -178,10 +177,8 @@ function serviceBadge(vehicle) {
 }
 
 export default function Fleet() {
-    const navigate = useNavigate();
-
+  
     const [profile, setProfile] = useState(undefined);
-    const [fleetAllowed, setFleetAllowed] = useState(undefined);
     const [limitInfo, setLimitInfo] = useState({ limit: null, count: 0 });
     const [vehicles, setVehicles] = useState([]);
     const [archived, setArchived] = useState([]);
@@ -280,21 +277,10 @@ export default function Fleet() {
 
     // Чи доступний автопарк на тарифі (Business). Якщо перевірити не вдалося,
     // сторінку не блокуємо: справжній захист додавання машин у базі.
-    async function checkFleetAllowed() {
-        const { data, error: rpcError } = await supabase.rpc("fleet_enabled");
-
-        if (rpcError) {
-            console.error(rpcError);
-            setFleetAllowed(true);
-            return;
-        }
-
-        setFleetAllowed(Boolean(data));
-    }
+    
 
     useEffect(() => {
         getMyProfile().then(setProfile);
-        checkFleetAllowed();
         loadVehicles();
     }, []);
 
@@ -896,59 +882,10 @@ export default function Fleet() {
         );
     }
 
-    if (profile === undefined || fleetAllowed === undefined) {
+       if (profile === undefined) {
         return <p style={{ color: "var(--text-secondary)" }}>Завантаження…</p>;
     }
 
-    // Автопарк доступний лише на тарифі Business
-    if (!fleetAllowed) {
-        return (
-            <main
-                style={{
-                    color: "var(--text)",
-                    maxWidth: 700,
-                    margin: 0,
-                    paddingBottom: 32,
-                }}
-            >
-                <h1 style={{ margin: "0 0 8px", fontSize: 28 }}>Автопарк</h1>
-
-                <section
-                    style={{
-                        background: "var(--surface)",
-                        border: "1px solid var(--border)",
-                        borderRadius: 14,
-                        padding: 22,
-                        marginTop: 20,
-                    }}
-                >
-                    <h2 style={{ margin: "0 0 10px", fontSize: 20 }}>
-                        Автопарк доступний у тарифі Business
-                    </h2>
-
-                    <p
-                        style={{
-                            margin: "0 0 14px",
-                            color: "var(--text-secondary)",
-                            lineHeight: 1.6,
-                        }}
-                    >
-                        Облік машин фірми: ТО, ремонти, поломки, статуси та
-                        пробіг. Рейси, пальне, Шенген і звіти працюють на вашому
-                        тарифі як раніше.
-                    </p>
-
-                    <button
-                        type="button"
-                        style={styles.button}
-                        onClick={() => navigate("/pricing")}
-                    >
-                        Переглянути тарифи
-                    </button>
-                </section>
-            </main>
-        );
-    }
 
     const defaultForType = SERVICE_INTERVAL_KM[form.vehicle_type];
 
