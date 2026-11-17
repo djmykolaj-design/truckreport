@@ -16,6 +16,7 @@ import ReportBreakdown from "../pages/ReportBreakdown";
 import AuthGuard from "../components/AuthGuard";
 import RequireCompany from "../components/RequireCompany";
 import RequireRole from "../components/RequireRole";
+import RequirePlanManager from "../components/RequirePlanManager";
 import Login from "../pages/Login";
 import ResetPassword from "../pages/ResetPassword";
 import Office from "../pages/Office";
@@ -76,7 +77,9 @@ export default function AppRouter() {
             path="/pricing"
             element={
               <AuthGuard>
-                <Pricing />
+                <RequirePlanManager>
+                  <Pricing />
+                </RequirePlanManager>
               </AuthGuard>
             }
           />
@@ -191,7 +194,8 @@ export default function AppRouter() {
               </AuthGuard>
             }
           />
-           <Route
+
+          <Route
             path="/admin/requests"
             element={
               <AuthGuard>
