@@ -56,29 +56,26 @@ export function can(plan, feature) {
   return Boolean(FEATURES[plan]?.[feature]);
 }
 
+const FREE_RESULT = { plan: "free", until: null, label: PLAN_LABELS.free };
+
+// План користувача з урахуванням фірми: працівники отримують план шефа,
+// а власний платний план людини теж враховується (береться вищий).
 export async function getMyPlan() {
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) return { plan: "free", until: null, label: PLAN_LABELS.free };
-
-  const { data, error } = await supabase
-    .from("profiles")
-    .select("plan, plan_until")
-    .eq("id", user.id)
-    .maybeSingle();
+  const { data, error } = await supabase.rpc("my_effective_plan");
 
   if (error) {
     console.error("getMyPlan:", error);
-    return { plan: "free", until: null, label: PLAN_LABELS.free };
+    return FREE_RESULT;
   }
 
-  const plan = effectivePlan(data);
+  const row = Array.isArray(data) ? data[0] : data;
+  if (!row?.plan) return FREE_RESULT;
+
+  const plan = effectivePlan({ plan: row.plan, plan_until: row.plan_until });
 
   return {
     plan,
-    until: data?.plan_until || null,
+    until: row.plan_until || null,
     label: PLAN_LABELS[plan] || PLAN_LABELS.free,
   };
 }
