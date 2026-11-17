@@ -86,6 +86,11 @@ function planStatus(user) {
     : `${label}, строк закінчився ${formatDay(user.plan_until)}`;
 }
 
+function parseLimit(value) {
+  const n = Number(String(value ?? "").trim());
+  return Number.isInteger(n) && n >= 1 && n <= 10000 ? n : null;
+}
+
 export default function AdminRequests() {
   const [owner, setOwner] = useState(null);
   const [rows, setRows] = useState([]);
@@ -93,6 +98,7 @@ export default function AdminRequests() {
 
   const [email, setEmail] = useState("");
   const [found, setFound] = useState(null);
+  const [vehicleLimit, setVehicleLimit] = useState("5");
   const [searching, setSearching] = useState(false);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
@@ -127,7 +133,7 @@ export default function AdminRequests() {
 
     if (!value) {
       setError("Введіть email.");
-      return;
+      return null;
     }
 
     setSearching(true);
@@ -141,17 +147,27 @@ export default function AdminRequests() {
     if (rpcError) {
       console.error(rpcError);
       setError("Не вдалося виконати пошук.");
-      return;
+      return null;
     }
 
     const user = Array.isArray(data) ? data[0] : data;
 
     if (!user) {
       setError("Користувача з таким email не знайдено.");
-      return;
+      return null;
     }
 
+    // Ліміт: збережений, а якщо ще немає, то з заявки, а якщо і її немає, то 5
+    const request = rows.find(
+      (r) =>
+        r.email &&
+        r.email.toLowerCase() === String(user.email || "").toLowerCase() &&
+        r.vehicles
+    );
+
+    setVehicleLimit(String(user.vehicle_limit ?? request?.vehicles ?? 5));
     setFound(user);
+    return user;
   }
 
   function fromRequest(requestEmail) {
@@ -160,19 +176,83 @@ export default function AdminRequests() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
+  async function saveLimit(userId, limit) {
+    const { error: rpcError } = await supabase.rpc("admin_set_vehicle_limit", {
+      p_user: userId,
+      p_limit: limit,
+    });
+
+    if (rpcError) {
+      console.error(rpcError);
+      return false;
+    }
+
+    return true;
+  }
+
+  async function applyLimitOnly() {
+    if (!found) return;
+
+    const limit = parseLimit(vehicleLimit);
+
+    if (limit === null) {
+      setError("Кількість машин має бути цілим числом від 1.");
+      return;
+    }
+
+    setBusy(true);
+    setMessage("");
+    setError("");
+
+    const ok = await saveLimit(found.id, limit);
+
+    setBusy(false);
+
+    if (!ok) {
+      setError("Не вдалося зберегти ліміт.");
+      return;
+    }
+
+    await searchUser(found.email);
+    setMessage(`Ліміт збережено: ${limit} машин.`);
+  }
+
   async function applyPlan(plan, days) {
     if (!found) return;
+
+    let limit = null;
+
+    if (plan === "business") {
+      limit = parseLimit(vehicleLimit);
+
+      if (limit === null) {
+        setError("Вкажіть кількість машин для Business (ціле число від 1).");
+        return;
+      }
+    }
 
     const label =
       plan === "free"
         ? "скинути тариф на Free"
-        : `увімкнути ${PLAN_LABELS[plan]} на ${days} днів`;
+        : plan === "business"
+          ? `увімкнути Business на ${days} днів для ${limit} машин`
+          : `увімкнути ${PLAN_LABELS[plan]} на ${days} днів`;
 
     if (!window.confirm(`${found.email}: ${label}?`)) return;
 
     setBusy(true);
     setMessage("");
     setError("");
+
+    if (limit !== null) {
+      const limitSaved = await saveLimit(found.id, limit);
+
+      if (!limitSaved) {
+        setBusy(false);
+        setError("Не вдалося зберегти ліміт машин. Тариф не змінено.");
+        return;
+      }
+    }
 
     const { error: rpcError } = await supabase.rpc("admin_set_plan", {
       p_user: found.id,
@@ -188,7 +268,6 @@ export default function AdminRequests() {
       return;
     }
 
-    setMessage("Тариф змінено.");
     await searchUser(found.email);
     setMessage("Тариф змінено.");
   }
@@ -300,6 +379,52 @@ export default function AdminRequests() {
             </div>
             <div style={{ marginTop: 8, color: "var(--primary)", fontWeight: 600 }}>
               Зараз: {planStatus(found)}
+            </div>
+            <div style={{ marginTop: 4, color: "var(--text-secondary)", fontSize: 14 }}>
+              Машин зараз: {found.vehicle_count ?? 0}
+              {found.vehicle_limit != null
+                ? ` · ліміт: ${found.vehicle_limit}`
+                : " · ліміт не задано (діє 5)"}
+            </div>
+
+            <div
+              style={{
+                display: "flex",
+                flexWrap: "wrap",
+                alignItems: "center",
+                gap: 8,
+                marginTop: 14,
+              }}
+            >
+              <label
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                  color: "var(--text-secondary)",
+                  fontSize: 14,
+                }}
+              >
+                Кількість машин (Business)
+                <input
+                  type="number"
+                  min="1"
+                  max="10000"
+                  step="1"
+                  value={vehicleLimit}
+                  onChange={(event) => setVehicleLimit(event.target.value)}
+                  style={{ ...inputStyle, flex: "none", minWidth: 0, width: 90 }}
+                />
+              </label>
+
+              <button
+                type="button"
+                style={smallBtn}
+                disabled={busy}
+                onClick={applyLimitOnly}
+              >
+                Зберегти ліміт
+              </button>
             </div>
 
             <div

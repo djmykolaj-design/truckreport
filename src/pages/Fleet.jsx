@@ -5,6 +5,9 @@ import { supabase } from "../lib/supabase";
 import { getMyProfile, roleCan } from "../services/profile";
 import VehicleRepairs from "../components/fleet/VehicleRepairs";
 
+const WHATSAPP_URL = "https://wa.me/380680269478";
+const VIBER_URL = "viber://chat?number=%2B380680269478";
+
 const VEHICLE_TYPES = [
     { value: "truck", label: "Вантажівка / тягач" },
     { value: "van", label: "Мікроавтобус" },
@@ -179,6 +182,7 @@ export default function Fleet() {
 
     const [profile, setProfile] = useState(undefined);
     const [fleetAllowed, setFleetAllowed] = useState(undefined);
+    const [limitInfo, setLimitInfo] = useState({ limit: null, count: 0 });
     const [vehicles, setVehicles] = useState([]);
     const [archived, setArchived] = useState([]);
     const [showArchive, setShowArchive] = useState(false);
@@ -197,6 +201,27 @@ export default function Fleet() {
     const canManage = roleCan(profile, "fleet.manage"); // додавати / редагувати машини
     const canService = roleCan(profile, "fleet.service"); // статуси, ТО, суми ремонтів
     const canRepairStatus = roleCan(profile, "fleet.repairStatus"); // поставити на ремонт
+
+    const limitReached =
+        limitInfo.limit !== null && limitInfo.count >= limitInfo.limit;
+
+    // Скільки машин дозволено тарифом і скільки вже зайнято
+    async function loadLimit() {
+        const [limitResult, countResult] = await Promise.all([
+            supabase.rpc("my_vehicle_limit"),
+            supabase.rpc("my_vehicle_count"),
+        ]);
+
+        if (limitResult.error || countResult.error) {
+            console.error(limitResult.error || countResult.error);
+            return;
+        }
+
+        setLimitInfo({
+            limit: limitResult.data ?? null,
+            count: countResult.data ?? 0,
+        });
+    }
 
     async function loadVehicles() {
         setError("");
@@ -232,6 +257,8 @@ export default function Fleet() {
 
         setIssues(issuesResult.data || []);
         setRepairs(repairsResult.data || []);
+
+        await loadLimit();
 
         setLoading(false);
     }
@@ -452,8 +479,9 @@ export default function Fleet() {
             setError(
                 editingId
                     ? "Не вдалося зберегти транспорт."
-                    : "Не вдалося додати транспорт. Автопарк доступний у тарифі Business."
+                    : "Не вдалося додати транспорт. Перевірте тариф і ліміт машин."
             );
+            await loadLimit();
             setSaving(false);
             return;
         }
@@ -821,7 +849,9 @@ export default function Fleet() {
 
         if (rpcError) {
             console.error(rpcError);
-            setError("Не вдалося повернути машину з архіву.");
+            setError(
+                "Не вдалося повернути машину з архіву. Можливо, вичерпано ліміт машин за тарифом."
+            );
             return;
         }
 
@@ -970,7 +1000,68 @@ export default function Fleet() {
                 </div>
             )}
 
-            {canManage && (
+            {canManage && limitInfo.limit !== null && (
+                <div
+                    style={{
+                        marginTop: 16,
+                        color: limitReached ? "#fbbf24" : "var(--text-secondary)",
+                        fontWeight: 600,
+                        fontSize: 14,
+                    }}
+                >
+                    Машин за тарифом: {limitInfo.count} з {limitInfo.limit}
+                </div>
+            )}
+
+            {canManage && limitReached && !editingId && (
+                <section
+                    style={{
+                        background: "var(--surface)",
+                        border: "1px solid var(--border)",
+                        borderRadius: 14,
+                        padding: 18,
+                        marginTop: 20,
+                    }}
+                >
+                    <h2 style={{ marginTop: 0, fontSize: 19 }}>
+                        Ліміт машин вичерпано
+                    </h2>
+
+                    <p
+                        style={{
+                            margin: "0 0 12px",
+                            color: "var(--text-secondary)",
+                            lineHeight: 1.6,
+                        }}
+                    >
+                        Ваш тариф розрахований на {limitInfo.limit} машин. Щоб
+                        додати більше, напишіть нам, і ми збільшимо ліміт. Також
+                        можна перенести непотрібні машини в архів: вони не
+                        рахуються в ліміті.
+                    </p>
+
+                    <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                        <a
+                            href={VIBER_URL}
+                            className="fl-btn fl-btn--ok"
+                            style={{ textDecoration: "none" }}
+                        >
+                            Viber
+                        </a>
+                        <a
+                            href={WHATSAPP_URL}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="fl-btn fl-btn--ok"
+                            style={{ textDecoration: "none" }}
+                        >
+                            WhatsApp
+                        </a>
+                    </div>
+                </section>
+            )}
+
+            {canManage && (!limitReached || editingId) && (
                 <section
                     style={{
                         background: "var(--surface)",
