@@ -42,6 +42,10 @@ export function generateTripPdf(trip, options = { download: true }) {
                 trip,
                 totalFuel,
                 fuelUsed,
+                // витрата з бака тягача (разом з основним рефом)
+                tankUsed: fuel.fuelUsed || 0,
+                // витрата самого тягача (без рефа)
+                engineFuel: fuel.engineFuel || 0,
                 averageFuel,
                 reefMainFuel: fuel.reefMainFuel,
                 reefSeparateFuel: fuel.reefSeparateFuel,
@@ -75,7 +79,7 @@ export function generateTripPdf(trip, options = { download: true }) {
         pdfDoc.download(fileName);
     }
 
-       // Повертаємо Blob (для Поділитися).
+    // Повертаємо Blob (для Поділитися).
     // Працює і зі старим pdfmake (колбек), і з новим (проміс).
     return new Promise((resolve, reject) => {
         try {

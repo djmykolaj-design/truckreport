@@ -1,4 +1,27 @@
+// Літри: ціле число без нулів, дробове до сотих
+function fmtL(value) {
+    const n = Number(value);
+    if (!Number.isFinite(n)) return "0";
+    const r = Math.round(n * 100) / 100;
+    return Number.isInteger(r) ? String(r) : r.toFixed(2);
+}
+
+// Середні витрати: завжди два знаки після коми
+function fmtAvg(value) {
+    const n = Number(value);
+    return (Number.isFinite(n) ? n : 0).toFixed(2);
+}
+
 export function FuelSection(data) {
+    const reefMain = Number(data.reefMainFuel || 0);
+    const reefSeparate = Number(data.reefSeparateFuel || 0);
+
+    // Витрата з бака тягача (початковий + заправлено − кінцевий)
+    const tankUsed = Number(data.tankUsed ?? data.fuelUsed ?? 0);
+
+    // Витрата самого тягача = бак мінус реф з основного бака
+    const truckUsed = Number(data.engineFuel ?? tankUsed - reefMain);
+
     return [
 
         {
@@ -13,39 +36,46 @@ export function FuelSection(data) {
                 fuelCard(
                     "Автомобіль",
                     [
-                        ["Початковий", `${data.trip.startFuel || 0} л`],
-                        ["Заправлено", `${data.totalFuel.toFixed(0)} л`],
-                        ["Кінцевий", `${data.trip.endFuel || 0} л`],
-                        ["Витрачено", `${data.fuelUsed.toFixed(0)} л`],
-                        ["Середня", `${data.averageFuel.toFixed(1)} л/100`],
+                        ["Початковий", `${fmtL(data.trip.startFuel)} л`],
+                        ["Заправлено", `${fmtL(data.totalFuel)} л`],
+                        ["Кінцевий", `${fmtL(data.trip.endFuel)} л`],
+                        ["Витрачено всього", `${fmtL(tankUsed)} л`],
+
+                        ...(reefMain > 0
+                            ? [
+                                ["з них рефрижератор", `− ${fmtL(reefMain)} л`],
+                                ["Витрачено тягачем", `${fmtL(truckUsed)} л`],
+                            ]
+                            : []),
+
+                        ["Середня", `${fmtAvg(data.averageFuel)} л/100`],
                     ]
                 ),
 
                 fuelCard(
                     "Рефрижератор",
                     [
-                        ...(data.reefMainFuel > 0
+                        ...(reefMain > 0
                             ? [
-                                ["Осн. бак", `${data.reefMainFuel.toFixed(1)} л`],
+                                ["Осн. бак", `${fmtL(reefMain)} л`],
                                 [
                                     "Середня",
-                                    `${data.mainReefAverage.toFixed(1)} л/год`,
+                                    `${fmtAvg(data.mainReefAverage)} л/год`,
                                 ],
                             ]
                             : []),
 
-                        ...(data.reefSeparateFuel > 0
+                        ...(reefSeparate > 0
                             ? [
-                                ["Окремий бак", `${data.reefSeparateFuel.toFixed(1)} л`],
+                                ["Окремий бак", `${fmtL(reefSeparate)} л`],
                                 [
                                     "Середня",
-                                    `${data.separateReefAverage.toFixed(1)} л/год`,
+                                    `${fmtAvg(data.separateReefAverage)} л/год`,
                                 ],
                             ]
                             : []),
 
-                        ...(data.reefMainFuel === 0 &&
-                            data.reefSeparateFuel === 0
+                        ...(reefMain === 0 && reefSeparate === 0
                             ? [["Не використовувався", "-"]]
                             : []),
                     ]
@@ -68,7 +98,7 @@ function fuelCard(title, rows) {
 
         table: {
 
-            widths: ["*", 70],
+            widths: ["*", 85],
 
             body: [
 

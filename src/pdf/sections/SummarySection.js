@@ -1,19 +1,33 @@
+// Число до сотих: ціле без нулів, дробове з двома знаками
+function fmtNum(value) {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return "0";
+  const r = Math.round(n * 100) / 100;
+  return Number.isInteger(r) ? String(r) : r.toFixed(2);
+}
+
+// Середні витрати: завжди два знаки після коми
+function fmtAvg(value) {
+  const n = Number(value);
+  return (Number.isFinite(n) ? n : 0).toFixed(2);
+}
+
 export function SummarySection(data) {
   return [
     {
       columns: [
-        card("Старт", `${data.startMileage} км`),
-        card("Фініш", `${data.endMileage} км`),
-        card("Пробіг", `${data.totalKm} км`),
-        card("Середня", `${Number(data.averageFuel).toFixed(1)} л/100`),
+        card("Старт", `${fmtNum(data.startMileage)} км`),
+        card("Фініш", `${fmtNum(data.endMileage)} км`),
+        card("Пробіг", `${fmtNum(data.totalKm)} км`),
+        card("Середня", `${fmtAvg(data.averageFuel)} л/100`),
       ],
       columnGap: 10,
       margin: [0, 0, 0, 12],
     },
     {
       columns: [
-        card("Пальне", `${Number(data.fuelUsed).toFixed(0)} л`),
-        card("Реф", `${Number(data.reefFuelUsed).toFixed(0)} л`),
+        card("Пальне", `${fmtNum(data.fuelUsed)} л`),
+        card("Реф", `${fmtNum(data.reefFuelUsed)} л`),
         { width: "*", text: "" },
         { width: "*", text: "" },
       ],

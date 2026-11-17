@@ -1,4 +1,3 @@
-
 import "./TripReport.css";
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
@@ -27,7 +26,7 @@ export default function TripReport() {
         trip?.reportSaved || false
     );
 
-        const [plan, setPlan] = useState(null);
+    const [plan, setPlan] = useState(null);
 
     useEffect(() => {
         let cancelled = false;
@@ -74,7 +73,7 @@ export default function TripReport() {
         window.print();
     };
 
-        const exportExcel = async () => {
+    const exportExcel = async () => {
         if (!plan) return;
 
         if (!can(plan.plan, "export")) {
@@ -172,7 +171,7 @@ export default function TripReport() {
                 QUICK STATS
             ========================= */}
 
-                       <div className="report-stats">
+            <div className="report-stats">
 
                 <div className="report-stat">
                     <div className="report-stat-icon">
@@ -420,7 +419,7 @@ export default function TripReport() {
                             <span className="report-fuel-value">
                                 {Number(
                                     fuel.engineAverage || 0
-                                ).toFixed(1)}{" "}
+                                ).toFixed(2)}{" "}
                                 л/100 км
                             </span>
                         </div>
@@ -454,7 +453,7 @@ export default function TripReport() {
                             <span className="report-fuel-value">
                                 {Number(
                                     fuel.totalAverage || 0
-                                ).toFixed(1)}{" "}
+                                ).toFixed(2)}{" "}
                                 л/100 км
                             </span>
                         </div>
@@ -468,7 +467,7 @@ export default function TripReport() {
                             <span className="report-fuel-value">
                                 {Number(
                                     fuel.separateReefUsed || 0
-                                ).toFixed(1)}{" "}
+                                ).toFixed(2)}{" "}
                                 л
                             </span>
                         </div>
@@ -679,7 +678,7 @@ export default function TripReport() {
                                 <span className="report-fuel-value">
                                     {Number(
                                         fuel.separateReefUsed
-                                    ).toFixed(1)}{" "}
+                                    ).toFixed(2)}{" "}
                                     л
                                 </span>
                             </div>
@@ -697,7 +696,7 @@ export default function TripReport() {
                                 <span className="report-fuel-value">
                                     {Number(
                                         fuel.separateReefAverage
-                                    ).toFixed(1)}{" "}
+                                    ).toFixed(2)}{" "}
                                     л/год
                                 </span>
                             </div>
@@ -877,8 +876,7 @@ export default function TripReport() {
                 </PrimaryButton>
 
 
-
-               <PrimaryButton
+                <PrimaryButton
                     variant="secondary"
                     size="md"
                     icon=""
@@ -888,7 +886,6 @@ export default function TripReport() {
                 </PrimaryButton>
 
 
-                
                 <PrimaryButton
                     variant="secondary"
                     size="md"

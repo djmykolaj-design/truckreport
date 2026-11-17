@@ -1,3 +1,12 @@
+// З'єднує лише заповнені значення; якщо всі порожні, повертає "-"
+function joinFilled(parts, separator = " | ") {
+    const filled = parts
+        .map((p) => String(p ?? "").trim())
+        .filter(Boolean);
+
+    return filled.length ? filled.join(separator) : "-";
+}
+
 export function HeaderSection(trip) {
     return [
 
@@ -69,10 +78,10 @@ export function HeaderSection(trip) {
                     stack: [
 
                         label("Маршрут"),
-                        value(`${trip.fromCity || "-"} - ${trip.toCity || "-"}`),
+                        value(joinFilled([trip.fromCity, trip.toCity], " - ")),
 
                         label("Водії"),
-                        value(`${trip.driver || "-"} | ${trip.codriver || "-"}`),
+                        value(joinFilled([trip.driver, trip.codriver])),
 
                     ]
                 },
@@ -86,7 +95,7 @@ export function HeaderSection(trip) {
                         value(`${trip.startDate || "-"} — ${trip.endDate || "-"}`),
 
                         label("Авто"),
-                        value(`${trip.truck || "-"} | ${trip.trailer || "-"}`),
+                        value(joinFilled([trip.truck, trip.trailer])),
 
                     ]
                 }
