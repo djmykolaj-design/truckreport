@@ -176,6 +176,8 @@ function serviceBadge(vehicle) {
 export default function Fleet() {
     const [profile, setProfile] = useState(undefined);
     const [vehicles, setVehicles] = useState([]);
+    const [archived, setArchived] = useState([]);
+    const [showArchive, setShowArchive] = useState(false);
     const [form, setForm] = useState(emptyForm);
     const [editingId, setEditingId] = useState(null);
     const [search, setSearch] = useState("");
@@ -230,10 +232,29 @@ export default function Fleet() {
         setLoading(false);
     }
 
+    // Архівовані машини (бачить лише той, хто керує автопарком)
+    async function loadArchived() {
+        const { data, error: archiveError } = await supabase.rpc(
+            "list_archived_vehicles"
+        );
+
+        if (archiveError) {
+            console.error(archiveError);
+            setArchived([]);
+            return;
+        }
+
+        setArchived(data || []);
+    }
+
     useEffect(() => {
         getMyProfile().then(setProfile);
         loadVehicles();
     }, []);
+
+    useEffect(() => {
+        if (canManage) loadArchived();
+    }, [canManage]);
 
     function updateField(event) {
         const { name, value } = event.target;
@@ -727,6 +748,63 @@ export default function Fleet() {
                 : "ТО зафіксовано."
         );
         await loadVehicles();
+    }
+
+    // Перенести машину в архів: зникає зі списку й не рахується в тарифі,
+    // ремонти та історія залишаються, повернути можна з архіву.
+    async function archiveVehicle(vehicle) {
+        setError("");
+        setNotice("");
+
+        if (vehicle.status === "in_trip") {
+            setError(
+                "Машина зараз у рейсі. Спершу завершіть рейс, потім її можна перенести в архів."
+            );
+            return;
+        }
+
+        const confirmed = window.confirm(
+            `Перенести «${vehicle.name}» (${vehicle.plate_number}) в архів?\n\n` +
+                `Машина зникне зі списку й не рахуватиметься в тарифі. ` +
+                `Ремонти та історія збережуться, а повернути її можна з архіву.`
+        );
+
+        if (!confirmed) return;
+
+        const { error: rpcError } = await supabase.rpc("archive_vehicle", {
+            p_id: vehicle.id,
+        });
+
+        if (rpcError) {
+            console.error(rpcError);
+            setError("Не вдалося перенести машину в архів.");
+            return;
+        }
+
+        if (editingId === vehicle.id) resetForm();
+
+        setNotice("Машину перенесено в архів.");
+        await loadVehicles();
+        await loadArchived();
+    }
+
+    async function restoreVehicle(vehicle) {
+        setError("");
+        setNotice("");
+
+        const { error: rpcError } = await supabase.rpc("restore_vehicle", {
+            p_id: vehicle.id,
+        });
+
+        if (rpcError) {
+            console.error(rpcError);
+            setError("Не вдалося повернути машину з архіву.");
+            return;
+        }
+
+        setNotice("Машину повернуто з архіву.");
+        await loadVehicles();
+        await loadArchived();
     }
 
     const typeCounts = useMemo(() => {
@@ -1410,6 +1488,16 @@ export default function Fleet() {
                                                         Редагувати
                                                     </button>
                                                 )}
+
+                                                {canManage && (
+                                                    <button
+                                                        type="button"
+                                                        className="fl-btn"
+                                                        onClick={() => archiveVehicle(vehicle)}
+                                                    >
+                                                        В архів
+                                                    </button>
+                                                )}
                                             </div>
                                         )}
                                     </div>
@@ -1419,6 +1507,70 @@ export default function Fleet() {
                     </div>
                 )}
             </section>
+
+            {canManage && archived.length > 0 && (
+                <section style={{ marginTop: 28 }}>
+                    <button
+                        type="button"
+                        className="fl-btn"
+                        onClick={() => setShowArchive((value) => !value)}
+                    >
+                        {showArchive ? "Сховати архів" : `Архів (${archived.length})`}
+                    </button>
+
+                    {showArchive && (
+                        <div style={{ display: "grid", gap: 10, marginTop: 14 }}>
+                            {archived.map((vehicle) => (
+                                <article
+                                    key={vehicle.id}
+                                    style={{
+                                        background: "var(--surface)",
+                                        border: "1px solid var(--border)",
+                                        borderRadius: 14,
+                                        padding: 14,
+                                        display: "flex",
+                                        justifyContent: "space-between",
+                                        alignItems: "center",
+                                        gap: 12,
+                                        flexWrap: "wrap",
+                                    }}
+                                >
+                                    <div>
+                                        <div style={{ fontWeight: 700 }}>
+                                            {vehicle.name}
+                                        </div>
+                                        <div style={{ marginTop: 6 }}>
+                                            <Plate value={vehicle.plate_number} />
+                                        </div>
+                                        <div
+                                            style={{
+                                                color: "var(--text-secondary)",
+                                                fontSize: 13,
+                                                marginTop: 6,
+                                            }}
+                                        >
+                                            {typeLabel(vehicle.vehicle_type)} · в архіві з{" "}
+                                            {vehicle.archived_at
+                                                ? new Date(
+                                                    vehicle.archived_at
+                                                ).toLocaleDateString("uk-UA")
+                                                : "—"}
+                                        </div>
+                                    </div>
+
+                                    <button
+                                        type="button"
+                                        className="fl-btn fl-btn--ok"
+                                        onClick={() => restoreVehicle(vehicle)}
+                                    >
+                                        Повернути з архіву
+                                    </button>
+                                </article>
+                            ))}
+                        </div>
+                    )}
+                </section>
+            )}
         </main>
     );
 }
