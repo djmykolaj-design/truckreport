@@ -9,9 +9,19 @@ import {
   BarChart3,
   AlertTriangle,
   Download,
+  MessageCircle,
+  Phone,
+  Check,
 } from "lucide-react";
 import logo from "../assets/truckreport-logo.png";
 import "./Landing.css";
+
+const CONTACT_PHONE_DISPLAY = "+380 68 026 94 78";
+const CONTACT_PHONE_DIGITS = "380680269478";
+const WHATSAPP_URL = `https://wa.me/${CONTACT_PHONE_DIGITS}?text=${encodeURIComponent(
+  "Доброго дня! Питання щодо Truckreport"
+)}`;
+const VIBER_URL = `viber://chat?number=%2B${CONTACT_PHONE_DIGITS}`;
 
 function useInstall() {
   const [promptEvent, setPromptEvent] = useState(null);
@@ -99,37 +109,124 @@ const BOSS_ITEMS = [
   },
 ];
 
+// Скріни лежать у public/screens/. Якщо файлу ще немає, картка не показується.
+const SHOTS = [
+  {
+    file: "dashboard.png",
+    title: "Головна",
+    text: "Активний рейс, пальне, витрати й шенгенські дні на одному екрані.",
+  },
+  {
+    file: "new-trip.png",
+    title: "Новий рейс",
+    text: "Стартовий пробіг підставляється сам з останнього рейсу машини.",
+  },
+  {
+    file: "trip-menu.png",
+    title: "Рейс",
+    text: "Пальне, обмін валют, витрати, документи й завершення рейсу.",
+  },
+  {
+    file: "expenses.png",
+    title: "Витрати",
+    text: "Витрати по категоріях у кожній валюті окремо.",
+  },
+  {
+    file: "schengen.png",
+    title: "Шенген",
+    text: "Скільки днів залишилось і до якої дати треба виїхати.",
+  },
+  {
+    file: "report.png",
+    title: "PDF-звіт",
+    text: "Готовий звіт по рейсу: пальне, гроші й витрати.",
+  },
+  {
+    file: "fleet.png",
+    title: "Автопарк",
+    text: "Машини зі статусами та ТО для керівника фірми.",
+  },
+];
+
 const PLANS = [
   {
     name: "Безкоштовний",
     price: "0 грн",
     period: "без терміну й без картки",
+    audience: "Щоб спробувати й вести рейси щодня",
     now: true,
     features: [
-      "Активний рейс, заправки й витрати",
-      "Лічильник Шенгену 90/180",
-      "Відмітка в'їзду й виїзду",
+      "Активний рейс, заправки й витрати в євро, злотих, гривнях і доларах",
+      "Лічильник Шенгену 90/180 з відміткою в'їзду й виїзду",
+      "PDF-звіт по рейсу",
+      "Документи рейсу й хмарне збереження даних",
+      "У списку видно активні та 3 останні рейси, решта збережена",
     ],
   },
   {
     name: "Pro для водія",
     price: "150 грн",
     period: "на місяць",
+    audience: "Для водія, який їздить постійно",
     features: [
-      "Планувальник поїздки в Шенген",
-      "Уся історія рейсів",
-      "Експорт і аналітика",
+      "Усе з безкоштовного плану",
+      "Уся історія рейсів без обмежень",
+      "Планувальник поїздки: чи вкладаєтесь у 90/180",
+      "Експорт рейсу в Excel",
+      "Аналітика та графіки по рейсах",
     ],
   },
   {
     name: "Business для фірми",
     price: "від 170 грн",
     period: "за авто на місяць",
+    audience: "Для фірми з кількома машинами",
     features: [
+      "Усе з Pro для кожного працівника фірми, без окремої оплати",
+      "Автопарк: статуси машин, ТО за пробігом і датою, ремонти",
+      "Кабінет керівника: водії, рейси, шенген кожного водія",
+      "Ролі: заступник, логіст, механік, водій",
       "250 грн за авто до 20 машин, 210 грн до 50, 170 грн до 100",
-     "Причепи та працівники (заступник, логіст, механік) не рахуються",
+      "Причепи та працівники не рахуються: платите лише за машини",
       "Перший місяць безкоштовно",
     ],
+  },
+];
+
+const FREE = "Безкоштовний";
+const COMPARE_ROWS = [
+  { label: "Активний рейс, заправки, витрати в 4 валютах", values: [true, true, true] },
+  { label: "Лічильник Шенгену 90/180", values: [true, true, true] },
+  { label: "PDF-звіт по рейсу", values: [true, true, true] },
+  { label: "Історія рейсів", values: ["3 останні", "Уся", "Уся"] },
+  { label: "Планувальник поїздки в Шенген", values: [false, true, true] },
+  { label: "Експорт в Excel", values: [false, true, true] },
+  { label: "Аналітика та графіки", values: [false, true, true] },
+  { label: "Автопарк, ТО, ремонти", values: [false, false, true] },
+  { label: "Кабінет керівника та ролі", values: [false, false, true] },
+  { label: "Повна версія для всіх працівників фірми", values: [false, false, true] },
+];
+
+const PRICING_NOTES = [
+  {
+    title: "Картка не потрібна",
+    text: "Безкоштовний план працює без терміну. Платити нікого не змушуємо.",
+  },
+  {
+    title: "Дані нікуди не зникають",
+    text: "Якщо платний план закінчився, ваші рейси лишаються збереженими. Ви бачите менше, поки не продовжите, але нічого не втрачаєте.",
+  },
+  {
+    title: "За фірму платить керівник",
+    text: "Водії, яких він додав, отримують повну версію без окремої оплати. Водій може мати й власний платний план: береться вищий.",
+  },
+  {
+    title: "Ціни в гривнях",
+    text: "Без конвертації за курсом і без прихованих платежів.",
+  },
+  {
+    title: "Оплату ще не підключено",
+    text: "Залиште заявку на сторінці тарифів або напишіть нам, і ми повідомимо, коли платні плани запрацюють.",
   },
 ];
 
@@ -148,7 +245,7 @@ const FAQ = [
   },
   {
     q: "Хто бачить мої дані?",
-        a: "Ви й ваша фірма. Рейси водія бачить сам водій та керівник фірми, до якої він приєднаний. Заступник, логіст і механік бачать лише те, що потрібно для їхньої роботи: логіст рейси й документи, механік автопарк і ремонти. Водій без фірми працює сам, і його дані ніхто більше не бачить.",
+    a: "Ви й ваша фірма. Рейси водія бачить сам водій та керівник фірми, до якої він приєднаний. Заступник, логіст і механік бачать лише те, що потрібно для їхньої роботи: логіст рейси й документи, механік автопарк і ремонти. Водій без фірми працює сам, і його дані ніхто більше не бачить.",
   },
 ];
 
@@ -246,9 +343,31 @@ function FeatureColumn({ title, subtitle, items }) {
   );
 }
 
+function CompareCell({ value }) {
+  if (value === true) {
+    return (
+      <span className="lp-yes">
+        <Check size={18} aria-hidden="true" />
+        <span className="lp-sr">Так</span>
+      </span>
+    );
+  }
+
+  if (value === false) {
+    return (
+      <span className="lp-no" aria-label="Ні">
+        —
+      </span>
+    );
+  }
+
+  return <span className="lp-cell-text">{value}</span>;
+}
+
 export default function Landing() {
   const { canInstall, installed, install } = useInstall();
   const [platform, setPlatform] = useState("windows");
+  const [missingShots, setMissingShots] = useState({});
 
   useEffect(() => {
     setPlatform(detectPlatform());
@@ -262,6 +381,11 @@ export default function Landing() {
         ?.scrollIntoView({ behavior: "smooth", block: "start" });
     }
   };
+
+  const hideShot = (file) =>
+    setMissingShots((prev) => ({ ...prev, [file]: true }));
+
+  const visibleShots = SHOTS.filter((shot) => !missingShots[shot.file]);
 
   const guide = INSTALL_STEPS[platform];
 
@@ -333,7 +457,36 @@ export default function Landing() {
         </div>
       </section>
 
-      <section className="lp-section lp-section--alt" id="pricing">
+      {visibleShots.length > 0 && (
+        <section className="lp-section lp-section--alt" id="screens">
+          <div className="lp-wrap">
+            <h2>Як це виглядає</h2>
+            <p className="lp-section-lead">
+              Справжні екрани з додатка: те, що водій бачить у рейсі, і те, що
+              отримує керівник.
+            </p>
+
+            <div className="lp-shots">
+              {visibleShots.map((shot) => (
+                <figure className="lp-shot" key={shot.file}>
+                  <img
+                    src={`/screens/${shot.file}`}
+                    alt={shot.title}
+                    loading="lazy"
+                    onError={() => hideShot(shot.file)}
+                  />
+                  <figcaption>
+                    <b>{shot.title}</b>
+                    <span>{shot.text}</span>
+                  </figcaption>
+                </figure>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      <section className="lp-section" id="pricing">
         <div className="lp-wrap">
           <h2>Скільки це коштує</h2>
           <p className="lp-section-lead">
@@ -348,6 +501,7 @@ export default function Landing() {
                 className={`lp-plan ${plan.now ? "lp-plan--now" : ""}`}
               >
                 <h3>{plan.name}</h3>
+                <p className="lp-plan-for">{plan.audience}</p>
                 <div className="lp-plan-price">
                   {plan.price}
                   <small>{plan.period}</small>
@@ -361,18 +515,65 @@ export default function Landing() {
             ))}
           </div>
 
-          <p className="lp-plans-note">
-            Оплату платних планів ще не підключено. Залишити заявку можна на
-            сторінці тарифів після входу.
-          </p>
+          <h3 className="lp-subtitle">Що входить у кожен план</h3>
 
-          <Link to="/pricing" className="lp-btn lp-btn--ghost">
-            Дивитись тарифи
-          </Link>
+          <div className="lp-compare-wrap">
+            <table className="lp-compare">
+              <thead>
+                <tr>
+                  <th scope="col">Можливість</th>
+                  <th scope="col">{FREE}</th>
+                  <th scope="col">Pro</th>
+                  <th scope="col">Business</th>
+                </tr>
+              </thead>
+              <tbody>
+                {COMPARE_ROWS.map((row) => (
+                  <tr key={row.label}>
+                    <th scope="row">{row.label}</th>
+                    {row.values.map((value, index) => (
+                      <td key={index}>
+                        <CompareCell value={value} />
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="lp-example">
+            <b>Приклад для Business</b>
+            <p>
+              Фірма з 10 тягачами, 4 причепами, заступником і логістом платить
+              за 10 машин: 10 × 250 = 2 500 грн на місяць. Причепи й працівники
+              не рахуються, а перший місяць безкоштовно.
+            </p>
+          </div>
+
+          <h3 className="lp-subtitle">Важливо знати</h3>
+
+          <div className="lp-notes">
+            {PRICING_NOTES.map((note) => (
+              <div className="lp-note" key={note.title}>
+                <b>{note.title}</b>
+                <p>{note.text}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="lp-actions">
+            <Link to="/pricing" className="lp-btn lp-btn--ghost">
+              Дивитись тарифи
+            </Link>
+            <a href="#contacts" className="lp-btn lp-btn--ghost">
+              Запитати нас
+            </a>
+          </div>
         </div>
       </section>
 
-      <section className="lp-section" id="install">
+      <section className="lp-section lp-section--alt" id="install">
         <div className="lp-wrap">
           <h2>Як встановити</h2>
           <p className="lp-section-lead">
@@ -416,7 +617,7 @@ export default function Landing() {
         </div>
       </section>
 
-      <section className="lp-section lp-section--alt" id="faq">
+      <section className="lp-section" id="faq">
         <div className="lp-wrap">
           <h2>Поширені питання</h2>
 
@@ -431,11 +632,43 @@ export default function Landing() {
         </div>
       </section>
 
+      <section className="lp-section lp-section--alt" id="contacts">
+        <div className="lp-wrap lp-final">
+          <h2>Зв'язатися</h2>
+          <p className="lp-section-lead">
+            Питання по додатку, підключення фірми чи пропозиція: напишіть у
+            Viber або WhatsApp, відповімо особисто.
+          </p>
+
+          <div className="lp-contact-phone">
+            <Phone size={18} />
+            <a href={`tel:+${CONTACT_PHONE_DIGITS}`}>{CONTACT_PHONE_DISPLAY}</a>
+          </div>
+
+          <div className="lp-actions lp-contact-actions">
+            <a
+              href={WHATSAPP_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="lp-btn lp-btn--primary"
+            >
+              <MessageCircle size={18} />
+              WhatsApp
+            </a>
+            <a href={VIBER_URL} className="lp-btn lp-btn--ghost">
+              <MessageCircle size={18} />
+              Viber
+            </a>
+          </div>
+        </div>
+      </section>
+
       <section className="lp-section">
         <div className="lp-wrap lp-final">
-          <h2>Спробуйте на наступному рейсі</h2>
+          <h2>Спробуйте в наступному рейсі</h2>
           <p className="lp-section-lead">
-            Вхід через Google займає кілька секунд. Налаштувати нічого не треба.
+            Вхід через Google займає кілька секунд. Налаштовувати нічого не
+            потрібно.
           </p>
           <div className="lp-actions">
             <Link to="/login" className="lp-btn lp-btn--primary">
@@ -452,6 +685,7 @@ export default function Landing() {
         <div className="lp-wrap lp-footer-row">
           <span>© {new Date().getFullYear()} Truckreport</span>
           <nav className="lp-footer-links">
+            <a href="#contacts">Контакти</a>
             <Link to="/terms">Умови користування</Link>
             <Link to="/privacy">Політика конфіденційності</Link>
             <Link to="/login">Вхід</Link>
