@@ -222,3 +222,9 @@ export async function releaseVehiclesAfterTrip(trip, endMileage) {
 
   return result;
 }
+
+// Останній збережений пробіг тягача з автопарку (0, якщо машини немає)
+export async function getVehicleOdometer(plateNumber) {
+  const vehicle = await findFleetVehicle(plateNumber);
+  return vehicle ? Number(vehicle.odometer || 0) : 0;
+}

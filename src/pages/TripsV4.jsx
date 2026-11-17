@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import TripList from "../components/TripList";
 import TripForm from "../components/TripForm";
@@ -14,6 +14,7 @@ import {
 import {
   markVehicleInTrip,
   markVehicleAvailable,
+  getVehicleOdometer,
 } from "../services/fleetStatus";
 import { getMyProfile } from "../services/profile";
 import { getMyPlan, can, FREE_TRIP_LIMIT } from "../services/plan";
@@ -41,6 +42,20 @@ function plateKey(value) {
     .split("")
     .map((ch) => PLATE_LOOKALIKES[ch] || ch)
     .join("");
+}
+
+// Кінцевий пробіг останнього рейсу цього тягача (найбільше значення)
+function lastMileageFromTrips(trips, plate) {
+  const key = plateKey(plate);
+  if (!key) return 0;
+
+  let best = 0;
+  for (const trip of trips) {
+    if (plateKey(trip.truck) !== key) continue;
+    const end = Number(String(trip.endMileage ?? "").replace(/\s/g, ""));
+    if (Number.isFinite(end) && end > best) best = end;
+  }
+  return best;
 }
 
 function HistoryNote({ hidden, onUpgrade }) {
@@ -117,6 +132,14 @@ export default function TripsV4() {
     startUah, setStartUah,
   } = form;
 
+  // Автопідстановка стартового пробігу:
+  // suggestedMileageRef — що ми підставили самі, щоб не затирати ручне введення.
+  const suggestedMileageRef = useRef("");
+  const startMileageRef = useRef(startMileage);
+  const tripsRef = useRef(trips);
+  startMileageRef.current = startMileage;
+  tripsRef.current = trips;
+
   useEffect(() => {
     async function init() {
       const cloud = await loadTripsFromCloud();
@@ -155,6 +178,46 @@ export default function TripsV4() {
     const trip = trips.find((t) => t.id === Number(tripId));
     if (trip) setSelectedTrip(trip);
   }, [trips, searchParams]);
+
+  // Коли обрано тягач у формі нового рейсу, підставляємо його останній пробіг
+  useEffect(() => {
+    if (!showForm) return;
+
+    let cancelled = false;
+
+    const timer = setTimeout(async () => {
+      const plate = String(truck || "").trim();
+      let mileage = 0;
+
+      if (plate) {
+        try {
+          mileage = await getVehicleOdometer(plate);
+        } catch (error) {
+          console.error("Не вдалося отримати пробіг з автопарку:", error);
+        }
+
+        if (!mileage) {
+          mileage = lastMileageFromTrips(tripsRef.current, plate);
+        }
+      }
+
+      if (cancelled) return;
+
+      const current = String(startMileageRef.current ?? "");
+      const untouched = current === "" || current === suggestedMileageRef.current;
+      if (!untouched) return;
+
+      const next = mileage > 0 ? String(Math.round(mileage)) : "";
+      suggestedMileageRef.current = next;
+      setStartMileage(next);
+    }, 400);
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [truck, showForm]);
 
   const saveTrip = async () => {
     if (!tripNumber || !truck || !fromCity || !toCity || !startDate) {
@@ -213,6 +276,7 @@ export default function TripsV4() {
     setStartDate("");
     setStartFuel("");
     setStartMileage("");
+    suggestedMileageRef.current = "";
     setStartEuro("");
     setStartUsd("");
     setStartPln("");
