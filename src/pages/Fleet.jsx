@@ -21,6 +21,8 @@ const VEHICLE_STATUSES = [
     { value: "blocked", label: "Не використовувати" },
 ];
 
+// Стандартний інтервал ТО за типом. Якщо в машини задано свій інтервал,
+// використовується він (див. getInterval).
 const SERVICE_INTERVAL_KM = {
     truck: 60000,
     van: 15000,
@@ -39,6 +41,7 @@ const emptyForm = {
     odometer: "",
     status: "available",
     notes: "",
+    service_interval_km: "",
     last_service_date: "",
     last_service_odometer: "",
     next_service_date: "",
@@ -72,6 +75,23 @@ const styles = {
         cursor: "pointer",
     },
 };
+
+// Число кілометрів із тексту: пробіли й кому приймаємо, нуль і мінус ні
+function parseKm(value) {
+    const n = Number(
+        String(value ?? "")
+            .replace(/[\s\u00a0]/g, "")
+            .replace(",", ".")
+    );
+    return Number.isFinite(n) && n > 0 ? Math.round(n) : null;
+}
+
+// Інтервал ТО машини: власний, а якщо не задано, то за типом
+function getInterval(vehicle) {
+    const own = Number(vehicle?.service_interval_km);
+    if (Number.isFinite(own) && own > 0) return own;
+    return SERVICE_INTERVAL_KM[vehicle?.vehicle_type] || null;
+}
 
 function daysUntil(dateStr) {
     if (!dateStr) return null;
@@ -143,7 +163,9 @@ function serviceBadge(vehicle) {
 
     if (nextOdo !== null) {
         return {
-            text: `Наступне ТО: ${nextOdo.toLocaleString("uk-UA")} км`,
+            text: `Наступне ТО: ${nextOdo.toLocaleString("uk-UA")} км (ще ${(
+                nextOdo - odo
+            ).toLocaleString("uk-UA")} км)`,
             color: "var(--text-secondary)",
         };
     }
@@ -221,10 +243,13 @@ export default function Fleet() {
 
             if (
                 name === "vehicle_type" ||
+                name === "service_interval_km" ||
                 name === "last_service_odometer" ||
                 name === "odometer"
             ) {
-                const interval = SERVICE_INTERVAL_KM[next.vehicle_type];
+                const interval =
+                    parseKm(next.service_interval_km) ||
+                    SERVICE_INTERVAL_KM[next.vehicle_type];
                 const baseOdo = Number(
                     next.last_service_odometer || next.odometer || 0
                 );
@@ -262,6 +287,7 @@ export default function Fleet() {
             odometer: vehicle.odometer ?? "",
             status: vehicle.status || "available",
             notes: vehicle.notes || "",
+            service_interval_km: vehicle.service_interval_km ?? "",
             last_service_date: vehicle.last_service_date || "",
             last_service_odometer: vehicle.last_service_odometer ?? "",
             next_service_date: vehicle.next_service_date || "",
@@ -273,6 +299,23 @@ export default function Fleet() {
         window.scrollTo({ top: 0, behavior: "smooth" });
     }
 
+    // Змінює поля машини й перевіряє, що рядок справді оновився
+    // (якщо правила доступу забороняють зміну, база не видає помилку, а повертає 0 рядків)
+    async function updateVehicleFields(vehicle, patch) {
+        const { data, error: updateError } = await supabase
+            .from("fleet_vehicles")
+            .update(patch)
+            .eq("id", vehicle.id)
+            .select("id");
+
+        if (updateError) {
+            console.error(updateError);
+            return false;
+        }
+
+        return Boolean(data && data.length);
+    }
+
     async function saveVehicle(event) {
         event.preventDefault();
         if (!canManage) return;
@@ -281,7 +324,17 @@ export default function Fleet() {
         setError("");
         setNotice("");
 
-        const interval = SERVICE_INTERVAL_KM[form.vehicle_type];
+        const ownInterval = form.service_interval_km
+            ? parseKm(form.service_interval_km)
+            : null;
+
+        if (form.service_interval_km && ownInterval === null) {
+            setError("Інтервал ТО має бути числом, більшим за нуль.");
+            setSaving(false);
+            return;
+        }
+
+        const interval = ownInterval || SERVICE_INTERVAL_KM[form.vehicle_type];
         const baseOdo = Number(form.last_service_odometer || form.odometer || 0);
 
         let nextServiceOdo = form.next_service_odometer
@@ -305,6 +358,7 @@ export default function Fleet() {
             odometer: Number(form.odometer || 0),
             status: form.status,
             notes: form.notes.trim() || null,
+            service_interval_km: ownInterval,
             last_service_date: form.last_service_date || null,
             last_service_odometer: form.last_service_odometer
                 ? Number(form.last_service_odometer)
@@ -482,13 +536,139 @@ export default function Fleet() {
         await loadVehicles();
     }
 
+    // Змінити інтервал ТО машини (механік, керівник, заступник)
+    async function changeInterval(vehicle) {
+        setError("");
+        setNotice("");
+
+        const effective = getInterval(vehicle);
+
+        const answer = window.prompt(
+            `Інтервал ТО для «${vehicle.name}», км.\n` +
+                `Очисти поле, щоб повернути стандартний за типом` +
+                `${
+                    SERVICE_INTERVAL_KM[vehicle.vehicle_type]
+                        ? ` (${SERVICE_INTERVAL_KM[vehicle.vehicle_type].toLocaleString("uk-UA")} км)`
+                        : ""
+                }.`,
+            effective ? String(effective) : ""
+        );
+
+        if (answer === null) return;
+
+        let value = null;
+
+        if (answer.trim() !== "") {
+            value = parseKm(answer);
+
+            if (value === null) {
+                setError("Інтервал має бути числом, більшим за нуль.");
+                return;
+            }
+        }
+
+        const saved = await updateVehicleFields(vehicle, {
+            service_interval_km: value,
+        });
+
+        if (!saved) {
+            setError("Не вдалося зберегти інтервал ТО.");
+            return;
+        }
+
+        const newEffective = value || SERVICE_INTERVAL_KM[vehicle.vehicle_type] || null;
+        const lastOdo = Number(vehicle.last_service_odometer || 0);
+
+        if (
+            newEffective &&
+            lastOdo > 0 &&
+            window.confirm(
+                `Перерахувати наступне ТО?\n\n` +
+                    `Останнє ТО: ${lastOdo.toLocaleString("uk-UA")} км + інтервал ` +
+                    `${newEffective.toLocaleString("uk-UA")} км = ` +
+                    `${(lastOdo + newEffective).toLocaleString("uk-UA")} км.`
+            )
+        ) {
+            const recalculated = await updateVehicleFields(vehicle, {
+                next_service_odometer: lastOdo + newEffective,
+            });
+
+            if (!recalculated) {
+                setError("Інтервал збережено, але наступне ТО перерахувати не вдалося.");
+                await loadVehicles();
+                return;
+            }
+        }
+
+        setNotice("Інтервал ТО збережено.");
+        await loadVehicles();
+    }
+
+    // Вказати, через скільки км від поточного пробігу буде наступне ТО
+    async function setNextService(vehicle) {
+        setError("");
+        setNotice("");
+
+        const odo = Number(vehicle.odometer || 0);
+        const interval = getInterval(vehicle);
+
+        const answer = window.prompt(
+            `Через скільки км наступне ТО?\n` +
+                `Пробіг зараз: ${odo.toLocaleString("uk-UA")} км.`,
+            interval ? String(interval) : ""
+        );
+
+        if (answer === null) return;
+
+        const km = parseKm(answer);
+
+        if (km === null) {
+            setError("Вкажіть кількість кілометрів числом, більшим за нуль.");
+            return;
+        }
+
+        const saved = await updateVehicleFields(vehicle, {
+            next_service_odometer: odo + km,
+        });
+
+        if (!saved) {
+            setError("Не вдалося зберегти наступне ТО.");
+            return;
+        }
+
+        setNotice(
+            `Наступне ТО призначено на ${(odo + km).toLocaleString("uk-UA")} км.`
+        );
+        await loadVehicles();
+    }
+
     async function completeService(vehicle) {
         setError("");
         setNotice("");
 
-        const interval = SERVICE_INTERVAL_KM[vehicle.vehicle_type];
+        const defaultInterval = getInterval(vehicle);
         const odo = Number(vehicle.odometer || 0);
         const today = new Date().toLocaleDateString("uk-UA");
+
+        // Через скільки км наступне ТО: за замовчуванням інтервал машини, можна змінити
+        let nextKm = null;
+
+        if (defaultInterval) {
+            const answer = window.prompt(
+                `Через скільки км наступне ТО?\n` +
+                    `Пробіг зараз: ${odo.toLocaleString("uk-UA")} км.`,
+                String(defaultInterval)
+            );
+
+            if (answer === null) return;
+
+            nextKm = parseKm(answer);
+
+            if (nextKm === null) {
+                setError("Вкажіть кількість кілометрів числом, більшим за нуль.");
+                return;
+            }
+        }
 
         let updatedNotes = vehicle.notes || "";
 
@@ -508,8 +688,8 @@ export default function Fleet() {
             notes: updatedNotes || null,
         };
 
-        if (interval) {
-            payload.next_service_odometer = odo + interval;
+        if (nextKm) {
+            payload.next_service_odometer = odo + nextKm;
         }
 
         // Записуємо ТО в історію (дата + пробіг), а не лише в примітки
@@ -541,7 +721,11 @@ export default function Fleet() {
             return;
         }
 
-        setNotice("ТО зафіксовано. Поломку перенесено в історію.");
+        setNotice(
+            nextKm
+                ? `ТО зафіксовано. Наступне ТО: ${(odo + nextKm).toLocaleString("uk-UA")} км.`
+                : "ТО зафіксовано."
+        );
         await loadVehicles();
     }
 
@@ -584,6 +768,8 @@ export default function Fleet() {
     if (profile === undefined) {
         return <p style={{ color: "var(--text-secondary)" }}>Завантаження…</p>;
     }
+
+    const defaultForType = SERVICE_INTERVAL_KM[form.vehicle_type];
 
     return (
         <main
@@ -771,6 +957,24 @@ export default function Fleet() {
                         </label>
 
                         <label style={styles.label}>
+                            Інтервал ТО, км
+                            <input
+                                style={styles.input}
+                                type="number"
+                                name="service_interval_km"
+                                value={form.service_interval_km}
+                                onChange={updateField}
+                                min="1"
+                                step="1"
+                                placeholder={
+                                    defaultForType
+                                        ? `Стандарт: ${defaultForType.toLocaleString("uk-UA")} км`
+                                        : "Для причепа не рахується"
+                                }
+                            />
+                        </label>
+
+                        <label style={styles.label}>
                             Останнє ТО (дата)
                             <input
                                 style={styles.input}
@@ -936,7 +1140,8 @@ export default function Fleet() {
                         {filteredVehicles.map((vehicle) => {
                             const badge = serviceBadge(vehicle);
                             const isOnService = ["maintenance", "repair"].includes(vehicle.status);
-                            const interval = SERVICE_INTERVAL_KM[vehicle.vehicle_type];
+                            const interval = getInterval(vehicle);
+                            const ownInterval = Number(vehicle.service_interval_km) > 0;
 
                             const odo = Number(vehicle.odometer || 0);
                             const nextOdo = vehicle.next_service_odometer
@@ -1004,7 +1209,9 @@ export default function Fleet() {
                                             <div style={{ color: "var(--text)" }}>
                                                 {typeLabel(vehicle.vehicle_type)}
                                                 {interval
-                                                    ? ` · інтервал ТО ${interval.toLocaleString("uk-UA")} км`
+                                                    ? ` · інтервал ТО ${interval.toLocaleString("uk-UA")} км${
+                                                          ownInterval ? " (задано вручну)" : ""
+                                                      }`
                                                     : ""}
                                             </div>
                                             <div style={{ marginTop: 10 }}>
@@ -1149,7 +1356,7 @@ export default function Fleet() {
                                                     </button>
                                                 )}
 
-                                                    {canRepairStatus &&
+                                                {canRepairStatus &&
                                                     !canService &&
                                                     vehicle.status !== "repair" &&
                                                     !issues.some(
@@ -1171,6 +1378,26 @@ export default function Fleet() {
                                                         onClick={() => completeService(vehicle)}
                                                     >
                                                         Зафіксувати ТО
+                                                    </button>
+                                                )}
+
+                                                {canService && (
+                                                    <button
+                                                        type="button"
+                                                        className="fl-btn"
+                                                        onClick={() => setNextService(vehicle)}
+                                                    >
+                                                        Наступне ТО через…
+                                                    </button>
+                                                )}
+
+                                                {canService && (
+                                                    <button
+                                                        type="button"
+                                                        className="fl-btn"
+                                                        onClick={() => changeInterval(vehicle)}
+                                                    >
+                                                        Інтервал ТО
                                                     </button>
                                                 )}
 
