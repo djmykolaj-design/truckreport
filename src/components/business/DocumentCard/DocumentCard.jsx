@@ -1,4 +1,5 @@
 import "./DocumentCard.css";
+import { useDocumentUrl } from "../../../services/documents";
 
 export default function DocumentCard({
     document,
@@ -7,6 +8,8 @@ export default function DocumentCard({
     onPreview,
     onDelete,
 }) {
+    const signedUrl = useDocumentUrl(document);
+
     return (
         <div className="document-card">
 
@@ -48,8 +51,10 @@ export default function DocumentCard({
 
                 <a
                     className="document-btn document-btn--green"
-                    href={document.url || document.fileData}
+                    href={signedUrl || document.fileData}
                     download={document.fileName}
+                    target="_blank"
+                    rel="noopener noreferrer"
                 >
                     Завантажити
                 </a>

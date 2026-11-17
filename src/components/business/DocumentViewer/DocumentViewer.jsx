@@ -12,6 +12,7 @@ import {
     Download,
     X,
 } from "lucide-react";
+import { useDocumentUrl } from "../../../services/documents";
 
 const ICON = 18;
 
@@ -21,9 +22,12 @@ export default function DocumentViewer({
     previewIndex,
     setPreviewIndex,
 }) {
+    // Хук має викликатись до раннього return
+    const signedUrl = useDocumentUrl(previewDoc);
+
     if (!previewDoc) return null;
 
-    const fileData = previewDoc.fileData || "";
+    const fileData = previewDoc.fileData || signedUrl || "";
     const hasFile = Boolean(fileData);
 
     const isImage =
@@ -123,6 +127,8 @@ export default function DocumentViewer({
                                     <a
                                         href={fileData}
                                         download={previewDoc.fileName}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
                                         className="viewer-download"
                                         aria-label="Завантажити"
                                     >
