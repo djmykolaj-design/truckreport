@@ -8,33 +8,33 @@ import {
 } from "../services/planInterest";
 
 // Ціни й склад планів: змінюйте тут, коли визначитесь остаточно.
-// Business рахується прогресивно: кожен діапазон за своєю ціною (грн за машину на місяць).
+// Business рахується ступінчасто: кожен діапазон за своєю ціною (грн за машину на місяць).
 const PRO_PRICE = 150;
 
 const BUSINESS_TIERS = [
-  { upTo: 20, price: 250 },
-  { upTo: 50, price: 210 },
-  { upTo: 100, price: 170 },
+  { upTo: 20, price: 250, label: "Перші 20 машин" },
+  { upTo: 50, price: 210, label: "З 21-ї по 50-ту" },
+  { upTo: 100, price: 170, label: "З 51-ї по 100-ту" },
 ];
 const BUSINESS_MAX = BUSINESS_TIERS[BUSINESS_TIERS.length - 1].upTo;
 
-function businessMonthly(vehicles) {
-  let total = 0;
+// Розбивка: скільки машин за якою ціною
+function businessBreakdown(vehicles) {
+  const rows = [];
   let from = 0;
 
   for (const tier of BUSINESS_TIERS) {
     if (vehicles <= from) break;
     const count = Math.min(vehicles, tier.upTo) - from;
-    total += count * tier.price;
+    rows.push({ count, price: tier.price, sum: count * tier.price });
     from = tier.upTo;
   }
 
-  return total;
+  return rows;
 }
 
-function tierLabel(index) {
-  const from = index === 0 ? 1 : BUSINESS_TIERS[index - 1].upTo + 1;
-  return `${from}–${BUSINESS_TIERS[index].upTo} машин`;
+function businessMonthly(vehicles) {
+  return businessBreakdown(vehicles).reduce((total, row) => total + row.sum, 0);
 }
 
 function money(value) {
@@ -72,10 +72,10 @@ const PLANS = [
   {
     id: "business",
     name: "Business",
-    price: `від ${BUSINESS_TIERS[BUSINESS_TIERS.length - 1].price} грн`,
+    price: `від ${BUSINESS_TIERS[0].price} грн`,
     period: "за машину на місяць",
-    note: "Для фірми з автопарком: чим більший парк, тим дешевша машина",
-     features: [
+    note: "Для фірми з автопарком: у більших парках машини дешевшають",
+    features: [
       "Кабінет керівника: автопарк, водії, рейси",
       "Ролі: заступник, логіст, механік, водій",
       "ТО, ремонти, поломки, документи",
@@ -89,6 +89,7 @@ const PLANS = [
 function BusinessCalculator({ value, setValue }) {
   const vehicles = Math.max(0, Math.floor(Number(value) || 0));
   const overLimit = vehicles > BUSINESS_MAX;
+  const rows = businessBreakdown(Math.min(vehicles, BUSINESS_MAX));
   const monthly = businessMonthly(Math.min(vehicles, BUSINESS_MAX));
   const average = vehicles > 0 && !overLimit ? monthly / vehicles : 0;
 
@@ -103,23 +104,34 @@ function BusinessCalculator({ value, setValue }) {
         fontSize: 13,
       }}
     >
-      <div style={{ display: "grid", gap: 4, marginBottom: 12 }}>
-        {BUSINESS_TIERS.map((tier, index) => (
+      <div style={{ display: "grid", gap: 4, marginBottom: 8 }}>
+        {BUSINESS_TIERS.map((tier) => (
           <div
             key={tier.upTo}
-            style={{ display: "flex", justifyContent: "space-between" }}
+            style={{ display: "flex", justifyContent: "space-between", gap: 8 }}
           >
-            <span style={{ color: "var(--text-secondary)" }}>{tierLabel(index)}</span>
-            <b>{tier.price} грн за машину</b>
+            <span style={{ color: "var(--text-secondary)" }}>{tier.label}</span>
+            <b>{tier.price} грн за кожну</b>
           </div>
         ))}
-        <div style={{ display: "flex", justifyContent: "space-between" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", gap: 8 }}>
           <span style={{ color: "var(--text-secondary)" }}>
             Понад {BUSINESS_MAX}
           </span>
           <b>за домовленістю</b>
         </div>
       </div>
+
+      <p
+        style={{
+          margin: "0 0 12px",
+          color: "var(--text-secondary)",
+          lineHeight: 1.4,
+        }}
+      >
+        Нижча ціна діє лише на машини свого діапазону, а не на весь парк.
+        Приклад: 25 машин = 20 × 250 + 5 × 210 = 6 050 грн на місяць.
+      </p>
 
       <label style={{ display: "grid", gap: 6, color: "var(--text-secondary)" }}>
         Скільки у вас машин (причепи не рахуються)
@@ -148,14 +160,33 @@ function BusinessCalculator({ value, setValue }) {
             Введіть кількість машин
           </span>
         )}
+
         {vehicles > 0 && !overLimit && (
           <>
+            <div style={{ display: "grid", gap: 2, marginBottom: 8 }}>
+              {rows.map((row) => (
+                <div
+                  key={row.price}
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    color: "var(--text-secondary)",
+                  }}
+                >
+                  <span>
+                    {row.count} × {row.price} грн
+                  </span>
+                  <span>{money(row.sum)} грн</span>
+                </div>
+              ))}
+            </div>
             Разом: <b>{money(monthly)} грн на місяць</b>
             <div style={{ color: "var(--text-secondary)", marginTop: 2 }}>
               у середньому {money(average)} грн за машину
             </div>
           </>
         )}
+
         {overLimit && (
           <>
             Для парку понад {BUSINESS_MAX} машин ціна <b>за домовленістю</b>.
