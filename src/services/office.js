@@ -1,5 +1,5 @@
 import { supabase } from "../lib/supabase";
-import { getMyProfile } from "./profile";
+import { getMyProfile, roleCan } from "./profile";
 
 export async function loadFleetTrips() {
   const profile = await getMyProfile();
@@ -44,10 +44,11 @@ export async function loadCompanyAccounts() {
   return data || [];
 }
 
-// Список водіїв фірми, який веде керівник
+// Список водіїв фірми. Бачать ті ролі, яким дозволено drivers.view
+// (керівник, заступник, логіст).
 export async function loadCompanyDrivers() {
   const profile = await getMyProfile();
-  if (!profile?.company_id || profile.role !== "boss") return [];
+  if (!profile?.company_id || !roleCan(profile, "drivers.view")) return [];
 
   const { data: list, error } = await supabase
     .from("company_drivers")
