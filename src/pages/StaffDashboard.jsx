@@ -4,7 +4,11 @@ import { supabase } from "../lib/supabase";
 import { getMyProfile, ROLE_LABELS } from "../services/profile";
 import { getMyCompany } from "../services/company";
 import { loadFleetTrips, loadCompanyDrivers } from "../services/office";
-import { calculateRollingSchengen } from "../utils/schengen";
+import {
+    calculateRollingSchengen,
+    calculateStayLimit,
+    stayLimitText,
+} from "../utils/schengen";
 import { Plate } from "../components/boss/Plate";
 
 const card = {
@@ -176,7 +180,11 @@ export default function StaffDashboard() {
 
     const driverRows = drivers
         .filter((d) => d.user_id)
-        .map((d) => ({ driver: d, schengen: calculateRollingSchengen(d.stays || []) }))
+        .map((d) => ({
+            driver: d,
+            schengen: calculateRollingSchengen(d.stays || []),
+            limit: calculateStayLimit(d.stays || []),
+        }))
         .sort((a, b) => a.schengen.remaining - b.schengen.remaining);
 
     const lowSchengen = driverRows.filter((r) => r.schengen.remaining <= 20);
@@ -305,10 +313,15 @@ export default function StaffDashboard() {
                     count={lowSchengen.length}
                     empty="У всіх водіїв запас більше 20 днів."
                 >
-                    {lowSchengen.map(({ driver, schengen }) => (
+                    {lowSchengen.map(({ driver, schengen, limit }) => (
                         <Row key={driver.id}>
                             <div style={{ display: "flex", justifyContent: "space-between", gap: 10 }}>
-                                <div style={{ fontWeight: 600 }}>{driver.full_name}</div>
+                                <div>
+                                    <div style={{ fontWeight: 600 }}>{driver.full_name}</div>
+                                    <div style={{ color: "var(--text-secondary)", fontSize: 13, marginTop: 2 }}>
+                                        {stayLimitText(limit)}
+                                    </div>
+                                </div>
                                 <div
                                     style={{
                                         fontWeight: 600,

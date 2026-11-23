@@ -25,6 +25,13 @@ export function todayKey() {
   return warsawKey();
 }
 
+// "2026-12-28" -> "28.12.2026"
+export function formatDay(key) {
+  if (!key) return "";
+  const [year, month, day] = String(key).slice(0, 10).split("-");
+  return `${day}.${month}.${year}`;
+}
+
 export function getDaysBetween(start, end) {
   const s = parseDay(start);
   const e = end ? parseDay(end) : parseDay(new Date());
@@ -90,4 +97,51 @@ export function calculateRollingSchengen(stays, referenceDate = new Date()) {
     status,
     usagePercent: Math.min((usedDays / 90) * 100, 100),
   };
+}
+
+// Скільки днів водій може пробути в Шенгені в цій поїздці.
+// Старі дні випадають з вікна 180 днів, тому ліміт рахується день за днем уперед.
+//  - якщо водій у Шенгені: скільки ще днів він може лишатись і до якої дати виїхати;
+//  - якщо поза Шенгеном: на скільки днів він може заїхати, якщо заїде сьогодні.
+export function calculateStayLimit(stays, referenceDate = new Date()) {
+  const today = parseDay(referenceDate);
+  const list = stays || [];
+  const inZone = list.some((s) => s?.start && !s.end);
+
+  const scenario = inZone ? list : [...list, { start: toKey(today), end: null }];
+
+  let lastOk = -1;
+  for (let i = 0; i <= 200; i++) {
+    const day = new Date(today);
+    day.setUTCDate(day.getUTCDate() + i);
+    if (getUsedDates(scenario, day).size > 90) break;
+    lastOk = i;
+  }
+
+  if (lastOk < 0) {
+    return { inZone, days: 0, lastDay: null, blocked: true };
+  }
+
+  const last = new Date(today);
+  last.setUTCDate(last.getUTCDate() + lastOk);
+
+  return {
+    inZone,
+    // у Шенгені: ще скільки днів після сьогодні; поза ним: усього днів поїздки
+    days: inZone ? lastOk : lastOk + 1,
+    lastDay: toKey(last),
+    blocked: false,
+  };
+}
+
+// Готовий текст для кабінету керівника
+export function stayLimitText(limit) {
+  if (limit.inZone) {
+    if (limit.blocked) return "у Шенгені: ліміт перевищено, потрібно виїхати";
+    if (limit.days === 0) return "у Шенгені: сьогодні останній день, виїзд сьогодні";
+    return `у Шенгені: може пробути ще ${limit.days} дн., виїзд до ${formatDay(limit.lastDay)}`;
+  }
+
+  if (limit.blocked) return "поза Шенгеном: заїзд зараз неможливий";
+  return `поза Шенгеном: може пробути до ${limit.days} дн. (до ${formatDay(limit.lastDay)})`;
 }

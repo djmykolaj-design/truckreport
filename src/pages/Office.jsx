@@ -8,7 +8,11 @@ import {
   addCompanyDriver,
   deleteCompanyDriver,
 } from "../services/office";
-import { calculateRollingSchengen } from "../utils/schengen";
+import {
+  calculateRollingSchengen,
+  calculateStayLimit,
+  stayLimitText,
+} from "../utils/schengen";
 import { Plate } from "../components/boss/Plate";
 import TeamPanel from "../components/boss/TeamPanel";
 
@@ -153,6 +157,9 @@ export default function Office() {
   const selectedSchengen =
     selected && selected.user_id ? calculateRollingSchengen(selected.stays || []) : null;
 
+  const selectedLimit =
+    selected && selected.user_id ? calculateStayLimit(selected.stays || []) : null;
+
   const addDriver = async () => {
     if (!newName.trim()) {
       alert("Введіть ім'я водія");
@@ -256,6 +263,7 @@ export default function Office() {
 
           {drivers.map((d) => {
             const s = d.user_id ? calculateRollingSchengen(d.stays || []) : null;
+            const limit = d.user_id ? calculateStayLimit(d.stays || []) : null;
             const color = !s
               ? "var(--text-secondary)"
               : s.status === "ok"
@@ -276,10 +284,15 @@ export default function Office() {
                 }}
               >
                 <span style={{ fontWeight: 500 }}>{d.full_name}</span>
-                <span style={{ color, fontWeight: 600 }}>
+                <span style={{ color, fontWeight: 600, textAlign: "right" }}>
                   {s
                     ? `лишилось ${s.remaining} з 90 (використано ${s.usedDays})`
                     : "акаунт не прив'язано"}
+                  {limit && (
+                    <div style={{ fontWeight: 400, fontSize: 13, marginTop: 2 }}>
+                      {stayLimitText(limit)}
+                    </div>
+                  )}
                 </span>
               </div>
             );
@@ -287,6 +300,8 @@ export default function Office() {
 
           <div style={{ color: "var(--text-secondary)", fontSize: 12, marginTop: 8 }}>
             Рахується за останні 180 днів із записів, які водій вносить у розділі «Шенген».
+            Для водіїв у Шенгені показано, скільки ще днів вони можуть пробути в цій поїздці,
+            а для тих, хто поза ним, на скільки днів можна заїхати сьогодні.
           </div>
         </div>
       )}
@@ -331,7 +346,7 @@ export default function Office() {
           }}
         >
           {selectedSchengen
-            ? `Шенген: ${selectedSchengen.remaining} днів`
+            ? `Шенген: ${selectedSchengen.remaining} днів. ${stayLimitText(selectedLimit)}`
             : "Шенген з'явиться, коли акаунт водія буде прив'язано"}
         </p>
       )}

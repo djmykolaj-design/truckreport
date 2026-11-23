@@ -4,7 +4,11 @@ import { supabase } from "../lib/supabase";
 import { getMyProfile } from "../services/profile";
 import { getMyCompany } from "../services/company";
 import { loadFleetTrips, loadCompanyDrivers } from "../services/office";
-import { calculateRollingSchengen } from "../utils/schengen";
+import {
+  calculateRollingSchengen,
+  calculateStayLimit,
+  stayLimitText,
+} from "../utils/schengen";
 import { Plate, StatusPill } from "../components/boss/Plate";
 import "./BossDashboard.css";
 
@@ -190,7 +194,11 @@ export function BossDashboardView({ state, navigate }) {
 
   const schengenAlerts = drivers
     .filter((d) => d.user_id)
-    .map((d) => ({ driver: d, s: calculateRollingSchengen(d.stays || []) }))
+    .map((d) => ({
+      driver: d,
+      s: calculateRollingSchengen(d.stays || []),
+      limit: calculateStayLimit(d.stays || []),
+    }))
     .filter((x) => x.s.remaining <= 15)
     .sort((a, b) => a.s.remaining - b.s.remaining);
 
@@ -330,10 +338,11 @@ export function BossDashboardView({ state, navigate }) {
               </button>
             ))}
 
-            {schengenAlerts.map(({ driver, s }) => (
+            {schengenAlerts.map(({ driver, s, limit }) => (
               <button key={driver.id} type="button" className={`bd-alert ${s.remaining <= 5 ? "is-bad" : ""}`} onClick={() => navigate("/office")}>
                 <div>
                   <b>Шенген: {driver.full_name}</b>
+                  <small>{stayLimitText(limit)}</small>
                 </div>
                 <time>лишилось {s.remaining} дн.</time>
               </button>
