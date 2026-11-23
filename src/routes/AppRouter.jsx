@@ -172,6 +172,17 @@ export default function AppRouter() {
           />
 
           <Route
+            path="/shared/:tripId"
+            element={
+              <AuthGuard>
+                <RequireRole perm="trips.own">
+                  <OfficeTrip backTo="/trips" />
+                </RequireRole>
+              </AuthGuard>
+            }
+          />
+
+          <Route
             path="/fleet"
             element={
               <AuthGuard>

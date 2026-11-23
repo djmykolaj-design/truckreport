@@ -7,6 +7,7 @@ import TripTrash from "../components/TripTrash";
 import useTripForm from "../hooks/useTripForm";
 import {
   loadTripsFromCloud,
+  loadSharedTripsFromCloud,
   saveAllTripsToCloud,
   deleteTripFromCloud,
   TRASH_DAYS,
@@ -18,6 +19,8 @@ import {
 } from "../services/fleetStatus";
 import { getMyProfile } from "../services/profile";
 import { getMyPlan, can, FREE_TRIP_LIMIT } from "../services/plan";
+import { supabase } from "../lib/supabase";
+import { Plate } from "../components/boss/Plate";
 
 function tripsWord(n) {
   const mod10 = n % 10;
@@ -102,6 +105,52 @@ function HistoryNote({ hidden, onUpgrade }) {
   );
 }
 
+// Рейси колег, де ви вказані напарником. Лише перегляд.
+function SharedTrips({ trips, onOpen }) {
+  if (!trips.length) return null;
+
+  return (
+    <div style={{ marginTop: 16 }}>
+      <div style={{ color: "#94a3b8", fontSize: 13, margin: "0 4px 8px" }}>
+        Рейси колег (тільки перегляд)
+      </div>
+
+      {trips.map((trip) => (
+        <button
+          key={trip.id}
+          type="button"
+          onClick={() => onOpen(trip)}
+          style={{
+            display: "block",
+            width: "100%",
+            textAlign: "left",
+            marginBottom: 10,
+            padding: 14,
+            borderRadius: 14,
+            border: "1px solid #334155",
+            background: "#111827",
+            color: "#e2e8f0",
+            cursor: "pointer",
+            boxSizing: "border-box",
+          }}
+        >
+          <div style={{ fontWeight: 600 }}>
+            TR-{trip.tripNumber} • {trip.fromCity} → {trip.toCity}
+          </div>
+          <div style={{ color: "#94a3b8", fontSize: 13, marginTop: 4 }}>
+            Водій: {trip.driver || "—"} •{" "}
+            {trip.status === "completed" ? "Завершений" : "Активний"}
+          </div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 8 }}>
+            {trip.truck && <Plate value={trip.truck} />}
+            {trip.trailer && <Plate value={trip.trailer} />}
+          </div>
+        </button>
+      ))}
+    </div>
+  );
+}
+
 export default function TripsV4() {
   const [showForm, setShowForm] = useState(false);
   const [showTrash, setShowTrash] = useState(false);
@@ -110,6 +159,7 @@ export default function TripsV4() {
   const [cloudReady, setCloudReady] = useState(false);
   const [selectedTrip, setSelectedTrip] = useState(null);
   const [planInfo, setPlanInfo] = useState(null);
+  const [sharedTrips, setSharedTrips] = useState([]);
 
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -147,6 +197,9 @@ export default function TripsV4() {
       localStorage.setItem("cabina_trips_v4", JSON.stringify(cloud));
       setLoadingTrips(false);
       setCloudReady(true);
+
+      // Рейси колег тримаємо окремо від власних, щоб вони не потрапили в збереження
+      setSharedTrips(await loadSharedTripsFromCloud());
     }
 
     init();
@@ -226,12 +279,28 @@ export default function TripsV4() {
     }
 
     const me = await getMyProfile();
+
+    // Акаунт напарника, щоб рейс з'явився і в нього (лише перегляд)
+    let codriverUserId = null;
+    if (codriver && me?.company_id) {
+      const { data: mate } = await supabase
+        .from("company_drivers")
+        .select("user_id")
+        .eq("company_id", me.company_id)
+        .eq("full_name", codriver)
+        .maybeSingle();
+
+      codriverUserId = mate?.user_id || null;
+      if (codriverUserId && codriverUserId === me.id) codriverUserId = null;
+    }
+
     const newTrip = {
       id: Date.now(),
       companyId: me?.company_id || null,
       tripNumber,
       driver,
       codriver,
+      codriverUserId,
       truck,
       trailer,
       fromCity,
@@ -382,6 +451,8 @@ export default function TripsV4() {
     : sortedTrips;
   const hiddenCount = sortedTrips.length - visibleTrips.length;
 
+  const openShared = (trip) => navigate(`/shared/${trip.id}`);
+
   const isMobile = window.innerWidth <= 768;
 
   if (loadingTrips) {
@@ -483,6 +554,7 @@ export default function TripsV4() {
             hidden={hiddenCount}
             onUpgrade={() => navigate("/pricing")}
           />
+          <SharedTrips trips={sharedTrips} onOpen={openShared} />
         </div>
       </div>
     );
@@ -527,6 +599,7 @@ export default function TripsV4() {
           hidden={hiddenCount}
           onUpgrade={() => navigate("/pricing")}
         />
+        <SharedTrips trips={sharedTrips} onOpen={openShared} />
       </div>
 
       <div style={{ width: "100%", maxWidth: "1200px" }}>

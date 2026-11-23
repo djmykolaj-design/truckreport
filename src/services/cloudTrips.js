@@ -250,3 +250,33 @@ export async function purgeOldDeletedTrips() {
     console.error("purgeOldDeletedTrips:", error);
   }
 }
+
+// Рейси колег, де поточний користувач вказаний напарником (лише перегляд).
+// Тримаємо окремо від власних рейсів, щоб вони не потрапили в збереження.
+export async function loadSharedTripsFromCloud() {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) return [];
+
+  const { data, error } = await supabase
+    .from("trips")
+    .select("id, user_id, data, status, company_id")
+    .neq("user_id", user.id)
+    .eq("data->>codriverUserId", user.id)
+    .is("deleted_at", null);
+
+  if (error) {
+    console.error("loadSharedTripsFromCloud:", error);
+    return [];
+  }
+
+  return (data || []).map((row) => ({
+    ...row.data,
+    id: row.id,
+    ownerId: row.user_id,
+    companyId: row.company_id || null,
+    status: row.status || row.data?.status,
+  }));
+}

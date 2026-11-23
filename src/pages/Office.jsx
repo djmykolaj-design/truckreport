@@ -276,24 +276,35 @@ export default function Office() {
               <div
                 key={d.id}
                 style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  gap: 12,
-                  padding: "8px 0",
+                  padding: "10px 0",
                   borderTop: "1px solid var(--border)",
                 }}
               >
-                <span style={{ fontWeight: 500 }}>{d.full_name}</span>
-                <span style={{ color, fontWeight: 600, textAlign: "right" }}>
-                  {s
-                    ? `лишилось ${s.remaining} з 90 (використано ${s.usedDays})`
-                    : "акаунт не прив'язано"}
-                  {limit && (
-                    <div style={{ fontWeight: 400, fontSize: 13, marginTop: 2 }}>
-                      {stayLimitText(limit)}
-                    </div>
-                  )}
-                </span>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    flexWrap: "wrap",
+                    gap: 4,
+                  }}
+                >
+                  <span style={{ fontWeight: 600 }}>{d.full_name}</span>
+                  <span style={{ color, fontWeight: 600 }}>
+                    {s ? `лишилось ${s.remaining} з 90` : "акаунт не прив'язано"}
+                  </span>
+                </div>
+
+                {s && limit && (
+                  <div
+                    style={{
+                      color: "var(--text-secondary)",
+                      fontSize: 13,
+                      marginTop: 2,
+                    }}
+                  >
+                    використано {s.usedDays} • {stayLimitText(limit)}
+                  </div>
+                )}
               </div>
             );
           })}

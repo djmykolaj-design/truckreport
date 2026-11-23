@@ -3,7 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import { generateTripPdf } from "../pdf/TripReportPdf";
 
-export default function OfficeTrip() {
+export default function OfficeTrip({ backTo = "/office" }) {
   const { tripId } = useParams();
   const navigate = useNavigate();
   const [trip, setTrip] = useState(null);
@@ -34,7 +34,7 @@ export default function OfficeTrip() {
   if (!trip) {
     return (
       <div style={{ color: "white" }}>
-        <button onClick={() => navigate("/office")}>← Назад</button>
+        <button onClick={() => navigate(backTo)}>← Назад</button>
         <p>Рейс не знайдено</p>
       </div>
     );
@@ -46,7 +46,7 @@ export default function OfficeTrip() {
   return (
     <div style={{ color: "white", maxWidth: 800 }}>
       <button
-        onClick={() => navigate("/office")}
+        onClick={() => navigate(backTo)}
         style={{
           marginBottom: 16,
           padding: "10px 14px",
@@ -57,12 +57,12 @@ export default function OfficeTrip() {
           cursor: "pointer",
         }}
       >
-        ← До офісу
+        {backTo === "/office" ? "← До офісу" : "← До списку рейсів"}
       </button>
 
       <h1>Рейс № {trip.tripNumber}</h1>
       <p>{trip.fromCity} → {trip.toCity}</p>
-            <p style={{ color: "#94a3b8" }}>
+      <p style={{ color: "#94a3b8" }}>
         Водій: {trip.driver || "—"}
         {trip.codriver ? ` • Напарник: ${trip.codriver}` : ""}
       </p>
@@ -81,7 +81,7 @@ export default function OfficeTrip() {
       <p>UAH: {trip.startUah || 0}</p>
       <p>{trip.status === "active" ? "В дорозі" : "Завершений"}</p>
 
-            <button
+      <button
         onClick={() => generateTripPdf(trip)}
         style={{
           marginTop: 16,
