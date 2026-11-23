@@ -52,12 +52,16 @@ export function FuelSection(data) {
                     ]
                 ),
 
-                fuelCard(
+                                fuelCard(
                     "Рефрижератор",
                     [
                         ...(reefMain > 0
                             ? [
                                 ["Осн. бак", `${fmtL(reefMain)} л`],
+                                [
+                                    "Відпрацьовано",
+                                    `${fmtL(data.mainReefHours)} год`,
+                                ],
                                 [
                                     "Середня",
                                     `${fmtAvg(data.mainReefAverage)} л/год`,
@@ -68,6 +72,10 @@ export function FuelSection(data) {
                         ...(reefSeparate > 0
                             ? [
                                 ["Окремий бак", `${fmtL(reefSeparate)} л`],
+                                [
+                                    "Відпрацьовано",
+                                    `${fmtL(data.separateReefHours)} год`,
+                                ],
                                 [
                                     "Середня",
                                     `${fmtAvg(data.separateReefAverage)} л/год`,

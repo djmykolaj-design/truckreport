@@ -239,3 +239,9 @@
     font-size: 12px !important;
   }
 }
+
+.trip-plates {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}

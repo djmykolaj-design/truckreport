@@ -25,9 +25,10 @@ export default function TripCard({
           {trip.fromCity} → {trip.toCity}
         </p>
 
-        {trip.truck && (
-          <div className="trip-plate">
-            <Plate value={trip.truck} />
+        {(trip.truck || trip.trailer) && (
+          <div className="trip-plates">
+            {trip.truck && <Plate value={trip.truck} />}
+            {trip.trailer && <Plate value={trip.trailer} />}
           </div>
         )}
       </Card>

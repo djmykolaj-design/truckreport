@@ -59,13 +59,13 @@ function buildNavItems(profile) {
 
     // driver і solo
     default:
+      // Водій у складі фірми: тариф оплачує керівник, тож сторінки тарифів немає
       if (hasCompany(profile)) {
         return [
           HOME,
           TRIPS,
           SCHENGEN,
           { to: "/report-breakdown", label: "Поломка", icon: AlertTriangle },
-          { ...PRICING, mobile: false },
         ];
       }
       return [HOME, TRIPS, SCHENGEN, PRICING];
