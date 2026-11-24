@@ -315,6 +315,9 @@ function DocsTab({ companyId, drivers, vehicles, canManage, canSeeDriverDocs }) 
   const [docs, setDocs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [form, setForm] = useState({ type: DOC_TYPES_COMPANY[0], target: "company", expires: "", note: "" });
+  const [newFile, setNewFile] = useState(null);
+  const [fileKey, setFileKey] = useState(0);
+  const [saving, setSaving] = useState(false);
   const [filter, setFilter] = useState({ q: "", target: "all", term: "all" });
 
   async function load() {
@@ -368,11 +371,13 @@ function DocsTab({ companyId, drivers, vehicles, canManage, canSeeDriverDocs }) 
     return true;
   });
 
-  const add = async () => {
+   const add = async () => {
     if (!form.expires) {
       alert("Вкажіть дату закінчення");
       return;
     }
+
+    setSaving(true);
 
     const row = {
       company_id: companyId,
@@ -383,12 +388,46 @@ function DocsTab({ companyId, drivers, vehicles, canManage, canSeeDriverDocs }) 
       driver_id: form.target.startsWith("d:") ? form.target.slice(2) : null,
     };
 
-    const { error } = await supabase.from("company_documents").insert(row);
+    const { data: created, error } = await supabase
+      .from("company_documents")
+      .insert(row)
+      .select("id")
+      .single();
+
     if (error) {
       alert("Не вдалося додати: " + error.message);
+      setSaving(false);
       return;
     }
+
+    if (newFile && created?.id) {
+      try {
+        const folder = row.vehicle_id ? "vehicles" : row.driver_id ? "drivers" : "firm";
+        const path = await uploadCompanyFile(companyId, folder, newFile);
+
+        const { data: updated, error: updateError } = await supabase
+          .from("company_documents")
+          .update({ file_path: path })
+          .eq("id", created.id)
+          .select("id");
+
+        if (updateError || !updated?.length) {
+          await removeCompanyFile(path);
+          alert("Документ додано, але файл не збережено. Додайте його ще раз у списку нижче.");
+        }
+      } catch (uploadError) {
+        console.error(uploadError);
+        alert(
+          "Документ додано, але файл не завантажився: " +
+            (uploadError.message || "помилка")
+        );
+      }
+    }
+
     setForm({ ...form, expires: "", note: "" });
+    setNewFile(null);
+    setFileKey((k) => k + 1);
+    setSaving(false);
     load();
   };
 
@@ -468,8 +507,29 @@ function DocsTab({ companyId, drivers, vehicles, canManage, canSeeDriverDocs }) 
               placeholder="Примітка (номер полісу тощо)"
               style={{ ...inputStyle, flex: 2, minWidth: 200 }}
             />
-            <button type="button" onClick={add} style={btnOk}>
-              Додати
+            <label
+              style={{
+                ...btn,
+                display: "inline-flex",
+                alignItems: "center",
+                maxWidth: 220,
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+              }}
+            >
+              {newFile ? `Файл: ${newFile.name}` : "Прикріпити файл"}
+              <input
+                key={fileKey}
+                type="file"
+                accept="image/*,application/pdf"
+                onChange={(e) => setNewFile(e.target.files?.[0] || null)}
+                style={{ display: "none" }}
+              />
+            </label>
+
+            <button type="button" onClick={add} disabled={saving} style={btnOk}>
+              {saving ? "Збереження…" : "Додати"}
             </button>
           </div>
         </div>
