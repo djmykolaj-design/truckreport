@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { supabase } from "../lib/supabase";
 import { getMyProfile, roleCan } from "../services/profile";
 import VehicleRepairs from "../components/fleet/VehicleRepairs";
+import VehiclePhoto from "../components/fleet/VehiclePhoto";
 
 const WHATSAPP_URL = "https://wa.me/380680269478";
 const VIBER_URL = "viber://chat?number=%2B380680269478";
@@ -1382,6 +1383,11 @@ export default function Fleet() {
                                         }}
                                     >
                                         <div style={{ flex: 1, minWidth: 220 }}>
+                                             <VehiclePhoto
+                                                vehicle={vehicle}
+                                                canManage={canManage}
+                                                onChanged={loadVehicles}
+                                            />
                                             <h3 style={{ margin: "0 0 7px", fontSize: 18 }}>
                                                 {vehicle.name}
                                             </h3>

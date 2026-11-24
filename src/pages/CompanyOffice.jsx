@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import { getMyProfile, roleCan, isOfficeRole } from "../services/profile";
@@ -6,19 +6,48 @@ import { getMyCompany, leaveCompany } from "../services/company";
 import { loadFleetTrips } from "../services/office";
 import { calculateFinance } from "../utils/financeCalculator";
 import { calculateFuel } from "../utils/fuelCalculator";
+import {
+  uploadCompanyFile,
+  removeCompanyFile,
+  useCompanyFileUrl,
+} from "../services/companyFiles";
 
-const DOC_TYPES = [
+// Типи документів за тим, кому вони належать
+const DOC_TYPES_VEHICLE = [
+  "Техпаспорт",
   "Страховка (ОСЦПВ)",
   "Зелена карта",
   "Техогляд",
   "Тахограф (калібрування)",
   "ADR",
-  "Посвідчення водія",
-  "Код 95",
-  "Віза / дозвіл",
-  "Медогляд",
+  "ATP (рефрижератор)",
+  "Дозвіл ЄКМТ",
+  "Двосторонній дозвіл",
   "Інше",
 ];
+
+const DOC_TYPES_DRIVER = [
+  "Посвідчення водія",
+  "Картка водія (тахограф)",
+  "Код 95",
+  "Медогляд",
+  "Закордонний паспорт",
+  "Віза / дозвіл",
+  "ADR (водій)",
+  "Інше",
+];
+
+const DOC_TYPES_COMPANY = [
+  "Ліцензія перевізника",
+  "Страхування перевізника (CMR)",
+  "Інше",
+];
+
+function docTypesFor(target) {
+  if (String(target).startsWith("v:")) return DOC_TYPES_VEHICLE;
+  if (String(target).startsWith("d:")) return DOC_TYPES_DRIVER;
+  return DOC_TYPES_COMPANY;
+}
 
 const CURRENCIES = ["EUR", "USD", "PLN", "UAH"];
 const SYMBOL = { EUR: "€", USD: "$", PLN: "zł", UAH: "₴" };
@@ -182,11 +211,110 @@ function FirmTab({ company, drivers, vehicles, canInvite, canLeave }) {
 }
 
 /* ───────────── Документи ───────────── */
+function DocFile({ doc, canManage, companyId, onChanged }) {
+  const inputRef = useRef(null);
+  const [busy, setBusy] = useState(false);
+  const url = useCompanyFileUrl(doc.file_path);
+
+  const folder = doc.vehicle_id ? "vehicles" : doc.driver_id ? "drivers" : "firm";
+
+  const saveFilePath = async (path) => {
+    const { data, error } = await supabase
+      .from("company_documents")
+      .update({ file_path: path })
+      .eq("id", doc.id)
+      .select("id");
+
+    return !error && Boolean(data?.length);
+  };
+
+  const onFile = async (event) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+
+    setBusy(true);
+
+    try {
+      const path = await uploadCompanyFile(companyId, folder, file);
+
+      if (await saveFilePath(path)) {
+        await removeCompanyFile(doc.file_path);
+        if (onChanged) await onChanged();
+      } else {
+        await removeCompanyFile(path);
+        alert("Не вдалося зберегти файл. Спробуйте ще раз.");
+      }
+    } catch (error) {
+      console.error(error);
+      alert(error.message || "Не вдалося завантажити файл");
+    }
+
+    setBusy(false);
+  };
+
+  const onRemove = async () => {
+    if (!window.confirm("Прибрати файл документа?")) return;
+
+    setBusy(true);
+
+    if (await saveFilePath(null)) {
+      await removeCompanyFile(doc.file_path);
+      if (onChanged) await onChanged();
+    } else {
+      alert("Не вдалося прибрати файл");
+    }
+
+    setBusy(false);
+  };
+
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+      {doc.file_path && (
+        <a
+          href={url || undefined}
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{ ...btn, textDecoration: "none", opacity: url ? 1 : 0.5 }}
+        >
+          Файл
+        </a>
+      )}
+
+      {canManage && (
+        <>
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => inputRef.current?.click()}
+            style={btn}
+          >
+            {busy ? "…" : doc.file_path ? "Замінити" : "Додати файл"}
+          </button>
+
+          {doc.file_path && !busy && (
+            <button type="button" onClick={onRemove} style={btn}>
+              ×
+            </button>
+          )}
+
+          <input
+            ref={inputRef}
+            type="file"
+            accept="image/*,application/pdf"
+            onChange={onFile}
+            style={{ display: "none" }}
+          />
+        </>
+      )}
+    </div>
+  );
+}
 
 function DocsTab({ companyId, drivers, vehicles, canManage, canSeeDriverDocs }) {
   const [docs, setDocs] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [form, setForm] = useState({ type: DOC_TYPES[0], target: "company", expires: "", note: "" });
+  const [form, setForm] = useState({ type: DOC_TYPES_COMPANY[0], target: "company", expires: "", note: "" });
   const [filter, setFilter] = useState({ q: "", target: "all", term: "all" });
 
   async function load() {
@@ -285,6 +413,7 @@ function DocsTab({ companyId, drivers, vehicles, canManage, canSeeDriverDocs }) 
       alert("Не вдалося видалити: " + error.message);
       return;
     }
+    await removeCompanyFile(doc.file_path);
     load();
   };
 
@@ -294,19 +423,12 @@ function DocsTab({ companyId, drivers, vehicles, canManage, canSeeDriverDocs }) 
         <div style={card}>
           <h2 style={{ fontSize: 17, margin: "0 0 10px" }}>Додати документ</h2>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-            <select
-              value={form.type}
-              onChange={(e) => setForm({ ...form, type: e.target.value })}
-              style={{ ...inputStyle, flex: 1, minWidth: 180 }}
-            >
-              {DOC_TYPES.map((t) => (
-                <option key={t} value={t}>{t}</option>
-              ))}
-            </select>
-
-            <select
+                    <select
               value={form.target}
-              onChange={(e) => setForm({ ...form, target: e.target.value })}
+              onChange={(e) => {
+                const target = e.target.value;
+                setForm({ ...form, target, type: docTypesFor(target)[0] });
+              }}
               style={{ ...inputStyle, flex: 1, minWidth: 180 }}
             >
               <option value="company">Фірма</option>
@@ -322,6 +444,16 @@ function DocsTab({ companyId, drivers, vehicles, canManage, canSeeDriverDocs }) 
                   <option key={d.id} value={`d:${d.id}`}>{d.full_name}</option>
                 ))}
               </optgroup>
+            </select>
+
+            <select
+              value={form.type}
+              onChange={(e) => setForm({ ...form, type: e.target.value })}
+              style={{ ...inputStyle, flex: 1, minWidth: 180 }}
+            >
+              {docTypesFor(form.target).map((t) => (
+                <option key={t} value={t}>{t}</option>
+              ))}
             </select>
 
             <input
@@ -438,6 +570,7 @@ function DocsTab({ companyId, drivers, vehicles, canManage, canSeeDriverDocs }) 
                 </div>
               </div>
               <div style={{ color, fontWeight: 700, fontSize: 13, minWidth: 110 }}>{text}</div>
+              <DocFile doc={d} canManage={canManage} companyId={companyId} onChanged={load} />
 
               {canManage ? (
                 <>
